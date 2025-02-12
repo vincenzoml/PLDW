@@ -4,7 +4,7 @@
         {
             "label": "Setup Virtual Environment",
             "type": "shell",
-            "command": "python -m venv .venv && .venv/bin/pip install -r requirements.txt && echo environment set up",
+            "command": "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && echo environment set up",
             "problemMatcher": [],
             "runOptions": {
                 "runOn": "folderOpen"
