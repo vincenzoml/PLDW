@@ -8,13 +8,19 @@ This workshop consists of 10 lectures (2 hours each) that combine theoretical fo
 
 ## Course Structure
 
-### Lecture 1: Types and Structural Pattern Matching in Python
+### Lecture 1: Introduction to Programming Language Design
+- What is a programming language?
+- The importance of programming language design
+- The course structure and expectations
+- Python as a language for exploring language design concepts
+
+### Lecture 2: Types and Structural Pattern Matching in Python
 - Introduction to Python's type system
 - Type hints and type checking
 - Structural pattern matching (match/case statements)
 - Practical applications and examples
 
-### Lecture 2: Programming Language Fundamentals
+### Lecture 3: Programming Language Fundamentals
 - What is a programming language?
 - Parsing and lexical analysis
 - Abstract Syntax Trees (AST)
