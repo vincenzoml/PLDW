@@ -1,0 +1,17 @@
+{
+    "name": "Programming Language Design Workshop",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "yzhang.markdown-all-in-one",
+                "james-yu.latex-workshop",
+                "streetsidesoftware.code-spell-checker"
+            ]
+        }
+    }    
+} 

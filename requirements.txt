@@ -1,2 +1,6 @@
 parsimonious
 ipykernel
+typing-extensions>=4.0.0
+black
+pylint
+mypy

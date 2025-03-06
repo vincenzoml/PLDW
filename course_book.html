@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>course_book</title>
+  <style>
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+background-color: #1a1a1a;
+border: none;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } 
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.at { color: #204a87; } 
+code span.bn { color: #0000cf; } 
+code span.cf { color: #204a87; font-weight: bold; } 
+code span.ch { color: #4e9a06; } 
+code span.cn { color: #8f5902; } 
+code span.co { color: #8f5902; font-style: italic; } 
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.dt { color: #204a87; } 
+code span.dv { color: #0000cf; } 
+code span.er { color: #a40000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #0000cf; } 
+code span.fu { color: #204a87; font-weight: bold; } 
+code span.im { } 
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } 
+code span.kw { color: #204a87; font-weight: bold; } 
+code span.op { color: #ce5c00; font-weight: bold; } 
+code span.ot { color: #8f5902; } 
+code span.pp { color: #8f5902; font-style: italic; } 
+code span.sc { color: #ce5c00; font-weight: bold; } 
+code span.ss { color: #4e9a06; } 
+code span.st { color: #4e9a06; } 
+code span.va { color: #000000; } 
+code span.vs { color: #4e9a06; } 
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#programming-language-design-workshop" id="toc-programming-language-design-workshop">Programming Language
+Design Workshop</a>
+<ul>
+<li><a href="#course-overview" id="toc-course-overview">Course
+Overview</a></li>
+<li><a href="#course-structure" id="toc-course-structure">Course
+Structure</a>
+<ul>
+<li><a href="#lecture-1-introduction-to-programming-language-design" id="toc-lecture-1-introduction-to-programming-language-design">Lecture
+1: Introduction to Programming Language Design</a></li>
+<li><a href="#lecture-2-types-and-structural-pattern-matching-in-python" id="toc-lecture-2-types-and-structural-pattern-matching-in-python">Lecture
+2: Types and Structural Pattern Matching in Python</a></li>
+<li><a href="#lecture-3-programming-language-fundamentals" id="toc-lecture-3-programming-language-fundamentals">Lecture 3:
+Programming Language Fundamentals</a></li>
+<li><a href="#lecture-3-tba" id="toc-lecture-3-tba">Lecture 3:
+TBA</a></li>
+<li><a href="#lecture-4-tba" id="toc-lecture-4-tba">Lecture 4:
+TBA</a></li>
+<li><a href="#lecture-5-tba" id="toc-lecture-5-tba">Lecture 5:
+TBA</a></li>
+<li><a href="#lecture-6-tba" id="toc-lecture-6-tba">Lecture 6:
+TBA</a></li>
+<li><a href="#lecture-7-tba" id="toc-lecture-7-tba">Lecture 7:
+TBA</a></li>
+<li><a href="#lecture-8-tba" id="toc-lecture-8-tba">Lecture 8:
+TBA</a></li>
+<li><a href="#lecture-9-tba" id="toc-lecture-9-tba">Lecture 9:
+TBA</a></li>
+<li><a href="#lecture-10-tba" id="toc-lecture-10-tba">Lecture 10:
+TBA</a></li>
+</ul></li>
+<li><a href="#prerequisites" id="toc-prerequisites">Prerequisites</a></li>
+<li><a href="#repository-structure" id="toc-repository-structure">Repository Structure</a></li>
+<li><a href="#getting-started" id="toc-getting-started">Getting
+Started</a></li>
+<li><a href="#license" id="toc-license">License</a></li>
+</ul></li>
+<li><a href="#chapter-1-programming-language-design-and-implementation" id="toc-chapter-1-programming-language-design-and-implementation">Chapter
+1: Programming Language Design and Implementation</a>
+<ul>
+<li><a href="#section-1-what-is-a-programming-language" id="toc-section-1-what-is-a-programming-language">Section 1: What is a
+Programming Language?</a>
+<ul>
+<li><a href="#formal-system-for-instructing-computers" id="toc-formal-system-for-instructing-computers">Formal system for
+instructing computers</a></li>
+<li><a href="#syntax-and-semantics" id="toc-syntax-and-semantics">Syntax
+and semantics</a></li>
+<li><a href="#bridge-between-human-thought-and-machine-execution" id="toc-bridge-between-human-thought-and-machine-execution">Bridge
+between human thought and machine execution</a></li>
+<li><a href="#everything-is-a-formal-language" id="toc-everything-is-a-formal-language">Everything is a formal
+language</a></li>
+<li><a href="#programming-language-design-and-the-ai-era" id="toc-programming-language-design-and-the-ai-era">Programming language
+design and the AI era</a></li>
+</ul></li>
+<li><a href="#section-2-key-design-considerations" id="toc-section-2-key-design-considerations">Section 2: Key Design
+Considerations</a>
+<ul>
+<li><a href="#expressiveness-and-power" id="toc-expressiveness-and-power">Expressiveness and Power</a></li>
+<li><a href="#imperative-functional-object-oriented-declarative-reactive" id="toc-imperative-functional-object-oriented-declarative-reactive">Imperative,
+Functional, Object-Oriented, Declarative, Reactive?</a></li>
+<li><a href="#application-domains" id="toc-application-domains">Application domains</a></li>
+<li><a href="#application-domains-1" id="toc-application-domains-1">Application domains</a></li>
+<li><a href="#scoping-rules" id="toc-scoping-rules">Scoping
+Rules</a></li>
+<li><a href="#memory-management" id="toc-memory-management">Memory
+Management</a></li>
+<li><a href="#error-handling-mechanisms" id="toc-error-handling-mechanisms">Error Handling Mechanisms</a></li>
+</ul></li>
+<li><a href="#section-3-language-paradigms" id="toc-section-3-language-paradigms">Section 3: Language Paradigms</a>
+<ul>
+<li><a href="#imperative-c-python" id="toc-imperative-c-python">Imperative (C, Python)</a></li>
+<li><a href="#object-oriented-java-c" id="toc-object-oriented-java-c">Object-Oriented (Java, C#)</a></li>
+<li><a href="#functional-haskell-lisp" id="toc-functional-haskell-lisp">Functional (Haskell, Lisp)</a></li>
+<li><a href="#logical-prolog" id="toc-logical-prolog">Logical
+(Prolog)</a></li>
+<li><a href="#declarative-sql" id="toc-declarative-sql">Declarative
+(SQL)</a></li>
+<li><a href="#reactive-react-svelte-vue" id="toc-reactive-react-svelte-vue">Reactive (React, Svelte,
+Vue)</a></li>
+</ul></li>
+<li><a href="#section-4-implementation-concerns" id="toc-section-4-implementation-concerns">Section 4: Implementation
+Concerns</a>
+<ul>
+<li><a href="#compilation-vs.-interpretation" id="toc-compilation-vs.-interpretation">Compilation
+vs. Interpretation</a></li>
+<li><a href="#memory-management-1" id="toc-memory-management-1">Memory
+Management</a></li>
+<li><a href="#garbage-collection" id="toc-garbage-collection">Garbage
+Collection</a></li>
+<li><a href="#runtime-environment" id="toc-runtime-environment">Runtime
+Environment</a></li>
+<li><a href="#performance-optimization" id="toc-performance-optimization">Performance Optimization</a></li>
+</ul></li>
+<li><a href="#section-5-syntax-and-semantics" id="toc-section-5-syntax-and-semantics">Section 5: Syntax and
+Semantics</a>
+<ul>
+<li><a href="#syntax-rules-for-valid-program-structure" id="toc-syntax-rules-for-valid-program-structure">Syntax: Rules for
+valid program structure</a></li>
+<li><a href="#semantics-meaning-of-valid-programs" id="toc-semantics-meaning-of-valid-programs">Semantics: Meaning of valid
+programs</a></li>
+<li><a href="#context-free-grammars" id="toc-context-free-grammars">Context-free grammars</a></li>
+<li><a href="#parsing-techniques" id="toc-parsing-techniques">Parsing
+techniques</a></li>
+<li><a href="#abstract-syntax-trees-ast" id="toc-abstract-syntax-trees-ast">Abstract Syntax Trees (AST)</a></li>
+</ul></li>
+<li><a href="#section-6-type-systems" id="toc-section-6-type-systems">Section 6: Type Systems</a>
+<ul>
+<li><a href="#static-vs.-dynamic-typing" id="toc-static-vs.-dynamic-typing">Static vs. Dynamic typing</a></li>
+<li><a href="#strong-vs.-weak-typing" id="toc-strong-vs.-weak-typing">Strong vs. Weak typing</a></li>
+<li><a href="#type-inference" id="toc-type-inference">Type
+inference</a></li>
+<li><a href="#generics-and-polymorphism" id="toc-generics-and-polymorphism">Generics and polymorphism</a></li>
+<li><a href="#union-and-intersection-types" id="toc-union-and-intersection-types">Union and intersection
+types</a></li>
+</ul></li>
+<li><a href="#section-7-modern-language-trends" id="toc-section-7-modern-language-trends">Section 7: Modern Language
+Trends</a>
+<ul>
+<li><a href="#concurrency-and-parallelism" id="toc-concurrency-and-parallelism">Concurrency and
+Parallelism</a></li>
+<li><a href="#asynchronous-programming" id="toc-asynchronous-programming">Asynchronous programming</a></li>
+<li><a href="#functional-programming-features" id="toc-functional-programming-features">Functional Programming
+Features</a></li>
+<li><a href="#type-inference-and-safety" id="toc-type-inference-and-safety">Type Inference and Safety</a></li>
+<li><a href="#domain-specific-languages" id="toc-domain-specific-languages">Domain-Specific Languages</a></li>
+<li><a href="#interoperability-with-other-languages" id="toc-interoperability-with-other-languages">Interoperability with
+Other Languages</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#lecture-1-types-and-pattern-matching-in-python" id="toc-lecture-1-types-and-pattern-matching-in-python">Lecture 1: Types
+and Pattern Matching in Python</a>
+<ul>
+<li><a href="#learning-objectives" id="toc-learning-objectives">Learning
+Objectives</a></li>
+<li><a href="#type-system" id="toc-type-system">Type System</a>
+<ul>
+<li><a href="#static-type-hints" id="toc-static-type-hints">Static Type
+Hints</a></li>
+<li><a href="#type-checking" id="toc-type-checking">Type
+Checking</a></li>
+</ul></li>
+<li><a href="#structural-pattern-matching" id="toc-structural-pattern-matching">Structural Pattern Matching</a>
+<ul>
+<li><a href="#basic-pattern-matching" id="toc-basic-pattern-matching">Basic Pattern Matching</a></li>
+<li><a href="#advanced-patterns" id="toc-advanced-patterns">Advanced
+Patterns</a></li>
+</ul></li>
+<li><a href="#practical-examples" id="toc-practical-examples">Practical
+Examples</a></li>
+<li><a href="#exercises" id="toc-exercises">Exercises</a></li>
+<li><a href="#additional-resources" id="toc-additional-resources">Additional Resources</a></li>
+</ul></li>
+<li><a href="#lecture-2-parsing-with-parsimonious" id="toc-lecture-2-parsing-with-parsimonious">Lecture 2: Parsing with
+Parsimonious</a>
+<ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#requirements" id="toc-requirements">Requirements</a></li>
+<li><a href="#running-the-examples" id="toc-running-the-examples">Running the Examples</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="programming-language-design-workshop">Programming Language
+Design Workshop</h1>
+<p>A hands-on course exploring programming language design concepts
+using Python’s modern features. This course leverages Python’s type
+system and structural pattern matching to demonstrate key programming
+language concepts and implementations.</p>
+<h2 id="course-overview">Course Overview</h2>
+<p>This workshop consists of 10 lectures (2 hours each) that combine
+theoretical foundations with practical implementations. Students will
+learn about programming language design principles while getting
+hands-on experience with Python’s advanced features.</p>
+<h2 id="course-structure">Course Structure</h2>
+<h3 id="lecture-1-introduction-to-programming-language-design">Lecture
+1: Introduction to Programming Language Design</h3>
+<ul>
+<li>What is a programming language?</li>
+<li>The importance of programming language design</li>
+<li>The course structure and expectations</li>
+<li>Python as a language for exploring language design concepts</li>
+</ul>
+<h3 id="lecture-2-types-and-structural-pattern-matching-in-python">Lecture
+2: Types and Structural Pattern Matching in Python</h3>
+<ul>
+<li>Introduction to Python’s type system</li>
+<li>Type hints and type checking</li>
+<li>Structural pattern matching (match/case statements)</li>
+<li>Practical applications and examples</li>
+</ul>
+<h3 id="lecture-3-programming-language-fundamentals">Lecture 3:
+Programming Language Fundamentals</h3>
+<ul>
+<li>What is a programming language?</li>
+<li>Parsing and lexical analysis</li>
+<li>Abstract Syntax Trees (AST)</li>
+<li>Program semantics</li>
+<li>Core language features</li>
+<li>Theoretical foundations</li>
+</ul>
+<h3 id="lecture-3-tba">Lecture 3: TBA</h3>
+<h3 id="lecture-4-tba">Lecture 4: TBA</h3>
+<h3 id="lecture-5-tba">Lecture 5: TBA</h3>
+<h3 id="lecture-6-tba">Lecture 6: TBA</h3>
+<h3 id="lecture-7-tba">Lecture 7: TBA</h3>
+<h3 id="lecture-8-tba">Lecture 8: TBA</h3>
+<h3 id="lecture-9-tba">Lecture 9: TBA</h3>
+<h3 id="lecture-10-tba">Lecture 10: TBA</h3>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Python 3.10 or higher (for pattern matching support)</li>
+<li>Basic Python programming knowledge</li>
+<li>Understanding of basic programming concepts</li>
+</ul>
+<h2 id="repository-structure">Repository Structure</h2>
+<p>Each lecture has its own directory containing: - A detailed README.md
+with lecture notes and exercises - Python modules with examples and
+implementations - Additional resources and references when
+applicable</p>
+<h2 id="getting-started">Getting Started</h2>
+<ol type="1">
+<li>Clone this repository</li>
+<li>Ensure you have Python 3.10+ installed</li>
+<li>Navigate to the specific lecture directory</li>
+<li>Follow the instructions in each lecture’s README.md</li>
+</ol>
+<h2 id="license">License</h2>
+<p><a href="LICENSE">MIT License</a></p>
+<h1 id="chapter-1-programming-language-design-and-implementation">Chapter 1:
+Programming Language Design and Implementation</h1>
+<h2 id="section-1-what-is-a-programming-language">Section 1: What is a
+Programming Language?</h2>
+<ul>
+<li>Formal system for instructing computers</li>
+<li>Consists of syntax and semantics</li>
+<li>Bridge between human thought and machine execution</li>
+<li>Examples: Python, Java, C++, JavaScript, FSharp, Haskell, Microsoft
+Word, Excel, Ableton Live, Mathematica, LaTeX, HTML, CSS, SQL, …</li>
+<li>Everything is a formal language!</li>
+</ul>
+<h3 id="formal-system-for-instructing-computers">Formal system for
+instructing computers</h3>
+<p>A programming language is a formal system for instructing computers
+to perform specific tasks. It provides a structured way to communicate
+with machines using a well-defined set of rules and conventions. These
+languages enable humans to express complex algorithms and computations
+in a way that computers can understand and execute.</p>
+<h3 id="syntax-and-semantics">Syntax and semantics</h3>
+<p>The <em>syntax</em> and <em>semantics</em> of a programming language
+form its core components. Syntax refers to the set of rules that define
+how programs are written, including grammar, punctuation, and structure.
+For example, in Python, the syntax for arithmetic expressions follows
+specific rules:</p>
+<ul>
+<li>Operators must be placed between operands: <code>2 + 3</code>
+(valid) vs <code>+ 2 3</code> (invalid)</li>
+<li>Parentheses must be balanced: <code>(2 + 3) * 4</code> (valid) vs
+<code>(2 + 3 * 4</code> (invalid)</li>
+<li>Operator precedence determines evaluation order:
+<code>2 + 3 * 4</code> evaluates to 14, not 20</li>
+</ul>
+<p>Semantics, on the other hand, determines the meaning of these
+syntactically correct programs and how they behave when executed.</p>
+<p>Here’s an example of a semantic valuation function for arithmetic
+expressions:</p>
+<blockquote>
+<p><code>V</code> is the semantic evaluation function that maps
+syntactic expressions to their computed values</p>
+</blockquote>
+<ul>
+<li>Define valuation function <code>V(expr)</code>:
+<ul>
+<li>Input: <code>expr</code> (arithmetic expression)</li>
+<li>Output: integer result</li>
+</ul></li>
+<li>Handle different expression types:
+<ul>
+<li>If <code>expr</code> is a number:
+<ul>
+<li>Return the number’s value</li>
+</ul></li>
+<li>If <code>expr</code> is of form <code>(a + b)</code>:
+<ul>
+<li>If <code>type(V(a))</code> and <code>type(V(b))</code> are numeric:
+Return <code>V(a) + V(b)</code></li>
+<li>Else: raise <code>TypeError</code></li>
+</ul></li>
+<li>If <code>expr</code> is of form <code>(a - b)</code>:
+<ul>
+<li>If <code>type(V(a))</code> and <code>type(V(b))</code> are numeric:
+Return <code>V(a) - V(b)</code></li>
+<li>Else: raise <code>TypeError</code></li>
+</ul></li>
+<li>If <code>expr</code> is of form <code>(a * b)</code>:
+<ul>
+<li>If <code>type(V(a))</code> and <code>type(V(b))</code> are numeric:
+Return <code>V(a) * V(b)</code></li>
+<li>Else: raise <code>TypeError</code></li>
+</ul></li>
+<li>If <code>expr</code> is of form <code>(a / b)</code>:
+<ul>
+<li>If <code>type(V(a))</code> and <code>type(V(b))</code> are numeric:
+<ul>
+<li>If <code>V(b) == 0</code>: raise
+<code>DivisionByZeroError</code></li>
+<li>Else: Return <code>V(a) / V(b)</code></li>
+</ul></li>
+<li>Else: raise <code>TypeError</code></li>
+</ul></li>
+</ul></li>
+</ul>
+<ol start="4" type="1">
+<li>Handle operator precedence:
+<ul>
+<li>Multiplication and division have higher precedence than addition and
+subtraction; this is usually decided by the grammar of the language and
+the parser</li>
+<li>Parentheses override default precedence; program semantics is
+responsible for this</li>
+</ul></li>
+</ol>
+<p>Example evaluation: Let’s evaluate the expression
+<code>(2 + 3) * 4</code> using our valuation function:</p>
+<ol type="1">
+<li>Parse the expression into its components:
+<ul>
+<li>Outer operation: <code>*</code></li>
+<li>Left operand: <code>(2 + 3)</code></li>
+<li>Right operand: <code>4</code></li>
+</ul></li>
+<li>Evaluate the left operand <code>(2 + 3)</code>:
+<ul>
+<li>Parse the sub-expression:
+<ul>
+<li>Operation: <code>+</code></li>
+<li>Left operand: <code>2</code></li>
+<li>Right operand: <code>3</code></li>
+</ul></li>
+<li>Apply the addition rule:
+<ul>
+<li><code>V(2)</code> returns 2</li>
+<li><code>V(3)</code> returns 3</li>
+<li><code>V(2 + 3)</code> returns <code>2 + 3 = 5</code></li>
+</ul></li>
+</ul></li>
+<li>Evaluate the right operand <code>4</code>:
+<ul>
+<li><code>V(4)</code> returns 4</li>
+</ul></li>
+<li>Apply the multiplication rule:
+<ul>
+<li><code>V((2 + 3) * 4)</code> returns <code>5 * 4 = 20</code></li>
+</ul></li>
+</ol>
+<p>Final result: 20</p>
+<h3 id="bridge-between-human-thought-and-machine-execution">Bridge
+between human thought and machine execution</h3>
+<p>Programming languages serve as a crucial bridge between human thought
+and machine execution. They allow developers to express abstract ideas
+and problem-solving strategies in a format that can be translated into
+machine code. This translation enables computers to perform complex
+operations and solve real-world problems efficiently.</p>
+<p>The world of programming languages is vast and diverse, encompassing
+general-purpose languages like Python and Java, domain-specific
+languages like SQL and HTML, and even languages embedded in applications
+like Microsoft Word macros and Excel formulas. This diversity
+demonstrates how programming languages have become fundamental tools in
+virtually every aspect of modern computing.</p>
+<h3 id="everything-is-a-formal-language">Everything is a formal
+language</h3>
+<p>The concept of formal languages extends beyond traditional
+programming languages. Everything from mathematical notation to musical
+scores are formal languages, as they all provide structured systems for
+expressing and communicating complex ideas in a
+<strong>machine-executable</strong> format.</p>
+<p>Most computer programs have a notion of “document” or “project”,
+which is a collection of files that are used to create a larger work.
+These documents are essentially formal languages, as they are structured
+systems for expressing and communicating complex ideas. The user
+interface of a program helps building these documents (the syntax) and
+the program itself interprets these documents (the semantics).</p>
+<p>This broader perspective helps us understand the fundamental role of
+formal systems in human-computer interaction and information
+processing.</p>
+<h3 id="programming-language-design-and-the-ai-era">Programming language
+design and the AI era</h3>
+<p>The advent of artificial intelligence is reshaping the landscape of
+programming language design in profound ways. As AI systems become more
+sophisticated, they’re influencing both how we design languages and how
+we interact with them.</p>
+<p>Let’s first establish a key point: AI enables a conversational
+programming interface does not mean “no code”. Rather, AI can help
+creating a computer program, which however the human must understand and
+eventually modify. This is needed to create and execute <em>unambiguous
+instructions</em>.</p>
+<p><strong>How can anyone (AI or human) ever prove that it has executed
+a task correctly, if the task is not well defined?</strong></p>
+<p>As an example, the reader can consider ComfyUI, which uses a
+graph-based, low-code, but still completely formal language to create
+and execute complex generative AI tasks. See https://www.comfy.org/</p>
+<p>Indeed, AI is nevertheless changing the way we program, and
+therefore, will inevitably also change the landscape of programming
+language design. Among the things that are changing, we find:</p>
+<ul>
+<li><strong>AI-Assisted Development</strong>:
+<ul>
+<li>AI-powered code completion and suggestion tools are becoming
+integral to modern IDEs</li>
+<li>AI can help identify potential bugs and suggest optimizations</li>
+<li>Natural language processing enables <strong>conversational</strong>
+programming interfaces</li>
+</ul></li>
+<li><strong>AI-Driven Language Evolution</strong>:
+<ul>
+<li>AI can analyze code patterns to suggest language improvements</li>
+<li>Automated testing of language features and syntax changes</li>
+<li>AI-assisted language standardization and documentation</li>
+</ul></li>
+<li><strong>Future Directions</strong>:
+<ul>
+<li>Integration of natural language processing into language design</li>
+<li><strong>Development of AI-specific type systems and
+semantics</strong></li>
+<li>Creation of languages that can evolve and adapt autonomously &lt;–
+this was actually suggested by the DeepSeek AI.</li>
+</ul></li>
+</ul>
+<p>As we move forward, the relationship between AI and programming
+language design will continue to deepen, creating new opportunities and
+challenges for language designers and developers alike.</p>
+<p>But the most fundamental, key consideration is that languages need to
+be designed for both human and AI comprehension. They serve, and will
+always serve, as a bridge between human thought and machine
+execution.</p>
+<p>Mathematics, as a prime example of a formal language, has been
+invented by humans, but it has always been used by both humans and
+machines; it is a universal language to express and reason about complex
+ideas.</p>
+<p>So will be (more and more declarative, more and more high-level)
+programming languages, as they will be used by both humans and AI
+systems to formalise complex processes and avoid ambiguity, which is the
+key issue for both human-driven and ai-driven process design and
+execution.</p>
+<h2 id="section-2-key-design-considerations">Section 2: Key Design
+Considerations</h2>
+<ul>
+<li>Expressiveness and power</li>
+<li>Imperative or Functional?</li>
+<li>Scoping rules</li>
+<li>Memory management</li>
+<li>Error handling mechanisms</li>
+</ul>
+<h3 id="expressiveness-and-power">Expressiveness and Power</h3>
+<p>A language’s expressiveness refers to its ability to concisely
+represent complex ideas and operations. More expressive languages allow
+developers to achieve more with less code, although this sometimes comes
+at the cost of readability and maintainability. The power of a language
+is closely related to its expressiveness, but also includes its
+computational capabilities and the range of problems it can effectively
+solve. Modern languages like Python strike a balance between
+expressiveness and clarity.</p>
+<h3 id="imperative-functional-object-oriented-declarative-reactive">Imperative,
+Functional, Object-Oriented, Declarative, Reactive?</h3>
+<p>Programming languages can be designed around different paradigms,
+each with its own strengths and trade-offs. The imperative paradigm
+focuses on explicit control flow and state changes, while functional
+programming emphasizes immutability and pure functions. Object-oriented
+programming organizes code around objects and their interactions, and
+declarative programming focuses on what to achieve rather than how to
+achieve it. Reactive (a.k.a. “dataflow”) programming deals with data
+streams and change propagation, making it particularly suitable for
+modern user interfaces. The choice of paradigm depends on the problem
+domain, with many modern languages supporting multiple paradigms to
+provide flexibility in solving different types of problems.</p>
+<h3 id="application-domains">Application domains</h3>
+<h3 id="application-domains-1">Application domains</h3>
+<p>Programming languages are often designed with specific application
+domains in mind, tailoring their features and capabilities to particular
+problem spaces. Some notable examples include:</p>
+<ul>
+<li><strong>Web Development</strong>:
+<ul>
+<li>JavaScript/TypeScript: The backbone of modern web development,
+enabling interactive front-end experiences and server-side
+applications</li>
+<li>Svelte: A modern framework for building efficient web applications
+with a compiler-based approach</li>
+<li>PHP: Widely used for server-side web development and content
+management systems</li>
+</ul></li>
+<li><strong>Scientific Computing</strong>:
+<ul>
+<li>Python: With libraries like NumPy, SciPy, and Pandas, it’s become a
+dominant language for data analysis and scientific computing</li>
+<li>MATLAB: Specialized for numerical computing and matrix
+operations</li>
+<li>R: Designed for statistical computing and data visualization</li>
+</ul></li>
+<li><strong>AI and Machine Learning</strong>:
+<ul>
+<li>Python: The de facto language for AI/ML with frameworks like
+TensorFlow and PyTorch</li>
+<li>Julia: Gaining popularity for high-performance scientific computing
+and machine learning</li>
+</ul></li>
+<li><strong>Music and Multimedia</strong>:
+<ul>
+<li>Max/MSP: A visual programming language for music and multimedia</li>
+<li>Pure Data: An open-source alternative for real-time audio and video
+processing</li>
+<li>SuperCollider: A language for audio synthesis and algorithmic
+composition</li>
+</ul></li>
+<li><strong>Mathematical Computing</strong>:
+<ul>
+<li>Mathematica: A powerful system for symbolic mathematics and
+technical computing</li>
+<li>Maple: Another computer algebra system for mathematical problem
+solving</li>
+</ul></li>
+<li><strong>Systems Programming</strong>:
+<ul>
+<li>C/C++: The foundation for operating systems and performance-critical
+applications</li>
+<li>Rust: A modern systems programming language focusing on safety and
+concurrency</li>
+</ul></li>
+<li><strong>Mobile Development</strong>:
+<ul>
+<li>Swift: Apple’s language for iOS and macOS development</li>
+<li>Kotlin: The preferred language for Android development</li>
+</ul></li>
+</ul>
+<p>Each domain-specific language or framework brings specialized
+features and abstractions that make it particularly suited for its
+target application area, while general-purpose languages like Python and
+Java find use across multiple domains.</p>
+<h3 id="scoping-rules">Scoping Rules</h3>
+<p>Scoping rules determine how and where variables and functions are
+accessible within a program. Lexical (static) scoping, used in most
+modern languages, determines variable visibility based on the program’s
+structure. Dynamic scoping, less common today, but used in operating
+system shells, determines visibility based on the program’s execution
+state. Proper scoping rules are crucial for managing complexity,
+preventing naming conflicts, and supporting modular programming.
+Python’s scoping rules, with their global, nonlocal, and local scopes,
+provide a good example of how scoping can be implemented
+effectively.</p>
+<h3 id="memory-management">Memory Management</h3>
+<p>Memory management is a critical aspect of language design that
+affects both performance and developer productivity. Languages can be
+manual (like C), garbage-collected (like Java and Python), or use
+reference counting (like Python and Swift). The choice of memory
+management strategy impacts the language’s runtime performance, memory
+safety, and the complexity of writing correct programs. Modern languages
+often provide automatic memory management while allowing manual control
+when needed for performance optimization.</p>
+<h3 id="error-handling-mechanisms">Error Handling Mechanisms</h3>
+<p>Error handling is essential for building robust and reliable
+software. Languages implement various error handling strategies,
+including exceptions (like in Python and Java), return codes (like in
+C), and monadic error handling (like in Haskell). The choice of error
+handling mechanism affects how easily developers can write correct code
+and how gracefully programs can recover from unexpected situations.
+Python’s exception handling system (similarly to other
+object-orientedlanguages), with its try/except blocks and exception
+hierarchy, is widely regarded as both powerful and intuitive.</p>
+<h2 id="section-3-language-paradigms">Section 3: Language Paradigms</h2>
+<ul>
+<li>Imperative (C, Python)</li>
+<li>Object-Oriented (Java, C#)</li>
+<li>Functional (Haskell, Lisp)</li>
+<li>Logical (Prolog)</li>
+<li>Declarative (SQL, VoxLogicA)</li>
+<li>Reactive (React, Svelte, Vue)</li>
+</ul>
+<h3 id="imperative-c-python">Imperative (C, Python)</h3>
+<p>Imperative programming is one of the most common programming
+paradigms, focusing on describing how a program operates through a
+sequence of statements that change a program’s state. Languages like C
+and Python follow this approach, where developers explicitly specify the
+steps needed to achieve a result. This paradigm is particularly useful
+for tasks that require precise control over program flow and memory
+management. However, it can lead to complex code when dealing with large
+systems, as the focus on state changes can make reasoning about program
+behavior more challenging.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode pascal"><code class="sourceCode pascal"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pseudo-code example of imperative programming: </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Calculating factorial</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> factorial(n):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Initialize a variable to store the result</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    result = <span class="dv">1</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use a loop to iteratively calculate factorial</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> i from <span class="dv">1</span> <span class="kw">to</span> n:</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        result = result * i</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Return the final calculated value</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    return result</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Example usage</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>number = <span class="dv">5</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>factorialOfNumber = factorial(number)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>print(&quot;Factorial of&quot;, number, &quot;is&quot;, factorialOfNumber)</span></code></pre></div>
+<h3 id="object-oriented-java-c">Object-Oriented (Java, C#)</h3>
+<p>Object-oriented programming (OOP) organizes software design around
+data, or objects, rather than functions and logic. Languages like Java
+and C# are built around this paradigm, which emphasizes concepts like
+encapsulation, inheritance, and polymorphism. OOP is particularly
+effective for modeling real-world systems and managing complex software
+projects through modular design. However, it can introduce complexity
+through deep inheritance hierarchies and can sometimes lead to
+over-engineering of simple problems.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode pascal"><code class="sourceCode pascal"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pseudo-code example of object-oriented programming with subclassing</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Animal:</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Base class with common attributes and methods</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    name: <span class="dt">String</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    age: <span class="dt">Integer</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constructor</span>(name, age):</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        this.name = name</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        this.age = age</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    method makeSound():</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        print(&quot;Generic animal sound&quot;)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    method describe():</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        print(&quot;Name:&quot;, this.name, &quot;Age:&quot;, this.age)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Dog(Animal):</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Subclass inheriting from Animal</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    breed: <span class="dt">String</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constructor</span>(name, age, breed):</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Call parent constructor</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        super(name, age)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        this.breed = breed</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Override parent method</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    method makeSound():</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        print(&quot;Woof! Woof!&quot;)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    method describe():</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Extended description specific to Dog</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        super.describe()</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        print(&quot;Breed:&quot;, this.breed)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">// Example usage</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>myDog = Dog(&quot;Buddy&quot;, <span class="dv">3</span>, &quot;Labrador&quot;)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>myDog.describe()    <span class="co">// Prints dog&#39;s details</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>myDog.makeSound()   <span class="co">// Prints dog-specific sound</span></span></code></pre></div>
+<h3 id="functional-haskell-lisp">Functional (Haskell, Lisp)</h3>
+<p>Functional programming treats computation as the evaluation of
+mathematical functions and avoids changing-state and mutable data.
+Languages like Haskell and Lisp embody this paradigm, emphasizing pure
+functions, immutability, and higher-order functions. This approach can
+lead to more predictable and testable code, as functions with no side
+effects are easier to reason about. However, it can be challenging for
+developers accustomed to imperative programming and may require a
+different way of thinking about problem-solving.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode fsharp"><code class="sourceCode fsharp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>//<span class="co"> Pseudo-code example of functional programming with immutability and higher-order functions</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>//<span class="co"> Pure function: deterministic and without side effects</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> square<span class="op">(</span>x<span class="op">)</span> -&gt; Number:</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> x * x</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>//<span class="co"> Higher-order function: transforms a list using a given function</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> map<span class="op">(</span>list, transform<span class="op">)</span> -&gt; List:</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">match</span> list:</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        | Empty -&gt; <span class="op">[]</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        | <span class="op">[</span>Head | Tail<span class="op">]</span> -&gt; </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            <span class="op">[</span>transform<span class="op">(</span>Head<span class="op">)]</span> ++ map<span class="op">(</span>Tail, transform<span class="op">)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>//<span class="co"> Immutable data and functional transformation</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> numbers = <span class="op">[</span><span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span><span class="op">]</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> squaredNumbers = map<span class="op">(</span>numbers, square<span class="op">)</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>//<span class="co"> Function composition as a first-class operation</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> compose<span class="op">(</span>f, g<span class="op">)</span> -&gt; Function:</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> λx: f<span class="op">(</span>g<span class="op">(</span>x<span class="op">))</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>//<span class="co"> Recursive function using tail-call optimization</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> factorial<span class="op">(</span>n, accumulator = <span class="dv">1</span><span class="op">)</span> -&gt; Number:</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">match</span> n:</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        | <span class="dv">0</span> -&gt; accumulator</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        | _ -&gt; factorial<span class="op">(</span>n - <span class="dv">1</span>, n * accumulator<span class="op">)</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>//<span class="co"> Functional application demonstrating composition</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result = compose<span class="op">(</span>square, factorial<span class="op">)(</span><span class="dv">3</span><span class="op">)</span>  //<span class="co"> Computes factorial then squares</span></span></code></pre></div>
+<h3 id="logical-prolog">Logical (Prolog)</h3>
+<p>Logical programming is based on formal logic, where programs consist
+of a set of facts and rules. Prolog is the most well-known language in
+this paradigm, where computation is performed by querying these facts
+and rules. This approach is particularly useful for problems involving
+symbolic computation, artificial intelligence, and knowledge
+representation. However, it can be less efficient for general-purpose
+programming tasks and may require a different mindset from traditional
+programming approaches.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">//</span> <span class="dt">Pseudo</span><span class="fu">-</span>code example of logical programming with <span class="dt">Prolog</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">//</span> <span class="dt">Facts</span> about family relationships</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">//</span> <span class="dt">Facts</span> about family relationships</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>parent(john<span class="kw">,</span> mary)<span class="kw">.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>parent(john<span class="kw">,</span> tom)<span class="kw">.</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>parent(mary<span class="kw">,</span> alice)<span class="kw">.</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">//</span> <span class="dt">Rules</span> for determining family relationships</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>grandparent(<span class="dt">X</span><span class="kw">,</span> <span class="dt">Z</span>) <span class="kw">:-</span> parent(<span class="dt">X</span><span class="kw">,</span> <span class="dt">Y</span>)<span class="kw">,</span> parent(<span class="dt">Y</span><span class="kw">,</span> <span class="dt">Z</span>)<span class="kw">.</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>sibling(<span class="dt">X</span><span class="kw">,</span> <span class="dt">Y</span>) <span class="kw">:-</span> parent(<span class="dt">P</span><span class="kw">,</span> <span class="dt">X</span>)<span class="kw">,</span> parent(<span class="dt">P</span><span class="kw">,</span> <span class="dt">Y</span>)<span class="kw">,</span> <span class="dt">X</span> <span class="kw">\=</span> <span class="dt">Y</span><span class="kw">.</span></span></code></pre></div>
+<h3 id="declarative-sql">Declarative (SQL)</h3>
+<p>Declarative programming focuses on what the program should accomplish
+rather than how to achieve it. Languages like SQL follow this paradigm,
+where developers specify the desired results rather than the
+step-by-step process to achieve them. This approach can lead to more
+concise and maintainable code, especially for data manipulation and
+querying tasks. However, it may provide less control over the underlying
+implementation details and can be less suitable for tasks requiring
+precise control over program execution. This does <em>not</em> mean that
+declarative programming is “less efficient”; quite the opposite, an SQL
+<em>query execution plan</em> can be highly optimised by the database
+engine, and be way more efficient than handwritten code.</p>
+<p>See also the voxlogica project: http://www.voxlogica.org</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Pseudo-code example of declarative programming with SQL</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- Define a table for employees</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> employees (</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    name <span class="dt">VARCHAR</span>(<span class="dv">100</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    department <span class="dt">VARCHAR</span>(<span class="dv">50</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    salary <span class="dt">DECIMAL</span>(<span class="dv">10</span>, <span class="dv">2</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    hire_date <span class="dt">DATE</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="op">//</span> <span class="kw">Insert</span> <span class="kw">sample</span> records</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> employees (name, department, salary, hire_date) <span class="kw">VALUES</span> </span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;John Doe&#39;</span>, <span class="st">&#39;Engineering&#39;</span>, <span class="fl">75000.00</span>, <span class="st">&#39;2022-01-15&#39;</span>),</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;Jane Smith&#39;</span>, <span class="st">&#39;Marketing&#39;</span>, <span class="fl">65000.50</span>, <span class="st">&#39;2021-11-03&#39;</span>);</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">//</span> Example <span class="kw">query</span> <span class="kw">to</span> demonstrate declarative programming</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> name, department, salary </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> employees </span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> department <span class="op">=</span> <span class="st">&#39;Engineering&#39;</span> </span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> salary <span class="kw">DESC</span>;</span></code></pre></div>
+<h3 id="reactive-react-svelte-vue">Reactive (React, Svelte, Vue)</h3>
+<p>Reactive programming is a paradigm that focuses on data flows and the
+propagation of change. Languages and frameworks like React, Svelte, and
+Vue implement this approach, where the UI automatically updates in
+response to changes in the underlying data. This paradigm is
+particularly effective for building modern web applications and user
+interfaces, as it simplifies the management of complex state changes and
+UI updates. Reactive programming often uses concepts like observables,
+streams, and declarative bindings to create responsive and efficient
+applications. While powerful for UI development, it can introduce
+complexity in managing state across large applications and may require
+specific architectural patterns to maintain code organization.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    $<span class="op">:</span> doubled <span class="op">=</span> count <span class="op">*</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">function</span> <span class="fu">increment</span>() {</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        count <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">button</span> <span class="er">on:click</span><span class="ot">=</span><span class="st">{increment}</span><span class="dt">&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    Count: {count} (Doubled: {doubled})</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span></code></pre></div>
+<h2 id="section-4-implementation-concerns">Section 4: Implementation
+Concerns</h2>
+<ul>
+<li>Compilation vs. Interpretation</li>
+<li>Memory management</li>
+<li>Garbage collection</li>
+<li>Runtime environment</li>
+<li>Performance optimization</li>
+</ul>
+<h3 id="compilation-vs.-interpretation">Compilation
+vs. Interpretation</h3>
+<p>The choice between compilation and interpretation is a fundamental
+decision in language implementation. Compiled languages (like C and
+Rust) translate source code into machine code before execution,
+resulting in faster runtime performance but requiring a separate
+compilation step. Interpreted languages (like Python and JavaScript)
+execute code directly through an interpreter, enabling faster
+development cycles and platform independence but typically with slower
+execution speeds. Many modern languages (like Java and C#) use a hybrid
+approach, compiling to an intermediate bytecode that is then interpreted
+or just-in-time (JIT) compiled, offering a balance between performance
+and flexibility.</p>
+<h3 id="memory-management-1">Memory Management</h3>
+<p>Memory management is crucial for both performance and safety in
+programming languages. Manual memory management, as seen in C and C++,
+gives developers fine-grained control but increases the risk of memory
+leaks and segmentation faults. Automatic memory management through
+garbage collection, used in Java and Python, simplifies development by
+automatically reclaiming unused memory but can introduce unpredictable
+pauses in program execution. Reference counting, another automatic
+approach used in Python and Swift, provides more predictable memory
+reclamation but can struggle with circular references.</p>
+<h3 id="garbage-collection">Garbage Collection</h3>
+<p>Garbage collection is a critical component of automatic memory
+management, responsible for reclaiming unused memory. Different garbage
+collection algorithms (like mark-and-sweep, generational, and reference
+counting) offer various trade-offs between throughput, latency, and
+memory efficiency. Languages like Java and C# use sophisticated garbage
+collectors that can be tuned for specific workloads, while languages
+like Go use concurrent garbage collection to minimize pause times. The
+choice of garbage collection strategy significantly impacts a language’s
+performance characteristics and suitability for different application
+domains, from real-time systems to long-running server applications.</p>
+<h3 id="runtime-environment">Runtime Environment</h3>
+<p>The runtime environment provides essential services for program
+execution, including memory management, type checking, and security
+features. Managed runtime environments, like the Java Virtual Machine
+(JVM) and .NET Common Language Runtime (CLR), offer platform
+independence and additional safety features but introduce overhead.
+Native runtime environments, as used in C and Rust, provide direct
+access to system resources but require more careful programming. Modern
+runtime environments often include features like just-in-time
+compilation, dynamic optimization, and extensive standard libraries to
+improve performance and developer productivity.</p>
+<p>A special mention goes to HTML5, the latest version of the Hypertext
+Markup Language, which provides a runtime environment for web
+applications. It includes features like local storage, web workers, and
+web sockets, enabling developers to create more powerful and responsive
+web applications. HTML5 also supports offline applications, multimedia,
+and advanced graphics, making it a versatile runtime environment for
+modern web development and also for desktop applications, thanks to
+frameworks such as Electron or Tauri.</p>
+<h3 id="performance-optimization">Performance Optimization</h3>
+<p>Performance optimization in programming languages involves various
+techniques at different levels of the implementation stack. Compiler
+optimizations, such as inlining, loop unrolling, and dead code
+elimination, can significantly improve execution speed without changing
+the source code. Runtime optimizations, like JIT compilation and
+adaptive optimization, can dynamically improve performance based on
+actual usage patterns. Language designers must balance optimization
+opportunities with compilation speed, memory usage, and the complexity
+of the implementation. Modern languages often provide profiling tools
+and optimization flags to help developers identify and address
+performance bottlenecks in their code.</p>
+<h2 id="section-5-syntax-and-semantics">Section 5: Syntax and
+Semantics</h2>
+<ul>
+<li>Syntax: Rules for valid program structure</li>
+<li>Semantics: Meaning of valid programs</li>
+<li>Abstract Syntax Trees (AST)</li>
+<li>Context-free grammars</li>
+<li>Parsing techniques</li>
+</ul>
+<h3 id="syntax-rules-for-valid-program-structure">Syntax: Rules for
+valid program structure</h3>
+<p>Syntax defines the formal rules that govern how programs are written
+in a language. It specifies the valid combinations of symbols, keywords,
+and structures that constitute a well-formed program. Syntax rules are
+typically defined using formal grammars, such as context-free grammars,
+which provide a precise specification of the language’s structure. These
+rules determine everything from basic elements like variable
+declarations and function definitions to more complex constructs like
+control flow statements and class definitions. While syntax rules are
+often rigid, many modern languages include syntactic sugar - features
+that make the language more expressive and easier to use without
+changing its fundamental capabilities.</p>
+<h3 id="semantics-meaning-of-valid-programs">Semantics: Meaning of valid
+programs</h3>
+<p>Semantics defines the meaning of syntactically valid programs - what
+happens when a program is executed. While syntax determines whether a
+program is well-formed, semantics determines what the program actually
+does. There are different approaches to defining semantics, including
+operational semantics (describing how a program executes), denotational
+semantics (mapping programs to mathematical objects), and axiomatic
+semantics (describing program behavior through logical assertions).
+Understanding semantics is crucial for writing correct programs, as it
+helps developers predict how their code will behave and ensures that
+programs produce the intended results.</p>
+<h3 id="context-free-grammars">Context-free grammars</h3>
+<p>Context-free grammars (CFGs) are formal systems used to describe the
+syntax of programming languages. They consist of a set of production
+rules that define how symbols in the language can be combined. CFGs are
+particularly useful because they can be parsed efficiently and provide a
+clear, mathematical foundation for language design. They consist of
+terminal symbols (the actual characters/tokens in the language),
+non-terminal symbols (abstract syntactic categories), and production
+rules (how non-terminals can be expanded into sequences of terminals and
+other non-terminals). While CFGs are powerful, some language features
+(like indentation-sensitive syntax in Python) require extensions to the
+basic CFG model.</p>
+<h3 id="parsing-techniques">Parsing techniques</h3>
+<p>Parsing is the process of analyzing a sequence of tokens to determine
+its grammatical structure according to a given formal grammar. There are
+several parsing techniques used in language implementation, including
+top-down parsing (like recursive descent) and bottom-up parsing (like LR
+parsing). Top-down parsers build the parse tree from the root down to
+the leaves, while bottom-up parsers work from the leaves up to the root.
+Modern language implementations often use parser generators (like ANTLR
+or Yacc) that can automatically generate efficient parsers from a
+grammar specification. The choice of parsing technique can affect both
+the performance of the language implementation and the complexity of the
+grammar that can be supported.</p>
+<h3 id="abstract-syntax-trees-ast">Abstract Syntax Trees (AST)</h3>
+<p>An Abstract Syntax Tree (AST) is a tree representation of the
+syntactic structure of source code. It abstracts away from the concrete
+syntax (like punctuation and specific keywords) and focuses on the
+essential structure of the program. ASTs are used extensively in
+compilers and interpreters, as they provide a convenient intermediate
+representation for performing various transformations and analyses. Each
+node in the tree represents a construct occurring in the source code,
+with the children of the node representing its components. ASTs are
+particularly useful for implementing features like syntax highlighting,
+code formatting, and static analysis tools.</p>
+<p>Example of a parse tree:</p>
+<pre><code>    Expr
+   /  |  \
+  3   +   Expr
+         /   |   \
+        (    Expr   )
+            /  |  \
+           4   *   5</code></pre>
+<p>Example of an AST:</p>
+<pre><code>  (+)
+ /   \
+ 3     (*)
+        /   \
+       4     5</code></pre>
+<p>Normally there is a translation step between the parse tree and the
+AST.</p>
+<h2 id="section-6-type-systems">Section 6: Type Systems</h2>
+<ul>
+<li>Static vs. Dynamic typing</li>
+<li>Strong vs. Weak typing</li>
+<li>Type inference</li>
+<li>Type safety</li>
+<li>Generics and polymorphism</li>
+<li>Union and intersection types</li>
+</ul>
+<h3 id="static-vs.-dynamic-typing">Static vs. Dynamic typing</h3>
+<p>Static typing requires variable types to be explicitly declared and
+checked at compile time, while dynamic typing determines types at
+runtime. Statically typed languages like Java and C++ provide early
+error detection and better tooling support, but can be more verbose.
+Dynamically typed languages like Python and JavaScript offer more
+flexibility and faster development cycles, but may lead to runtime
+errors that could have been caught earlier. The choice between static
+and dynamic typing often depends on the project’s requirements and the
+development team’s preferences.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example of static typing in Java</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">class</span> Main <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span><span class="op">(</span><span class="bu">String</span><span class="op">[]</span> args<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Explicit type declaration required</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> number <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>          <span class="co">// &#39;number&#39; is statically typed as int</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">String</span> text <span class="op">=</span> <span class="st">&quot;Hello&quot;</span><span class="op">;</span>    <span class="co">// &#39;text&#39; is statically typed as String</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Type checking at compile time</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// number = &quot;Hello&quot;;      // This would cause a compile-time error</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// text = 42;            // This would also cause a compile-time error</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">println</span><span class="op">(</span>number <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> text<span class="op">);</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example of dynamic typing in Python</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> main():</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># No explicit type declaration</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="dv">42</span>          <span class="co"># &#39;value&#39; is initially an integer</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="bu">type</span>(value))  <span class="co"># Output: &lt;class &#39;int&#39;&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="st">&quot;Hello&quot;</span>     <span class="co"># &#39;value&#39; is now a string</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="bu">type</span>(value))  <span class="co"># Output: &lt;class &#39;str&#39;&gt;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="fl">3.14</span>        <span class="co"># &#39;value&#39; is now a float</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="bu">type</span>(value))  <span class="co"># Output: &lt;class &#39;float&#39;&gt;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    main()</span></code></pre></div>
+<h3 id="strong-vs.-weak-typing">Strong vs. Weak typing</h3>
+<p>Strong typing enforces strict type rules and prevents implicit type
+conversions, while weak typing allows more flexible type handling.
+Strongly typed languages like CSharp, Java, FSharp and Haskell help
+prevent type-related bugs and make code more predictable, but can
+require more explicit type conversion code. Weakly typed languages like
+JavaScript and PHP can be more convenient for quick scripting but may
+lead to unexpected behavior due to implicit type coercion. The strength
+of a type system affects how easily developers can reason about code
+behavior and maintain type safety.</p>
+<p>A modern trend in language design is to delegate strong type checking
+to the editor, which highlights type errors at compile time. This is in
+contrast to languages like C# or Java, where the compiler performs the
+type checking. A poorly typed program will still run, which may be a
+balanced choice for development. Note that industrial programming
+environments also require programmers to write unit tests, which can
+help catch errors, and also in that case, programs can be executed
+(e.g. for debugging) also when tests are not passing.
+Typing-in-the-editor is somehow aligned to testing in this respect.</p>
+<h3 id="type-inference">Type inference</h3>
+<p>Type inference allows the compiler to automatically deduce types
+based on context, reducing the need for explicit type annotations.
+Languages like Haskell use sophisticated type inference systems that can
+often determine types without explicit declarations. This feature
+combines the benefits of static typing with the convenience of dynamic
+typing, making code more concise while maintaining type safety. However,
+complex type inference can sometimes make error messages harder to
+understand and may require explicit type annotations in certain
+cases.</p>
+<h3 id="generics-and-polymorphism">Generics and polymorphism</h3>
+<p>Generics allow writing code that works with multiple types while
+maintaining type safety, while polymorphism enables objects to take on
+multiple forms. Languages like Java and C#, and functional languages
+like OCaml, Haskell, FSharp, use generics to create reusable, type-safe
+components, while polymorphism allows for more flexible and extensible
+designs. These features help reduce code duplication and create more
+maintainable systems, but can introduce complexity in understanding and
+implementing type hierarchies and generic constraints.</p>
+<h3 id="union-and-intersection-types">Union and intersection types</h3>
+<p>Union types allow a value to be one of several types, while
+intersection types combine multiple types into one. Languages like
+TypeScript and Python’s type system support these advanced type
+features, enabling more precise type definitions and better code
+documentation. Union types are particularly useful for handling multiple
+possible input types, while intersection types can describe objects that
+must satisfy multiple interfaces. These features enhance type safety and
+expressiveness but can increase the complexity of type checking and
+inference. Nevertheless, the expressivity of such type systems provides
+a strong foundational alternative to object-oriented programming, often
+resulting in more maintainable and scalable systems.</p>
+<h2 id="section-7-modern-language-trends">Section 7: Modern Language
+Trends</h2>
+<ul>
+<li>Concurrency and parallelism</li>
+<li>Functional programming features</li>
+<li>Type inference and safety</li>
+<li>Domain-specific languages</li>
+<li>Interoperability with other languages</li>
+</ul>
+<h3 id="concurrency-and-parallelism">Concurrency and Parallelism</h3>
+<p>Modern programming languages are increasingly focusing on concurrency
+and parallelism to handle the demands of multi-core processors and
+distributed systems. Concurrency allows multiple tasks to make progress
+simultaneously, while parallelism enables the execution of multiple
+tasks at the same time. Languages like Go and Rust have built-in support
+for concurrent programming through goroutines and async/await patterns,
+respectively. These features help developers write efficient, scalable
+applications that can take full advantage of modern hardware. However,
+managing shared state and avoiding race conditions remain significant
+challenges in concurrent programming, requiring careful design and the
+use of synchronization primitives.</p>
+<h3 id="asynchronous-programming">Asynchronous programming</h3>
+<p>Asynchronous programming has become a crucial feature in modern
+languages to handle I/O-bound operations and improve application
+responsiveness. Languages like JavaScript, Python, and C# provide
+async/await syntax to write asynchronous code that appears synchronous,
+making it easier to reason about and maintain. This approach allows
+programs to perform non-blocking operations, such as network requests or
+file I/O, without freezing the user interface or wasting CPU cycles, and
+at the same time avoiding the pitfalls and complexity of parallel
+semantics. Asynchronous programming models help create more efficient
+and responsive applications, particularly in web development and
+server-side programming, where handling multiple concurrent requests is
+essential. However, managing asynchronous code flow and error handling
+can introduce complexity, requiring careful design and the use of
+appropriate patterns and libraries.</p>
+<h3 id="functional-programming-features">Functional Programming
+Features</h3>
+<p>Functional programming concepts are being incorporated into many
+mainstream languages, bringing benefits like immutability, pure
+functions, and higher-order functions. Languages like Python,
+JavaScript, and C# now support features such as structured types, lambda
+expressions, map/filter/reduce operations, and pattern matching. These
+features enable developers to write more concise, declarative code and
+can lead to programs that are easier to reason about and test. The
+adoption of functional programming principles also promotes better code
+organization and can help reduce side effects, leading to more
+predictable program behavior.</p>
+<h3 id="type-inference-and-safety">Type Inference and Safety</h3>
+<p>Type systems in modern languages are becoming more sophisticated,
+with features like type inference reducing the need for explicit type
+annotations while maintaining type safety. Languages like TypeScript and
+Swift use type inference to automatically determine types based on
+context, making code more concise without sacrificing safety. Advanced
+type systems also include features like algebraic data types, type
+classes, and dependent types, which can catch more errors at compile
+time. These developments help create more robust software by preventing
+common runtime errors and making code more self-documenting.</p>
+<h3 id="domain-specific-languages">Domain-Specific Languages</h3>
+<p>Domain-specific languages (DSLs) are specialized programming
+languages designed for particular application domains. They offer
+higher-level abstractions and more expressive syntax for specific tasks,
+such as SQL for database queries or HTML for web page structure. Modern
+language design often includes facilities such as Algebraic Data Types
+(ADTs) or Monadic syntax (see also computation expressions in FSharp),
+for creating embedded DSLs within general-purpose languages, allowing
+developers to create custom syntax and semantics tailored to their
+specific needs. This approach combines the power of general-purpose
+programming with the convenience and expressiveness of domain-specific
+solutions.</p>
+<h3 id="interoperability-with-other-languages">Interoperability with
+Other Languages</h3>
+<p>As software systems become more complex, the ability to interoperate
+with code written in other languages has become increasingly important.
+Many modern languages provide foreign function interfaces (FFIs) or
+support for calling functions from other languages. For example,
+Python’s C API allows integration with C/C++ code, while WebAssembly
+enables running code from multiple languages in web browsers. This
+interoperability allows developers to leverage existing libraries and
+frameworks while still using their preferred language for new
+development, promoting code reuse and reducing development time.</p>
+<h1 id="lecture-1-types-and-pattern-matching-in-python">Lecture 1: Types
+and Pattern Matching in Python</h1>
+<p>This lecture introduces two powerful features of modern Python: the
+type system and structural pattern matching. These features not only
+make Python code more robust and maintainable but also serve as
+excellent examples of programming language design concepts.</p>
+<h2 id="learning-objectives">Learning Objectives</h2>
+<ul>
+<li>Understand Python’s type system and type hints</li>
+<li>Master structural pattern matching with match/case statements</li>
+<li>Learn about type checking and its benefits</li>
+<li>Apply these concepts in practical examples</li>
+</ul>
+<h2 id="type-system">Type System</h2>
+<h3 id="static-type-hints">Static Type Hints</h3>
+<ul>
+<li>Introduction to type annotations</li>
+<li>Built-in types: <code>int</code>, <code>str</code>,
+<code>list</code>, <code>dict</code>, etc.</li>
+<li>Complex types: <code>Union</code>, <code>Optional</code>,
+<code>Any</code></li>
+<li>Generic types and type variables</li>
+<li>Custom types and <code>TypeVar</code></li>
+</ul>
+<h3 id="type-checking">Type Checking</h3>
+<ul>
+<li>Using <code>mypy</code> for static type checking</li>
+<li>Runtime type checking considerations</li>
+<li>Type checking best practices</li>
+<li>Common type-related errors and how to fix them</li>
+</ul>
+<h2 id="structural-pattern-matching">Structural Pattern Matching</h2>
+<h3 id="basic-pattern-matching">Basic Pattern Matching</h3>
+<ul>
+<li>Introduction to <code>match</code> statement</li>
+<li>Simple patterns with literals</li>
+<li>Variable patterns</li>
+<li>Wildcard patterns (<code>_</code>)</li>
+</ul>
+<h3 id="advanced-patterns">Advanced Patterns</h3>
+<ul>
+<li>Sequence patterns</li>
+<li>Mapping patterns</li>
+<li>OR patterns (<code>|</code>)</li>
+<li>Guard clauses (<code>if</code>)</li>
+<li>Class patterns</li>
+</ul>
+<h2 id="practical-examples">Practical Examples</h2>
+<p>The accompanying Python module <code>types_and_matching.py</code>
+contains practical examples demonstrating: 1. Type hints in function
+definitions 2. Generic type usage 3. Pattern matching for data
+processing 4. Combining types and pattern matching</p>
+<h2 id="exercises">Exercises</h2>
+<ol type="1">
+<li>Implement a function that uses type hints and processes different
+data structures</li>
+<li>Create a pattern-matching based calculator</li>
+<li>Design a small type-safe data processing pipeline</li>
+</ol>
+<h2 id="additional-resources">Additional Resources</h2>
+<ul>
+<li><a href="https://mypy.readthedocs.io/en/stable/">Python Type
+Checking Guide</a></li>
+<li><a href="https://peps.python.org/pep-0484/">PEP 484 – Type
+Hints</a></li>
+<li><a href="https://peps.python.org/pep-0634/">PEP 634 – Structural
+Pattern Matching</a></li>
+</ul>
+<h1 id="lecture-2-parsing-with-parsimonious">Lecture 2: Parsing with
+Parsimonious</h1>
+<p>This lecture covers parsing concepts using the Parsimonious library,
+a pure-Python PEG parser library that makes it easy to write clean,
+maintainable parsers.</p>
+<h2 id="overview">Overview</h2>
+<ul>
+<li>Introduction to Parsing Expression Grammars (PEG)</li>
+<li>Working with Parsimonious</li>
+<li>Building a practical parser</li>
+<li>Understanding grammar rules and visitors</li>
+</ul>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Python 3.12</li>
+<li>parsimonious</li>
+</ul>
+<h2 id="running-the-examples">Running the Examples</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install parsimonious</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> parsing_examples.py</span></code></pre></div>
+</body>
+</html>

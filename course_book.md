@@ -1,3 +1,71 @@
+# Programming Language Design Workshop
+
+A hands-on course exploring programming language design concepts using Python's modern features. This course leverages Python's type system and structural pattern matching to demonstrate key programming language concepts and implementations.
+
+## Course Overview
+
+This workshop consists of 10 lectures (2 hours each) that combine theoretical foundations with practical implementations. Students will learn about programming language design principles while getting hands-on experience with Python's advanced features.
+
+## Course Structure
+
+### Lecture 1: Introduction to Programming Language Design
+- What is a programming language?
+- The importance of programming language design
+- The course structure and expectations
+- Python as a language for exploring language design concepts
+
+### Lecture 2: Types and Structural Pattern Matching in Python
+- Introduction to Python's type system
+- Type hints and type checking
+- Structural pattern matching (match/case statements)
+- Practical applications and examples
+
+### Lecture 3: Programming Language Fundamentals
+- What is a programming language?
+- Parsing and lexical analysis
+- Abstract Syntax Trees (AST)
+- Program semantics
+- Core language features
+- Theoretical foundations
+
+### Lecture 3: TBA
+
+### Lecture 4: TBA
+
+### Lecture 5: TBA
+
+### Lecture 6: TBA
+
+### Lecture 7: TBA
+
+### Lecture 8: TBA
+
+### Lecture 9: TBA
+
+### Lecture 10: TBA
+
+## Prerequisites
+- Python 3.10 or higher (for pattern matching support)
+- Basic Python programming knowledge
+- Understanding of basic programming concepts
+
+## Repository Structure
+Each lecture has its own directory containing:
+- A detailed README.md with lecture notes and exercises
+- Python modules with examples and implementations
+- Additional resources and references when applicable
+
+## Getting Started
+1. Clone this repository
+2. Ensure you have Python 3.10+ installed
+3. Navigate to the specific lecture directory
+4. Follow the instructions in each lecture's README.md
+
+## License
+[MIT License](LICENSE)
+
+\newpage
+
 # Chapter 1: Programming Language Design and Implementation
 
 ## Section 1: What is a Programming Language?
@@ -548,3 +616,84 @@ Domain-specific languages (DSLs) are specialized programming languages designed 
 
 ### Interoperability with Other Languages
 As software systems become more complex, the ability to interoperate with code written in other languages has become increasingly important. Many modern languages provide foreign function interfaces (FFIs) or support for calling functions from other languages. For example, Python's C API allows integration with C/C++ code, while WebAssembly enables running code from multiple languages in web browsers. This interoperability allows developers to leverage existing libraries and frameworks while still using their preferred language for new development, promoting code reuse and reducing development time.
+
+
+\newpage
+
+# Lecture 1: Types and Pattern Matching in Python
+
+This lecture introduces two powerful features of modern Python: the type system and structural pattern matching. These features not only make Python code more robust and maintainable but also serve as excellent examples of programming language design concepts.
+
+## Learning Objectives
+- Understand Python's type system and type hints
+- Master structural pattern matching with match/case statements
+- Learn about type checking and its benefits
+- Apply these concepts in practical examples
+
+## Type System
+### Static Type Hints
+- Introduction to type annotations
+- Built-in types: `int`, `str`, `list`, `dict`, etc.
+- Complex types: `Union`, `Optional`, `Any`
+- Generic types and type variables
+- Custom types and `TypeVar`
+
+### Type Checking
+- Using `mypy` for static type checking
+- Runtime type checking considerations
+- Type checking best practices
+- Common type-related errors and how to fix them
+
+## Structural Pattern Matching
+### Basic Pattern Matching
+- Introduction to `match` statement
+- Simple patterns with literals
+- Variable patterns
+- Wildcard patterns (`_`)
+
+### Advanced Patterns
+- Sequence patterns
+- Mapping patterns
+- OR patterns (`|`)
+- Guard clauses (`if`)
+- Class patterns
+
+## Practical Examples
+The accompanying Python module `types_and_matching.py` contains practical examples demonstrating:
+1. Type hints in function definitions
+2. Generic type usage
+3. Pattern matching for data processing
+4. Combining types and pattern matching
+
+## Exercises
+1. Implement a function that uses type hints and processes different data structures
+2. Create a pattern-matching based calculator
+3. Design a small type-safe data processing pipeline
+
+## Additional Resources
+- [Python Type Checking Guide](https://mypy.readthedocs.io/en/stable/)
+- [PEP 484 – Type Hints](https://peps.python.org/pep-0484/)
+- [PEP 634 – Structural Pattern Matching](https://peps.python.org/pep-0634/)
+
+
+\newpage
+
+# Lecture 2: Parsing with Parsimonious
+
+This lecture covers parsing concepts using the Parsimonious library, a pure-Python PEG parser library that makes it easy to write clean, maintainable parsers.
+
+## Overview
+- Introduction to Parsing Expression Grammars (PEG)
+- Working with Parsimonious
+- Building a practical parser
+- Understanding grammar rules and visitors
+
+## Requirements
+- Python 3.12
+- parsimonious
+
+## Running the Examples
+```bash
+pip install parsimonious
+python parsing_examples.py
+```
