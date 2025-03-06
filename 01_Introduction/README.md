@@ -1,7 +1,7 @@
 # Chapter 1: Programming Language Design and Implementation
 
 ## Section 1: What is a Programming Language?
-- Formal system for instructing computers
+- A formal system for instructing computers
 - Consists of syntax and semantics
 - Bridge between human thought and machine execution
 - Examples: Python, Java, C++, JavaScript, FSharp, Haskell, Microsoft Word, Excel, Ableton Live, Mathematica, LaTeX, HTML, CSS, SQL, ...

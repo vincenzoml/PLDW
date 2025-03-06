@@ -20,13 +20,10 @@ This workshop consists of 10 lectures (2 hours each) that combine theoretical fo
 - Structural pattern matching (match/case statements)
 - Practical applications and examples
 
-### Lecture 3: Programming Language Fundamentals
-- What is a programming language?
+### Lecture 3: Programming Language Implementation: A mini interpreter
 - Parsing and lexical analysis
 - Abstract Syntax Trees (AST)
 - Program semantics
-- Core language features
-- Theoretical foundations
 
 ### Lecture 3: TBA
 

@@ -3,6 +3,9 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
+    "mounts": [
+        "source=/,target=/host,type=bind"
+    ],
     "customizations": {
         "vscode": {
             "extensions": [
@@ -13,5 +16,5 @@
                 "streetsidesoftware.code-spell-checker"
             ]
         }
-    }    
-} 
+    }
+}

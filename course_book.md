@@ -20,13 +20,10 @@ This workshop consists of 10 lectures (2 hours each) that combine theoretical fo
 - Structural pattern matching (match/case statements)
 - Practical applications and examples
 
-### Lecture 3: Programming Language Fundamentals
-- What is a programming language?
+### Lecture 3: Programming Language Implementation: A mini interpreter
 - Parsing and lexical analysis
 - Abstract Syntax Trees (AST)
 - Program semantics
-- Core language features
-- Theoretical foundations
 
 ### Lecture 3: TBA
 
@@ -69,7 +66,7 @@ Each lecture has its own directory containing:
 # Chapter 1: Programming Language Design and Implementation
 
 ## Section 1: What is a Programming Language?
-- Formal system for instructing computers
+- A formal system for instructing computers
 - Consists of syntax and semantics
 - Bridge between human thought and machine execution
 - Examples: Python, Java, C++, JavaScript, FSharp, Haskell, Microsoft Word, Excel, Ableton Live, Mathematica, LaTeX, HTML, CSS, SQL, ...
