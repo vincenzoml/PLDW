@@ -5,8 +5,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Python, LaTeX, Pandoc and other tools
 RUN apt-get update && apt-get install -y \
-    python3.12 \
-    python3.12-venv \
+    python3.13 \
+    python3.13-venv \
     python3-pip \
     git \
     curl \
@@ -16,4 +16,3 @@ RUN apt-get update && apt-get install -y \
     texlive-fonts-extra \
     texlive-latex-extra \
     fonts-dejavu \
-    && rm -rf /var/lib/apt/lists/*

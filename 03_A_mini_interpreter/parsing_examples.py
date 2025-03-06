@@ -2,65 +2,57 @@
 
 # %%
 
-from typing import Tuple
-from parsimonious.grammar import Grammar
-from parsimonious.nodes import NodeVisitor
+from lark import Lark, Transformer
 
-grammar = rf"""
-    expr        = ws ( bin / mono )
-    mono        = ground / paren
-    paren       = lparen expr rparen
-    bin         = mono op expr
-    ground      = number
+# Define the grammar in Lark's EBNF format
+grammar = r"""
+    ?expr: bin | mono
+    mono: ground | paren
+    paren: "(" expr ")"
+    bin: mono op expr
+    ground: NUMBER
 
-    ws          = ~" *"
-    lparen      = "(" ws
-    rparen      = ")" ws
-    number      = ~"[0-9]+" ws
-    op          = ( "+" / "-" / "*" ) ws
+    NUMBER: /[0-9]+/
+    op: "+" | "-" | "*"
+
+    %import common.WS
+    %ignore WS
 """
 
-expr = Grammar(grammar)
+# Create the Lark parser
+parser = Lark(grammar, start="expr")
 
+
+# Define the transformer to convert parse tree to AST
+class ExpressionTransformer(Transformer):
+    def expr(self, items):
+        return items[0]
+
+    def mono(self, items):
+        return items[0]
+
+    def paren(self, items):
+        return items[0]
+
+    def bin(self, items):
+        return (items[1], items[0], items[2])
+
+    def ground(self, items):
+        return int(items[0])
+
+    def op(self, items):
+        return items[0]
+
+    def NUMBER(self, token):
+        return int(token)
+
+
+# Example usage
 example = "    (   1  +   2  ) -    3   "
-
-parse_tree = expr.parse(example)
-
-print(parse_tree)
-
-# %%
-# Type definition using union type
-type Expr = int | Tuple[str, Expr, Expr]
-
-
-class ExpressionVisitor(NodeVisitor):
-    def visit_expr(self, node, children):
-        if len(children) == 1:
-            return children[0]
-        else:
-            return (children[1], children[0], children[2])
-
-    def visit_ground(self, node, children):
-        return children[0]
-
-    def visit_paren(self, node, children):
-        return children[1]
-
-    def visit_op(self, node, children):
-        return node.text
-
-    def visit_bin(self, node, children):
-        return children[1], children[0], children[2]
-
-    def visit_number(self, node, children):
-        return int(node.text)
-
-    def generic_visit(self, node, visited_children):
-        return
-
-
-visitor = ExpressionVisitor()
-
-ast: Expr = visitor.visit(parse_tree)
+parse_tree = parser.parse(example)
+transformer = ExpressionTransformer()
+ast = transformer.transform(parse_tree)
 
 print(ast)
+
+# %%

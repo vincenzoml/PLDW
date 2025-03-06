@@ -18,9 +18,21 @@ def find_lecture_dirs() -> List[str]:
 
 def combine_markdown_files(output_file: str = "course_book.md"):
     """Combine all README.md files into a single markdown file."""
-    # Start with the main README
+    # Start with title page
+    title_content = [
+        "---",
+        "title: Programming Languages Design Workshop",
+        "author: Vincenzo Ciancia",
+        "date: \\today",
+        "---",
+        "",
+        "\\newpage",
+        "",
+    ]
+
+    # Add the main README
     with open("README.md", "r") as f:
-        content = [f.read()]
+        content = title_content + [f.read()]
 
     # Add each lecture's README
     for dir_name in find_lecture_dirs():

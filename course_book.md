@@ -1,3 +1,11 @@
+---
+title: Programming Languages Design Workshop
+author: Vincenzo Ciancia
+date: \today
+---
+
+\newpage
+
 # Programming Language Design Workshop
 
 A hands-on course exploring programming language design concepts using Python's modern features. This course leverages Python's type system and structural pattern matching to demonstrate key programming language concepts and implementations.
