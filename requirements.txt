@@ -4,3 +4,5 @@ black
 pylint
 mypy
 lark
+pyre-check
+pytype

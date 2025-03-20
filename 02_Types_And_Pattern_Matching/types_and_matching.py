@@ -6,7 +6,7 @@ This module demonstrates various use cases of type hints and structural pattern 
 
 from __future__ import annotations
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+from typing import Literal
 
 # First of all, a familiar example: imperative stacks (Last In, First Out)
 # NOTE:
@@ -149,8 +149,6 @@ def sum_list(lst: list[int]) -> int:
             return 0
         case [head, *tail]:
             return head + sum_list(tail)
-        # case _:
-        #     return 0  # Default case, though it should never be reached
 
 
 @dataclass
@@ -239,36 +237,120 @@ print(
 # %%
 
 
-# Using dataclasses for direct JSON parsing
-@dataclass_json
 @dataclass
-class JsonSum:
-    sum: "JsonSumBody"
+class Human:
+    name: str
+    drivingLicense: bool
 
 
-@dataclass_json
+type DogKind = Literal["bulldog", "poodle", "labrador"]
+
+
 @dataclass
-class JsonSumBody:
-    left: "JsonExprValue"
-    right: "JsonExprValue"
+class Dog:
+    name: str
+    kind: DogKind
+    colour: Literal["brown", "black", "white"]
 
 
-type JsonExprValue = int | JsonSum
+type Record = Human | Dog
+
+# %%
 
 
-def eval_dataclass_expr(expr: JsonExprValue) -> int:
-    match expr:
-        case int(x):
-            return x
-        case JsonSum(sum=JsonSumBody(left=left, right=right)):
-            return eval_dataclass_expr(left) + eval_dataclass_expr(right)
+def describe_person(person: Human | Dog) -> str:
+    match person:
+        case Human(name=name, drivingLicense=True):
+            return f"Person {name} has a driving license"
+        case Human(name=name, drivingLicense=False):
+            return f"Person {name} does not have a driving license"
+        case Dog(name=name, kind=kind, colour=colour):
+            return f"Dog {name} is a {kind} and has a {colour} colour"
+
+
+def describe_person_2(person: Record) -> str:
+    if isinstance(person, Human):
+        return person.name + person.colour  # why is this wrong?
+    else:
+        return person.name + person.kind
+
+
+# %%
+@dataclass
+class Car:
+    make: str
+    model: str
+    year: int | None = None  # Year is optional
 
 
 # Example usage
-json_str = '{"sum": {"left": 3, "right": {"sum": {"left": 4, "right": 5}}}}'
-expr_obj = JsonSum.from_json(json_str)  # Parse JSON string directly to dataclass
-print(
-    f"Evaluated dataclass expression: {eval_dataclass_expr(expr_obj)}"
-)  # Should print 12
+car1 = Car(make="Toyota", model="Corolla", year=2020)
+car2 = Car(make="Honda", model="Civic")  # year is None
+
+print(car1)  # Car(make='Toyota', model='Corolla', year=2020)
+print(car2)  # Car(make='Honda', model='Civic', year=None)
+
+# %%
+
+from typing import Generic, TypeVar
+
+
+@dataclass
+class Box[T]:
+    content: T
+    label: str
+
+
+# Example usage
+box1 = Box(content=42, label="Numbers")
+box2 = Box(content="Hello", label="Strings")
+
+boxes = [Box(content=42, label="Numbers"), Box(content="Hello", label="Strings")]
+
+# %%
+
+
+def process_box[T](box: Box[T]) -> None:
+    match box:
+        case Box(content=x, label=y):
+            print(f"Box contains {x} and is labeled {y}")
+
+
+# %% So far so good... now let's define an AST for arithmetic expressions.
+
+
+@dataclass
+class BinOp:
+    op: Literal["+", "-", "*"]
+    left: ArithExpr
+    right: ArithExpr
+
+
+type ArithExpr = int | BinOp
+
+
+def eval_arith_expr(expr: ArithExpr) -> int:
+    match expr:
+        case int(x):
+            return x
+        case BinOp(left=x, right=y, op=op):
+            match op:
+                case "+":
+                    return eval_arith_expr(x) + eval_arith_expr(y)
+                case "-":
+                    return eval_arith_expr(x) - eval_arith_expr(y)
+                case "*":
+                    return eval_arith_expr(x) * eval_arith_expr(y)
+
+
+# example: 5 + (3 * 2)
+
+expr = BinOp(op="+", left=5, right=BinOp(op="*", left=3, right=2))
+
+eval_arith_expr(expr)
+
+# %%
+
+# Amazing! Now the big question is how to switch from "5 + (3 * 2)" to the AST?
 
 # %%

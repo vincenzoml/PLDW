@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>course_book</title>
+  <meta name="author" content="Vincenzo Ciancia" />
+  <title>Programming Languages Design Workshop</title>
   <style>
 html {
 color: #1a1a1a;
@@ -60,6 +61,10 @@ color: #1a1a1a;
 img {
 max-width: 100%;
 }
+svg {
+height: auto;
+max-width: 100%;
+}
 h1, h2, h3, h4, h5, h6 {
 margin-top: 1.4em;
 }
@@ -103,8 +108,8 @@ background-color: transparent;
 overflow: visible;
 }
 hr {
-background-color: #1a1a1a;
 border: none;
+border-top: 1px solid #1a1a1a;
 height: 1px;
 margin: 1em 0;
 }
@@ -162,8 +167,9 @@ vertical-align: middle;
 }
 .display.math{display: block; text-align: center; margin: 0.5rem auto;}
 
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -227,6 +233,10 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; }
 </style>
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Programming Languages Design Workshop</h1>
+<p class="author">Vincenzo Ciancia</p>
+</header>
 <nav id="TOC" role="doc-toc">
 <ul>
 <li><a href="#programming-language-design-workshop" id="toc-programming-language-design-workshop">Programming Language
@@ -358,26 +368,54 @@ Features</a></li>
 Other Languages</a></li>
 </ul></li>
 </ul></li>
-<li><a href="#lecture-1-types-and-pattern-matching-in-python" id="toc-lecture-1-types-and-pattern-matching-in-python">Lecture 1: Types
+<li><a href="#lecture-2-types-and-pattern-matching-in-python" id="toc-lecture-2-types-and-pattern-matching-in-python">Lecture 2: Types
 and Pattern Matching in Python</a>
 <ul>
 <li><a href="#learning-objectives" id="toc-learning-objectives">Learning
 Objectives</a></li>
-<li><a href="#type-system" id="toc-type-system">Type System</a>
+<li><a href="#pythons-type-system" id="toc-pythons-type-system">Python’s
+Type System</a>
 <ul>
-<li><a href="#static-type-hints" id="toc-static-type-hints">Static Type
-Hints</a></li>
-<li><a href="#type-checking" id="toc-type-checking">Type
-Checking</a></li>
+<li><a href="#type-annotations" id="toc-type-annotations">Type
+Annotations</a></li>
+<li><a href="#basic-types" id="toc-basic-types">Basic Types</a></li>
+<li><a href="#union-types" id="toc-union-types">Union Types</a></li>
+<li><a href="#optional-types" id="toc-optional-types">Optional
+Types</a></li>
+<li><a href="#generic-types" id="toc-generic-types">Generic
+Types</a></li>
+<li><a href="#type-aliases" id="toc-type-aliases">Type Aliases</a></li>
+<li><a href="#literal-types" id="toc-literal-types">Literal
+Types</a></li>
 </ul></li>
 <li><a href="#structural-pattern-matching" id="toc-structural-pattern-matching">Structural Pattern Matching</a>
 <ul>
 <li><a href="#basic-pattern-matching" id="toc-basic-pattern-matching">Basic Pattern Matching</a></li>
-<li><a href="#advanced-patterns" id="toc-advanced-patterns">Advanced
+<li><a href="#sequence-patterns" id="toc-sequence-patterns">Sequence
+Patterns</a></li>
+<li><a href="#mapping-patterns" id="toc-mapping-patterns">Mapping
+Patterns</a></li>
+<li><a href="#class-patterns" id="toc-class-patterns">Class
 Patterns</a></li>
 </ul></li>
-<li><a href="#practical-examples" id="toc-practical-examples">Practical
-Examples</a></li>
+<li><a href="#algebraic-data-types-in-python" id="toc-algebraic-data-types-in-python">Algebraic Data Types in
+Python</a>
+<ul>
+<li><a href="#sum-types-tagged-unions" id="toc-sum-types-tagged-unions">Sum Types (Tagged Unions)</a></li>
+<li><a href="#product-types" id="toc-product-types">Product
+Types</a></li>
+<li><a href="#recursive-types" id="toc-recursive-types">Recursive
+Types</a></li>
+</ul></li>
+<li><a href="#combining-types-and-pattern-matching" id="toc-combining-types-and-pattern-matching">Combining Types and
+Pattern Matching</a></li>
+<li><a href="#type-checking" id="toc-type-checking">Type Checking</a>
+<ul>
+<li><a href="#static-type-checking" id="toc-static-type-checking">Static
+Type Checking</a></li>
+<li><a href="#runtime-type-checking" id="toc-runtime-type-checking">Runtime Type Checking</a></li>
+</ul></li>
+<li><a href="#practical-applications" id="toc-practical-applications">Practical Applications</a></li>
 <li><a href="#exercises" id="toc-exercises">Exercises</a></li>
 <li><a href="#additional-resources" id="toc-additional-resources">Additional Resources</a></li>
 </ul></li>
@@ -990,7 +1028,7 @@ specific architectural patterns to maintain code organization.</p>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">button</span> <span class="er">on:click</span><span class="ot">=</span><span class="st">{increment}</span><span class="dt">&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> on:click</span><span class="op">=</span><span class="st">{increment}</span><span class="dt">&gt;</span></span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    Count: {count} (Doubled: {doubled})</span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span></code></pre></div>
 <h2 id="section-4-implementation-concerns">Section 4: Implementation
@@ -1330,64 +1368,162 @@ enables running code from multiple languages in web browsers. This
 interoperability allows developers to leverage existing libraries and
 frameworks while still using their preferred language for new
 development, promoting code reuse and reducing development time.</p>
-<h1 id="lecture-1-types-and-pattern-matching-in-python">Lecture 1: Types
+<h1 id="lecture-2-types-and-pattern-matching-in-python">Lecture 2: Types
 and Pattern Matching in Python</h1>
-<p>This lecture introduces two powerful features of modern Python: the
-type system and structural pattern matching. These features not only
-make Python code more robust and maintainable but also serve as
-excellent examples of programming language design concepts.</p>
+<p>This lecture explores two powerful features of modern Python: the
+type system and structural pattern matching. These features enhance code
+robustness, maintainability, and readability while demonstrating
+important programming language design concepts.</p>
 <h2 id="learning-objectives">Learning Objectives</h2>
 <ul>
-<li>Understand Python’s type system and type hints</li>
-<li>Master structural pattern matching with match/case statements</li>
-<li>Learn about type checking and its benefits</li>
-<li>Apply these concepts in practical examples</li>
+<li>Master Python’s type system and type hints</li>
+<li>Understand structural pattern matching with match/case
+statements</li>
+<li>Apply type checking for more reliable code</li>
+<li>Implement algebraic data types (ADTs) in Python</li>
+<li>Combine types and pattern matching in practical applications</li>
 </ul>
-<h2 id="type-system">Type System</h2>
-<h3 id="static-type-hints">Static Type Hints</h3>
-<ul>
-<li>Introduction to type annotations</li>
-<li>Built-in types: <code>int</code>, <code>str</code>,
-<code>list</code>, <code>dict</code>, etc.</li>
-<li>Complex types: <code>Union</code>, <code>Optional</code>,
-<code>Any</code></li>
-<li>Generic types and type variables</li>
-<li>Custom types and <code>TypeVar</code></li>
-</ul>
-<h3 id="type-checking">Type Checking</h3>
-<ul>
-<li>Using <code>mypy</code> for static type checking</li>
-<li>Runtime type checking considerations</li>
-<li>Type checking best practices</li>
-<li>Common type-related errors and how to fix them</li>
-</ul>
+<h2 id="pythons-type-system">Python’s Type System</h2>
+<h3 id="type-annotations">Type Annotations</h3>
+<p>Python’s type system allows developers to add optional type hints to
+variables, function parameters, and return values. These annotations
+help catch errors early and improve code documentation.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> greet(name: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&quot;Hello, </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">!&quot;</span></span></code></pre></div>
+<h3 id="basic-types">Basic Types</h3>
+<p>Python provides several built-in types: - Primitive types:
+<code>int</code>, <code>float</code>, <code>bool</code>,
+<code>str</code> - Collection types: <code>list</code>,
+<code>tuple</code>, <code>dict</code>, <code>set</code></p>
+<h3 id="union-types">Union Types</h3>
+<p>Union types allow a variable to have multiple possible types:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_data(data: <span class="bu">int</span> <span class="op">|</span> <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Can handle both integers and strings</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
+<h3 id="optional-types">Optional Types</h3>
+<p>For values that might be <code>None</code>:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> find_user(<span class="bu">id</span>: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span>:</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Returns a username or None if not found</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
+<h3 id="generic-types">Generic Types</h3>
+<p>Generics allow you to create reusable, type-safe components:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Container[T]:</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, item: T) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.item: T <span class="op">=</span> item</span></code></pre></div>
+<h3 id="type-aliases">Type Aliases</h3>
+<p>Type aliases help simplify complex type annotations:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> JsonData <span class="op">=</span> <span class="bu">dict</span>[<span class="bu">str</span>, <span class="bu">int</span> <span class="op">|</span> <span class="bu">str</span> <span class="op">|</span> <span class="bu">list</span> <span class="op">|</span> <span class="bu">dict</span>]</span></code></pre></div>
+<h3 id="literal-types">Literal Types</h3>
+<p>Literal types restrict values to specific constants:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> align_text(alignment: Literal[<span class="st">&quot;left&quot;</span>, <span class="st">&quot;center&quot;</span>, <span class="st">&quot;right&quot;</span>]) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Only accepts these three string values</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
 <h2 id="structural-pattern-matching">Structural Pattern Matching</h2>
 <h3 id="basic-pattern-matching">Basic Pattern Matching</h3>
-<ul>
-<li>Introduction to <code>match</code> statement</li>
-<li>Simple patterns with literals</li>
-<li>Variable patterns</li>
-<li>Wildcard patterns (<code>_</code>)</li>
-</ul>
-<h3 id="advanced-patterns">Advanced Patterns</h3>
-<ul>
-<li>Sequence patterns</li>
-<li>Mapping patterns</li>
-<li>OR patterns (<code>|</code>)</li>
-<li>Guard clauses (<code>if</code>)</li>
-<li>Class patterns</li>
-</ul>
-<h2 id="practical-examples">Practical Examples</h2>
-<p>The accompanying Python module <code>types_and_matching.py</code>
-contains practical examples demonstrating: 1. Type hints in function
-definitions 2. Generic type usage 3. Pattern matching for data
-processing 4. Combining types and pattern matching</p>
+<p>The <code>match</code> statement, introduced in Python 3.10, provides
+powerful pattern matching capabilities:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> describe(value):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> value:</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="dv">0</span>:</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;Zero&quot;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="bu">int</span>(x) <span class="cf">if</span> x <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;Positive integer&quot;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="bu">str</span>():</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;String&quot;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> _:</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;Something else&quot;</span></span></code></pre></div>
+<h3 id="sequence-patterns">Sequence Patterns</h3>
+<p>Match against sequences like lists and tuples:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_point(point):</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> point:</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>        case (<span class="dv">0</span>, <span class="dv">0</span>):</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;Origin&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        case (<span class="dv">0</span>, y):</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ss">f&quot;Y-axis at </span><span class="sc">{</span>y<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        case (x, <span class="dv">0</span>):</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ss">f&quot;X-axis at </span><span class="sc">{</span>x<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        case (x, y):</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ss">f&quot;Point at (</span><span class="sc">{</span>x<span class="sc">}</span><span class="ss">, </span><span class="sc">{</span>y<span class="sc">}</span><span class="ss">)&quot;</span></span></code></pre></div>
+<h3 id="mapping-patterns">Mapping Patterns</h3>
+<p>Match against dictionaries:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_config(config):</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> config:</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> {<span class="st">&quot;debug&quot;</span>: <span class="va">True</span>}:</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;Debug mode enabled&quot;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        case {<span class="st">&quot;output&quot;</span>: output, <span class="st">&quot;format&quot;</span>: <span class="st">&quot;json&quot;</span>}:</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ss">f&quot;JSON output to </span><span class="sc">{</span>output<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> _:</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&quot;Default configuration&quot;</span></span></code></pre></div>
+<h3 id="class-patterns">Class Patterns</h3>
+<p>Match against class instances:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> shape:</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Circle(radius<span class="op">=</span>r):</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&quot;Circle with radius </span><span class="sc">{</span>r<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Rectangle(width<span class="op">=</span>w, height<span class="op">=</span>h):</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&quot;Rectangle </span><span class="sc">{</span>w<span class="sc">}</span><span class="ss">×</span><span class="sc">{</span>h<span class="sc">}</span><span class="ss">&quot;</span></span></code></pre></div>
+<h2 id="algebraic-data-types-in-python">Algebraic Data Types in
+Python</h2>
+<p>Python can implement algebraic data types (ADTs) using classes,
+dataclasses, and union types:</p>
+<h3 id="sum-types-tagged-unions">Sum Types (Tagged Unions)</h3>
+<p>Represent values that could be one of several alternatives:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Success:</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    value: Any</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Error:</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    message: <span class="bu">str</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Result <span class="op">=</span> Success <span class="op">|</span> Error</span></code></pre></div>
+<h3 id="product-types">Product Types</h3>
+<p>Represent combinations of values:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Point:</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    x: <span class="bu">float</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    y: <span class="bu">float</span></span></code></pre></div>
+<h3 id="recursive-types">Recursive Types</h3>
+<p>Types that refer to themselves:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Node:</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">int</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">next</span>: <span class="st">&quot;Node | None&quot;</span> <span class="op">=</span> <span class="va">None</span></span></code></pre></div>
+<h2 id="combining-types-and-pattern-matching">Combining Types and
+Pattern Matching</h2>
+<p>The real power comes from combining type annotations with pattern
+matching:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_result(result: Success <span class="op">|</span> Error) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> result:</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Success(value<span class="op">=</span>val):</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ss">f&quot;Operation succeeded with value: </span><span class="sc">{</span>val<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Error(message<span class="op">=</span>msg):</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ss">f&quot;Operation failed: </span><span class="sc">{</span>msg<span class="sc">}</span><span class="ss">&quot;</span></span></code></pre></div>
+<h2 id="type-checking">Type Checking</h2>
+<h3 id="static-type-checking">Static Type Checking</h3>
+<p>Tools like mypy, pyright, and pylance can analyze your code without
+running it:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mypy my_program.py</span></code></pre></div>
+<h3 id="runtime-type-checking">Runtime Type Checking</h3>
+<p>Python’s type hints are not enforced at runtime by default, but
+libraries like <code>typeguard</code> can add runtime checks:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typeguard <span class="im">import</span> typechecked</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="at">@typechecked</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add(a: <span class="bu">int</span>, b: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b</span></code></pre></div>
+<h2 id="practical-applications">Practical Applications</h2>
+<p>Type hints and pattern matching are particularly useful for: - Data
+validation and processing - Parsing and interpreting structured data
+(like JSON) - Implementing domain-specific languages - Building robust
+APIs - Functional programming patterns</p>
 <h2 id="exercises">Exercises</h2>
 <ol type="1">
-<li>Implement a function that uses type hints and processes different
-data structures</li>
-<li>Create a pattern-matching based calculator</li>
-<li>Design a small type-safe data processing pipeline</li>
+<li>Create a generic container class with type hints</li>
+<li>Implement a recursive data structure with proper type
+annotations</li>
+<li>Build a pattern-matching based interpreter for a simple expression
+language</li>
+<li>Design a type-safe data processing pipeline</li>
 </ol>
 <h2 id="additional-resources">Additional Resources</h2>
 <ul>
@@ -1395,8 +1531,12 @@ data structures</li>
 Checking Guide</a></li>
 <li><a href="https://peps.python.org/pep-0484/">PEP 484 – Type
 Hints</a></li>
+<li><a href="https://peps.python.org/pep-0585/">PEP 585 – Type Hinting
+Generics In Standard Collections</a></li>
 <li><a href="https://peps.python.org/pep-0634/">PEP 634 – Structural
 Pattern Matching</a></li>
+<li><a href="https://peps.python.org/pep-0636/">PEP 636 – Structural
+Pattern Matching: Tutorial</a></li>
 </ul>
 <h1 id="lecture-2-parsing-with-parsimonious">Lecture 2: Parsing with
 Parsimonious</h1>
@@ -1416,7 +1556,7 @@ maintainable parsers.</p>
 <li>parsimonious</li>
 </ul>
 <h2 id="running-the-examples">Running the Examples</h2>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install parsimonious</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> parsing_examples.py</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install parsimonious</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> parsing_examples.py</span></code></pre></div>
 </body>
 </html>
