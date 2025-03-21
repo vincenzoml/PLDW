@@ -41,6 +41,8 @@ stack_1.push(1)
 stack_1.push(2)
 stack_1.push(3)
 
+stack_1.push("hello")
+
 print("Stack contents:", stack_1)
 
 print("Popped item:", stack_1.pop())  # Output: 3
@@ -52,9 +54,9 @@ print("Stack contents:", stack_1)
 
 
 # Now let's create a function that pushes a string
-def f():
+def f(stack: Stack[int]):
     print("Pushing 'hello' to the stack...")
-    stack_1.push("hello")  # This is an error!
+    stack.push("hello")  # This is an error!
 
 
 # "hello" is underlined, because it's an error to push a string to an integer
@@ -81,13 +83,19 @@ def f():
 # Union types
 # int | float | string
 
-# Recursive types
+# Dictionaries
+my_dict: dict[str, int] = {"a": 1, "b": 2}
+
+# Recursive types\
 type A = int | dict[str, A]
 
 a: A = {"A": {"B": 2}}
 
+# %%
 #  Literal types
 y: Literal["hello", "world"] = "hello"
+
+# %%
 z: Literal[1, 2, 3] = 9  # ERROR
 
 # can also be abbreviated as
@@ -102,10 +110,13 @@ class Person:
     age: int
 
 
-# Tuples
+# How to declare a variable of type "Person"
+p: Person = Person(name="Franco", age=18)
+
+# %% Tuples
 my_tuple: tuple[int, str, float] = (1, "hello", 1.0)
 
-# Sequences
+# %% Sequences
 my_list: list[int] = [1, 2, 3, 4, 5]
 
 print("My tuple:", my_tuple)
@@ -121,8 +132,8 @@ def greet(person: Person | str) -> None:
             print("Hello Alice!")
         case Person(name="Bob", age=30):
             print("Hi Bob!")
-        case Person(name=x, age=y):
-            print(f"Hello {x} of age {y}!")
+        case Person(name="Ciro", age=y):
+            print(f"Hello Ciro of age {y}!")
         case "Alice":
             print("Hello Alice!")
         case "Bob":
@@ -131,19 +142,17 @@ def greet(person: Person | str) -> None:
             print(f"Hello {name}!")
 
 
-def greet_people(people: tuple[Person, Person]) -> None:
+def greet_people(people: tuple[Person, Person]):
     match people:
         case (Person(name="Alice", age=25), Person(name="Bob", age=30)):
             print("Hello Alice and Bob!")
-        case (Person(name=x, age=y), Person(name=z, age=w)):
+        case (Person(name=x, age=3), Person(name=z, age=w)):
             print(f"Hello {x} of age {y} and {z} of age {w}!")
-        case _:  # Q: this code is unreachable, why?
-            print("Hello people!")
 
 
 greet_people((Person(name="Alice", age=25), Person(name="Bob", age=30)))
-greet("Alice")
-greet(25)  # Q: WHY does this work? (Hint: type checking)
+greet_people("Alice")
+greet_people(25)  # Q: WHY does this work? (Hint: type checking)
 
 # %%
 
@@ -164,6 +173,10 @@ def sum_list(lst: list[int]) -> int:
             return head + sum_list(tail)
 
 
+# %%
+
+
+# This should be fixed, it's mutually recursive
 @dataclass
 class MyList[T]:
     head: T
@@ -290,6 +303,14 @@ def process_box[T](box: Box[T]) -> None:
 # %% So far so good... now let's define an AST for arithmetic expressions.
 
 
+type ArithExpr = Int | BinOp
+
+
+@dataclass
+class Int:
+    value: int
+
+
 @dataclass
 class BinOp:
     op: Literal["+", "-", "*"]
@@ -297,28 +318,14 @@ class BinOp:
     right: ArithExpr
 
 
-type ArithExpr = int | BinOp
-
-
-def eval_arith_expr(expr: ArithExpr) -> int:
-    match expr:
-        case int(x):
-            return x
-        case BinOp(left=x, right=y, op=op):
-            match op:
-                case "+":
-                    return eval_arith_expr(x) + eval_arith_expr(y)
-                case "-":
-                    return eval_arith_expr(x) - eval_arith_expr(y)
-                case "*":
-                    return eval_arith_expr(x) * eval_arith_expr(y)
-
-
 # example: 5 + (3 * 2)
 
-expr = BinOp(op="+", left=5, right=BinOp(op="*", left=3, right=2))
+expr = BinOp(
+    op="+",
+    left=Int(value=5),
+    right=BinOp(op="*", left=Int(value=3), right=Int(value=2)),
+)
 
-eval_arith_expr(expr)
 
 # %%
 

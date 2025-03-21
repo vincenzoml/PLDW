@@ -14,12 +14,7 @@ from typing import List, Tuple, Union
 
 
 # Solution 1: Naive recursive solution using string splitting
-def parse_expression_naive(expression: str) -> Union[int, float]:
-    """
-    Parses an arithmetic expression using a naive recursive approach.
-    This solution works by splitting by + and - first, then by * and /.
-    It doesn't handle operator precedence correctly.
-    """
+def parse_expression_naive(expression: str) -> int:
     # Split by + and -
     tokens: List[str] = expression.split()
     if len(tokens) == 1:  # Just a number
