@@ -81,6 +81,19 @@ def f():
 # Union types
 # int | float | string
 
+# Recursive types
+type A = int | dict[str, A]
+
+a: A = {"A": {"B": 2}}
+
+#  Literal types
+y: Literal["hello", "world"] = "hello"
+z: Literal[1, 2, 3] = 9  # ERROR
+
+# can also be abbreviated as
+type B = Literal["hello", "world"]
+w: B = "world"
+
 
 # Records
 @dataclass
@@ -195,53 +208,13 @@ def eval_expr(expr: Expr) -> int:
 # %%
 
 
-# JSON as intermediate representation for our expression ADT
-def parse_expr(json_expr: dict | int) -> Expr:
-    match json_expr:
-        case int(x):
-            return x
-        case {"sum": {"left": left, "right": right}}:
-            return Sum(left=parse_expr(left), right=parse_expr(right))
-        case _:
-            raise ValueError(f"Invalid expression: {json_expr}")
-
-
-# Example usage
-json_expr = {"sum": {"left": 3, "right": {"sum": {"left": 4, "right": 5}}}}
-
-expr = parse_expr(json_expr)
-print(f"Evaluated expression: {eval_expr(expr)}")  # Should print 12 (3 + (4 + 5))
-
-# %%
-
-# Direct JSON expression type without intermediate classes
-type JsonExpr = int | dict[str, "JsonExpr"]
-
-
-def eval_json_expr(expr: JsonExpr) -> int:
-    match expr:
-        case int(x):
-            return x
-        case {"sum": {"left": left, "right": right}}:
-            return eval_json_expr(left) + eval_json_expr(right)
-        case _:
-            raise ValueError(f"Invalid expression: {expr}")
-
-
-# Example usage
-json_expr_2: JsonExpr = {"sum": {"left": 3, "right": {"sum": {"left": 4, "right": 5}}}}
-print(
-    f"Evaluated JSON expression: {eval_json_expr(json_expr_2)}"
-)  # Should print 12 (3 + (4 + 5))
-
-# %%
-
-
 @dataclass
 class Human:
     name: str
-    drivingLicense: bool
+    drivingLicense: Literal[True, False]
 
+
+x: Human = Human(name="John", drivingLicense=True)
 
 type DogKind = Literal["bulldog", "poodle", "labrador"]
 
@@ -291,8 +264,6 @@ print(car1)  # Car(make='Toyota', model='Corolla', year=2020)
 print(car2)  # Car(make='Honda', model='Civic', year=None)
 
 # %%
-
-from typing import Generic, TypeVar
 
 
 @dataclass
@@ -352,5 +323,3 @@ eval_arith_expr(expr)
 # %%
 
 # Amazing! Now the big question is how to switch from "5 + (3 * 2)" to the AST?
-
-# %%

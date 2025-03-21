@@ -6,68 +6,6 @@ date: \today
 
 \newpage
 
-# Programming Language Design Workshop
-
-A hands-on course exploring programming language design concepts using Python's modern features. This course leverages Python's type system and structural pattern matching to demonstrate key programming language concepts and implementations.
-
-## Course Overview
-
-This workshop consists of 10 lectures (2 hours each) that combine theoretical foundations with practical implementations. Students will learn about programming language design principles while getting hands-on experience with Python's advanced features.
-
-## Course Structure
-
-### Lecture 1: Introduction to Programming Language Design
-- What is a programming language?
-- The importance of programming language design
-- The course structure and expectations
-- Python as a language for exploring language design concepts
-
-### Lecture 2: Types and Structural Pattern Matching in Python
-- Introduction to Python's type system
-- Type hints and type checking
-- Structural pattern matching (match/case statements)
-- Practical applications and examples
-
-### Lecture 3: Programming Language Implementation: A mini interpreter
-- Parsing and lexical analysis
-- Abstract Syntax Trees (AST)
-- Program semantics
-
-### Lecture 3: TBA
-
-### Lecture 4: TBA
-
-### Lecture 5: TBA
-
-### Lecture 6: TBA
-
-### Lecture 7: TBA
-
-### Lecture 8: TBA
-
-### Lecture 9: TBA
-
-### Lecture 10: TBA
-
-## Prerequisites
-- Python 3.10 or higher (for pattern matching support)
-- Basic Python programming knowledge
-- Understanding of basic programming concepts
-
-## Repository Structure
-Each lecture has its own directory containing:
-- A detailed README.md with lecture notes and exercises
-- Python modules with examples and implementations
-- Additional resources and references when applicable
-
-## Getting Started
-1. Clone this repository
-2. Ensure you have Python 3.10+ installed
-3. Navigate to the specific lecture directory
-4. Follow the instructions in each lecture's README.md
-
-## License
-[MIT License](LICENSE)
 
 \newpage
 
@@ -625,34 +563,65 @@ As software systems become more complex, the ability to interoperate with code w
 
 \newpage
 
-# Lecture 2: Types and Pattern Matching in Python
+# Chapter 2: Types and Pattern Matching in Python
 
-This lecture explores two powerful features of modern Python: the type system and structural pattern matching. These features enhance code robustness, maintainability, and readability while demonstrating important programming language design concepts.
+## Section 1: Python's Type System
 
-## Learning Objectives
-- Master Python's type system and type hints
-- Understand structural pattern matching with match/case statements
-- Apply type checking for more reliable code
-- Implement algebraic data types (ADTs) in Python
-- Combine types and pattern matching in practical applications
-
-## Python's Type System
-
-### Type Annotations
-Python's type system allows developers to add optional type hints to variables, function parameters, and return values. These annotations help catch errors early and improve code documentation.
+### What are Type Annotations?
+Python's type system allows developers to add optional type hints to variables, function parameters, and return values. These annotations help catch errors early, improve code documentation, and enhance IDE support without changing the runtime behavior of the code.
 
 ```python
 def greet(name: str) -> str:
     return f"Hello, {name}!"
 ```
 
-### Basic Types
-Python provides several built-in types:
-- Primitive types: `int`, `float`, `bool`, `str`
-- Collection types: `list`, `tuple`, `dict`, `set`
+Type annotations are part of the Python Enhancement Proposal (PEP) 484 and have been continuously improved in subsequent PEPs. They provide a way to make Python code more robust through static type checking, although Python remains dynamically typed at runtime.
 
-### Union Types
-Union types allow a variable to have multiple possible types:
+### Basic Types in Python
+Python provides several built-in types for annotations:
+
+- **Primitive types**: `int`, `float`, `bool`, `str`
+- **Collection types**: `list`, `tuple`, `dict`, `set`
+
+Example from `types_and_matching.py`:
+
+```python
+my_tuple: tuple[int, str, float] = (1, "hello", 1.0)
+my_list: list[int] = [1, 2, 3, 4, 5]
+```
+
+These annotations tell the type checker that `my_tuple` is a 3-element tuple containing an integer, a string, and a float, while `my_list` is a list containing only integers.
+
+### Generic Types
+Generic types allow you to create reusable, type-safe components. In Python 3.12+, the syntax for generic classes uses square brackets:
+
+```python
+class Stack[T]:
+    def __init__(self) -> None:
+        self.items: list[T] = []
+    
+    def push(self, item: T) -> None:
+        self.items.append(item)
+    
+    def pop(self) -> T | None:
+        return self.items.pop() if self.items else None
+```
+
+In this example from our code:
+- `T` is a type parameter representing any type
+- `Stack[T]` is a generic class that can be specialized for specific types
+- `list[T]` indicates a list containing elements of type `T`
+
+To use this generic class:
+
+```python
+stack_1 = Stack[int]()  # A stack of integers
+stack_1.push(1)  # Valid
+stack_1.push("hello")  # Type error: expected int, got str
+```
+
+### Union Types and Optional Values
+Union types allow a variable to have multiple possible types, expressed using the `|` operator (introduced in Python 3.10):
 
 ```python
 def process_data(data: int | str) -> None:
@@ -660,44 +629,55 @@ def process_data(data: int | str) -> None:
     pass
 ```
 
-### Optional Types
-For values that might be `None`:
+From our example code:
 
 ```python
-def find_user(id: int) -> str | None:
-    # Returns a username or None if not found
-    pass
+def pop(self) -> T | None:  # Use | for union types
+    return self.items.pop() if self.items else None
 ```
 
-### Generic Types
-Generics allow you to create reusable, type-safe components:
-
-```python
-class Container[T]:
-    def __init__(self, item: T) -> None:
-        self.item: T = item
-```
+This indicates that the `pop` method returns either a value of type `T` or `None` if the stack is empty.
 
 ### Type Aliases
 Type aliases help simplify complex type annotations:
 
 ```python
 type JsonData = dict[str, int | str | list | dict]
+type A = int | dict[str, A]  # Recursive type
 ```
+
+In `types_and_matching.py`, we use type aliases for recursive types:
+
+```python
+type MyBaseList[T] = None | MyList[T]
+type Expr = int | Sum
+```
+
+These aliases make the code more readable and allow for recursive type definitions.
 
 ### Literal Types
 Literal types restrict values to specific constants:
 
 ```python
-def align_text(alignment: Literal["left", "center", "right"]) -> None:
-    # Only accepts these three string values
-    pass
+y: Literal["hello", "world"] = "hello"  # Valid
+z: Literal[1, 2, 3] = 9  # Type error
 ```
 
-## Structural Pattern Matching
+From our example code:
 
-### Basic Pattern Matching
-The `match` statement, introduced in Python 3.10, provides powerful pattern matching capabilities:
+```python
+@dataclass
+class Human:
+    name: str
+    drivingLicense: Literal[True, False]
+```
+
+This constrains the `drivingLicense` attribute to be either `True` or `False` only.
+
+## Section 2: Structural Pattern Matching
+
+### Introduction to Pattern Matching
+Introduced in Python 3.10, the `match` statement provides powerful pattern matching capabilities, similar to switch statements in other languages but with more expressive power:
 
 ```python
 def describe(value):
@@ -712,160 +692,205 @@ def describe(value):
             return "Something else"
 ```
 
+Pattern matching allows for more concise and readable code, especially when dealing with complex data structures and multiple conditions.
+
+### Basic Patterns
+Basic patterns match against simple values and types:
+
+```python
+match x:
+    case 0:
+        print("Zero")
+    case int():
+        print("Integer")
+    case str():
+        print("String")
+    case _:  # Wildcard pattern
+        print("Something else")
+```
+
+The `_` pattern is a wildcard that matches anything and is often used as a catch-all case.
+
 ### Sequence Patterns
-Match against sequences like lists and tuples:
+Sequence patterns match against sequence types like lists and tuples:
 
 ```python
-def process_point(point):
-    match point:
-        case (0, 0):
-            return "Origin"
-        case (0, y):
-            return f"Y-axis at {y}"
-        case (x, 0):
-            return f"X-axis at {x}"
-        case (x, y):
-            return f"Point at ({x}, {y})"
+def process_lst(lst: list[int]) -> None:
+    match lst:
+        case []:
+            print("List: empty")
+        case [head, *tail]:
+            print(f"List: head {head}, tail {tail}")
 ```
 
-### Mapping Patterns
-Match against dictionaries:
+This example shows destructuring a list into its head (first element) and tail (remaining elements), demonstrating how pattern matching facilitates recursive list processing.
+
+### Class Patterns and Attribute Matching
+Pattern matching works particularly well with dataclasses:
 
 ```python
-def process_config(config):
-    match config:
-        case {"debug": True}:
-            return "Debug mode enabled"
-        case {"output": output, "format": "json"}:
-            return f"JSON output to {output}"
-        case _:
-            return "Default configuration"
+def greet(person: Person | str) -> None:
+    match person:
+        case Person(name="Alice", age=25):
+            print("Hello Alice!")
+        case Person(name=x, age=y):
+            print(f"Hello {x} of age {y}!")
+        case str():
+            print(f"Hello {person}!")
 ```
 
-### Class Patterns
-Match against class instances:
+This example shows matching against specific attribute values and binding attributes to variables.
+
+### Complex Pattern Matching Examples
+
+#### Recursive Pattern Matching
+Pattern matching excels at handling recursive data structures:
 
 ```python
-match shape:
-    case Circle(radius=r):
-        return f"Circle with radius {r}"
-    case Rectangle(width=w, height=h):
-        return f"Rectangle {w}×{h}"
+def sum_list_2(lst: MyBaseList[int]) -> int:
+    match lst:
+        case None:
+            return 0
+        case MyList(head=x, tail=y):
+            return x + sum_list_2(y)
 ```
 
-## Algebraic Data Types in Python
+This function processes a custom linked list structure using pattern matching to handle the base case (None) and recursive case elegantly.
 
+#### Parsing Expressions
+Pattern matching can implement simple interpreters:
+
+```python
+def eval_expr(expr: Expr) -> int:
+    match expr:
+        case int(x):
+            return x
+        case Sum(left=x, right=y):
+            return eval_expr(x) + eval_expr(y)
+```
+
+This code evaluates a simple arithmetic expression tree, showing how pattern matching simplifies traversal of complex structures.
+
+## Section 3: Combining Types and Pattern Matching
+
+### Algebraic Data Types in Python
 Python can implement algebraic data types (ADTs) using classes, dataclasses, and union types:
 
-### Sum Types (Tagged Unions)
-Represent values that could be one of several alternatives:
+#### Sum Types (Tagged Unions)
+Sum types represent values that could be one of several alternatives:
 
 ```python
 @dataclass
-class Success:
-    value: Any
+class Human:
+    name: str
+    drivingLicense: Literal[True, False]
 
 @dataclass
-class Error:
-    message: str
+class Dog:
+    name: str
+    kind: DogKind
+    colour: Literal["brown", "black", "white"]
 
-type Result = Success | Error
+type Record = Human | Dog
 ```
 
-### Product Types
-Represent combinations of values:
+This example defines two distinct record types (`Human` and `Dog`) and a union type `Record` that can be either of them.
+
+#### Pattern Matching with Sum Types
+Pattern matching works seamlessly with sum types:
+
+```python
+def describe_person(person: Human | Dog) -> str:
+    match person:
+        case Human(name=name, drivingLicense=True):
+            return f"Person {name} has a driving license"
+        case Human(name=name, drivingLicense=False):
+            return f"Person {name} does not have a driving license"
+        case Dog(name=name, kind=kind, colour=colour):
+            return f"Dog {name} is a {kind} and has a {colour} colour"
+```
+
+This function handles different record types with specific patterns for each case.
+
+#### Product Types
+Product types represent combinations of values:
 
 ```python
 @dataclass
-class Point:
-    x: float
-    y: float
+class Person:
+    name: str
+    age: int
 ```
 
-### Recursive Types
-Types that refer to themselves:
+A dataclass like `Person` is a product type, representing a combination of a string and an integer.
+
+### Type Checking and Pattern Matching
+Type checkers like mypy can catch errors in pattern matching code:
 
 ```python
-@dataclass
-class Node:
-    value: int
-    next: "Node | None" = None
+def describe_person_2(person: Record) -> str:
+    if isinstance(person, Human):
+        return person.name + person.colour  # Type error: Human has no attribute 'colour'
+    else:
+        return person.name + person.kind
 ```
 
-## Combining Types and Pattern Matching
+Type checking helps identify incorrect attribute access, which might otherwise lead to runtime errors.
 
-The real power comes from combining type annotations with pattern matching:
+## Section 4: Applications and Best Practices
 
-```python
-def process_result(result: Success | Error) -> str:
-    match result:
-        case Success(value=val):
-            return f"Operation succeeded with value: {val}"
-        case Error(message=msg):
-            return f"Operation failed: {msg}"
-```
+### When to Use Type Annotations
 
-## Type Checking
+Type annotations are particularly valuable in:
+- Large codebases with multiple developers
+- APIs and libraries that will be used by others
+- Performance-critical code where type-specific optimizations matter
+- Complex data processing pipelines
 
-### Static Type Checking
-Tools like mypy, pyright, and pylance can analyze your code without running it:
+**Domain-specific languages, interpreters, ADTs!!**
 
-```bash
-$ mypy my_program.py
-```
+### When to Use Pattern Matching
 
-### Runtime Type Checking
-Python's type hints are not enforced at runtime by default, but libraries like `typeguard` can add runtime checks:
+Pattern matching excels at:
+- Processing complex recursive data structures
+- Implementing interpreters and compilers
+- Handling case-based logic with destructuring
+- Processing structured data like JSON or ASTs
 
-```python
-from typeguard import typechecked
+### Best Practices for Type Annotations
 
-@typechecked
-def add(a: int, b: int) -> int:
-    return a + b
-```
+1. Be consistent with type annotations across your codebase
+2. Use type aliases for complex or repetitive type expressions
+3. Leverage tools like mypy, pyright, or pylance for static type checking
+4. Balance between type precision and code readability
+5. Document non-obvious type constraints with comments
 
-## Practical Applications
+### Best Practices for Pattern Matching
 
-Type hints and pattern matching are particularly useful for:
-- Data validation and processing
-- Parsing and interpreting structured data (like JSON)
-- Implementing domain-specific languages
-- Building robust APIs
-- Functional programming patterns
+1. Order cases from most specific to most general
+2. Use the wildcard pattern (`_`) as the last case
+3. Consider using guard clauses for complex conditions
+4. Break complex pattern matching into smaller functions
+5. Leverage destructuring to avoid redundant variable assignments
 
 ## Exercises
-1. Create a generic container class with type hints
-2. Implement a recursive data structure with proper type annotations
-3. Build a pattern-matching based interpreter for a simple expression language
-4. Design a type-safe data processing pipeline
+- Consider the expression evaluator written in Lecture 01. Turn it into a parser
+that converts a string of the form "x op y op z ..." separated by spaces into an
+AST in the sense of Lecture 02. Concatenate the new parser and the evaluation
+function that takes AST as input to define a mini-interpreter.
+
+- Add the "==" boolean operator to the AST and the evaluator.
 
 ## Additional Resources
-- [Python Type Checking Guide](https://mypy.readthedocs.io/en/stable/)
 - [PEP 484 – Type Hints](https://peps.python.org/pep-0484/)
 - [PEP 585 – Type Hinting Generics In Standard Collections](https://peps.python.org/pep-0585/)
-- [PEP 634 – Structural Pattern Matching](https://peps.python.org/pep-0634/)
+- [PEP 604 – Allow writing union types as X | Y](https://peps.python.org/pep-0604/)
+- [PEP 634 – Structural Pattern Matching: Specification](https://peps.python.org/pep-0634/)
 - [PEP 636 – Structural Pattern Matching: Tutorial](https://peps.python.org/pep-0636/)
+- [Mypy Type Checker Documentation](https://mypy.readthedocs.io/en/stable/)
+- [Real Python: Python Type Checking](https://realpython.com/python-type-checking/)
+- [Real Python: Structural Pattern Matching in Python](https://realpython.com/python-pattern-matching/)
 
 
 \newpage
 
-# Lecture 2: Parsing with Parsimonious
-
-This lecture covers parsing concepts using the Parsimonious library, a pure-Python PEG parser library that makes it easy to write clean, maintainable parsers.
-
-## Overview
-- Introduction to Parsing Expression Grammars (PEG)
-- Working with Parsimonious
-- Building a practical parser
-- Understanding grammar rules and visitors
-
-## Requirements
-- Python 3.12
-- parsimonious
-
-## Running the Examples
-```bash
-pip install parsimonious
-python parsing_examples.py
-```
