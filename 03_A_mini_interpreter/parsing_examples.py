@@ -1,4 +1,4 @@
-# https://en.wikipedia.org/wiki/Parsing_expression_grammar
+from __future__ import annotations
 
 # %%
 
@@ -59,45 +59,77 @@ print_tree(parse_tree)
 
 # %%
 
-# %%
+from dataclasses import dataclass
+from typing import Literal
 
-# %%
-
-# %%
-
-# %%
+# Define AST types for the expression language
+type Op = Literal["+", "-", "*"]
 
 
-# Define the transformer to convert parse tree to AST
-class ExpressionTransformer(Transformer):
-    def expr(self, items):
-        return items[0]
-
-    def mono(self, items):
-        return items[0]
-
-    def paren(self, items):
-        return items[0]
-
-    def bin(self, items):
-        return (items[1], items[0], items[2])
-
-    def ground(self, items):
-        return int(items[0])
-
-    def op(self, items):
-        return items[0]
-
-    def NUMBER(self, token):
-        return int(token)
+@dataclass
+class Number:
+    value: int
 
 
-# Example usage
-example = "    (   1  +   2  ) -    3   "
-parse_tree = parser.parse(example)
-transformer = ExpressionTransformer()
-ast = transformer.transform(parse_tree)
+@dataclass
+class BinaryExpression:
+    op: Op
+    left: Expression
+    right: Expression
+
+
+type Expression = Number | BinaryExpression
+
+# ?expr: bin | mono
+# mono: ground | paren
+# paren: "(" expr ")"
+# bin: mono op expr
+# ground: NUMBER
+
+
+def transform_parse_tree(tree: Tree) -> Expression:
+    match tree:
+        case Tree(data="mono", children=[subtree]):
+            return transform_parse_tree(subtree)
+
+        case Tree(data="ground", children=[Token(type="NUMBER", value=value)]):
+            return Number(value=int(value))
+
+        case Tree(data="paren", children=[subtree]):
+            return transform_parse_tree(subtree)
+
+        case Tree(
+            data="bin",
+            children=[
+                left,
+                Tree(data="op", children=[Token(type="op", value=op)]),
+                right,
+            ],
+        ):
+            return BinaryExpression(
+                op=op,
+                left=transform_parse_tree(left),
+                right=transform_parse_tree(right),
+            )
+
+        case _:
+            print("Unexpected tree structure:")
+            print(tree.pretty())
+            raise ValueError(f"Unexpected parse tree structure")
+
+
+def parse_ast(expression: str) -> Expression:
+    parse_tree = parser.parse(expression)
+    return transform_parse_tree(parse_tree)
+
+
+example = "    (   1  +   2  ) -  3   "
+ast = parse_ast(example)
 
 print(ast)
 
 # %%
+
+# Exercise:
+# Add more operators. Implement the interpreter. Print the result. Add "/" and "%" operators.
+# Q: How will you handle division by zero?
