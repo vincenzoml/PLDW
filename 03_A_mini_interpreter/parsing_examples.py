@@ -2,7 +2,7 @@
 
 # %%
 
-from lark import Lark, Transformer
+from lark import Lark, ParseTree, Token, Transformer, Tree
 
 # Define the grammar in Lark's EBNF format
 grammar = r"""
@@ -21,6 +21,51 @@ grammar = r"""
 
 # Create the Lark parser
 parser = Lark(grammar, start="expr")
+
+parse_tree = parser.parse("(1 + 2) - 3")
+
+print(parse_tree.pretty())
+
+# bin
+# ├── mono
+# │   └── paren
+# │       └── bin
+# │           ├── mono
+# │           │   └── ground
+# │           │       └── 1
+# │           ├── op
+# │           └── mono
+# │               └── ground
+# │                   └── 2
+# ├── op
+# └── mono
+#     └── ground
+#         └── 3
+
+
+# %%
+def print_tree(tree: ParseTree | Token):
+    match tree:
+        case Tree(data=data, children=children):
+            print("Tree", data)
+            for child in children:
+                print_tree(child)
+        case Token(type=type, value=value):
+            print("Token", type, value)
+
+
+print_tree(parse_tree)
+
+
+# %%
+
+# %%
+
+# %%
+
+# %%
+
+# %%
 
 
 # Define the transformer to convert parse tree to AST
