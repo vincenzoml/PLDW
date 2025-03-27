@@ -114,47 +114,65 @@ match parse_tree:
 
 ## Section 5: Transforming Parse Trees to ASTs
 
-Parse trees often contain more detail than needed for interpretation. Transformers convert parse trees into more abstract representations:
+Parse trees often contain more detail than needed for interpretation. We can define custom types and use pattern matching to convert parse trees into a more abstract syntax tree (AST):
 
 ```python
-from lark import Transformer
+from dataclasses import dataclass
+from typing import Literal
 
-class ExpressionTransformer(Transformer):
-    def expr(self, items):
-        return items[0]
+# Define AST types for the expression language
+type Op = Literal["+", "-", "*"]
 
-    def mono(self, items):
-        return items[0]
+@dataclass
+class Number:
+    value: int
 
-    def paren(self, items):
-        return items[0]
+@dataclass
+class BinaryExpression:
+    op: Op
+    left: Expression
+    right: Expression
 
-    def bin(self, items):
-        return (items[1], items[0], items[2])
-
-    def ground(self, items):
-        return int(items[0])
-
-    def op(self, items):
-        return items[0]
-
-    def NUMBER(self, token):
-        return int(token)
+type Expression = Number | BinaryExpression
 ```
 
-## Section 6: Types in Parse Trees
+This AST representation is cleaner and more suitable for evaluation than the raw parse tree.
 
-Lark utilizes Python's type system to represent different parts of a parse tree:
+## Section 6: Converting Parse Trees to ASTs
+
+With our AST structure defined, we can convert parse trees into ASTs using pattern matching:
 
 ```python
-ParseTree = Tree['Token']  # Type alias for a Tree containing Token objects
+def transform_parse_tree(tree: Tree) -> Expression:
+    match tree:
+        case Tree(data="mono", children=[subtree]):
+            return transform_parse_tree(subtree)
+
+        case Tree(data="ground", children=[Token(type="NUMBER", value=value)]):
+            return Number(value=int(value))
+
+        case Tree(data="paren", children=[subtree]):
+            return transform_parse_tree(subtree)
+
+        case Tree(
+            data="bin",
+            children=[
+                left,
+                Token(type="OP", value=op),
+                right,
+            ],
+        ):
+            return BinaryExpression(
+                op=op,
+                left=transform_parse_tree(left),
+                right=transform_parse_tree(right),
+            )
+
+        case _:
+            raise ValueError(f"Unexpected parse tree structure")
 ```
 
-This type annotation indicates that `ParseTree` is a `Tree` that can contain `Token` objects in its children. Other possible type parameters for `Tree` include:
-
-- `Tree[Tree]`: A tree whose children are other trees
-- `Tree[Union[Tree, Token]]`: A tree with mixed children
-- `Tree[ASTNode]`: A tree containing custom AST nodes
+This approach provides much better type safety and makes the intent clearer than the Transformer class approach.
 
 ## Section 7: Building a Mini-Interpreter
 
@@ -165,33 +183,35 @@ By combining parsing with evaluation, we can create a mini-interpreter:
 3. **Evaluate**: Traverse the AST to compute a result
 
 ```python
-# Parse input
-parse_tree = parser.parse("(1 + 2) - 3")
+# Function to parse a string and return an AST
+def parse_ast(expression: str) -> Expression:
+    parse_tree = parser.parse(expression)
+    return transform_parse_tree(parse_tree)
 
-# Transform to AST
-transformer = ExpressionTransformer()
-ast = transformer.transform(parse_tree)
+# Example
+expression = "(1 + 2) - 3"
+ast = parse_ast(expression)
+print(ast)  # BinaryExpression(op='-', left=BinaryExpression(op='+', left=Number(value=1), right=Number(value=2)), right=Number(value=3))
 
-# Evaluate AST
-def evaluate(ast):
-    if isinstance(ast, int):
-        return ast
-    else:
-        op, left, right = ast
-        left_val = evaluate(left)
-        right_val = evaluate(right)
-        if op == '+':
-            return left_val + right_val
-        elif op == '-':
-            return left_val - right_val
-        elif op == '*':
-            return left_val * right_val
-        else:
-            raise ValueError(f"Unknown operator: {op}")
+# Evaluate function (to be implemented)
+def evaluate(ast: Expression) -> int:
+    match ast:
+        case Number(value=value):
+            return value
+        case BinaryExpression(op="+", left=left, right=right):
+            return evaluate(left) + evaluate(right)
+        case BinaryExpression(op="-", left=left, right=right):
+            return evaluate(left) - evaluate(right)
+        case BinaryExpression(op="*", left=left, right=right):
+            return evaluate(left) * evaluate(right)
+        case _:
+            raise ValueError(f"Unknown expression: {ast}")
 
 result = evaluate(ast)
 print(f"Result: {result}")  # Output: Result: 0
 ```
+
+This pattern-matching approach to evaluation is clear, concise, and type-safe.
 
 ## Exercises
 1. Extend the grammar to support division (`/`) and exponentiation (`^`).

@@ -9,11 +9,11 @@ grammar = r"""
     ?expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
-    bin: mono op expr
+    bin: mono OP expr
     ground: NUMBER
 
     NUMBER: /[0-9]+/
-    op: "+" | "-" | "*"
+    OP: "+" | "-" | "*"
 
     %import common.WS
     %ignore WS
@@ -85,8 +85,12 @@ type Expression = Number | BinaryExpression
 # paren: "(" expr ")"
 # bin: mono op expr
 # ground: NUMBER
+# op: OP
+# NUMBER: /[0-9]+/
+# OP: "+" | "-" | "*"
 
 
+# %%
 def transform_parse_tree(tree: Tree) -> Expression:
     match tree:
         case Tree(data="mono", children=[subtree]):
@@ -102,7 +106,7 @@ def transform_parse_tree(tree: Tree) -> Expression:
             data="bin",
             children=[
                 left,
-                Tree(data="op", children=[Token(type="op", value=op)]),
+                Token(type="OP", value=op),
                 right,
             ],
         ):
@@ -113,8 +117,6 @@ def transform_parse_tree(tree: Tree) -> Expression:
             )
 
         case _:
-            print("Unexpected tree structure:")
-            print(tree.pretty())
             raise ValueError(f"Unexpected parse tree structure")
 
 
@@ -124,9 +126,13 @@ def parse_ast(expression: str) -> Expression:
 
 
 example = "    (   1  +   2  ) -  3   "
+
+# example = "1+2"
 ast = parse_ast(example)
 
 print(ast)
+
+# %%
 
 # %%
 
