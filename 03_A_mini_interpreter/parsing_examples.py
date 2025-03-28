@@ -81,15 +81,6 @@ class BinaryExpression:
 
 type Expression = Number | BinaryExpression
 
-# ?expr: bin | mono
-# mono: ground | paren
-# paren: "(" expr ")"
-# bin: mono op expr
-# ground: NUMBER
-# op: OP
-# NUMBER: /[0-9]+/
-# OP: "+" | "-" | "*"
-
 
 # %%
 def transform_parse_tree(tree: Tree) -> Expression:
