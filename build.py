@@ -69,7 +69,17 @@ def build_book():
                 "--highlight-style=tango",
                 "-V",
                 "geometry:margin=1in",
-                # Font specification removed to use system defaults
+                # Font specifications for lambda support
+                "-V",
+                "mainfont=Times New Roman",
+                "-V",
+                "monofont=Courier New",
+                # Make code font significantly smaller
+                "-V",
+                "monofontoptions:Scale=0.7",
+                # Add syntax highlighting styling
+                "-V",
+                "colorlinks=true",
             ],
             check=True,
         )

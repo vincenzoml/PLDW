@@ -62,22 +62,22 @@ For the expression `(1 + 2) - 3`, the parse tree looks like:
 
 ```
 bin
-├── mono
-│   └── paren
-│       └── bin
-│           ├── mono
-│           │   └── ground
-│           │       └── 1
-│           ├── op
-│           │   └── +
-│           └── mono
-│               └── ground
-│                   └── 2
-├── op
-│   └── -
-└── mono
-    └── ground
-        └── 3
++-- mono
+|   +-- paren
+|       +-- bin
+|           +-- mono
+|           |   +-- ground
+|           |       +-- 1
+|           +-- op
+|           |   +-- +
+|           +-- mono
+|               +-- ground
+|                   +-- 2
++-- op
+|   +-- -
++-- mono
+    +-- ground
+        +-- 3
 ```
 
 ### Navigating the Parse Tree
@@ -191,7 +191,7 @@ def parse_ast(expression: str) -> Expression:
 # Example
 expression = "(1 + 2) - 3"
 ast = parse_ast(expression)
-print(ast)  # BinaryExpression(op='-', left=BinaryExpression(op='+', left=Number(value=1), right=Number(value=2)), right=Number(value=3))
+print(ast)  
 
 # Evaluate function (to be implemented)
 def evaluate(ast: Expression) -> int:
@@ -213,16 +213,8 @@ print(f"Result: {result}")  # Output: Result: 0
 
 This pattern-matching approach to evaluation is clear, concise, and type-safe.
 
-## Exercises
-1. Extend the grammar to support division (`/`) and exponentiation (`^`).
-2. Add support for variables in the grammar and evaluator.
-3. Implement a transformer that converts the parse tree to a different AST structure.
-4. Add error handling to provide meaningful error messages for invalid input.
-5. Implement a visualization tool for parse trees and ASTs.
-
 ## Additional Resources
 - [Lark Documentation](https://lark-parser.readthedocs.io/en/latest/)
 - [Context-Free Grammars (Wikipedia)](https://en.wikipedia.org/wiki/Context-free_grammar)
-- [Parsing Expression Grammars (Wikipedia)](https://en.wikipedia.org/wiki/Parsing_expression_grammar) - For comparing with other parsing approaches
 - [EBNF Syntax (Wikipedia)](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
 - [Python Pattern Matching Documentation](https://docs.python.org/3/reference/expressions.html#pattern-matching)

@@ -384,6 +384,40 @@ Matching</a></li>
 <li><a href="#exercises" id="toc-exercises">Exercises</a></li>
 <li><a href="#additional-resources" id="toc-additional-resources">Additional Resources</a></li>
 </ul></li>
+<li><a href="#chapter-3-parsing-and-mini-interpreters" id="toc-chapter-3-parsing-and-mini-interpreters">Chapter 3: Parsing and
+Mini-Interpreters</a>
+<ul>
+<li><a href="#section-1-introduction-to-context-free-grammars-and-parsing" id="toc-section-1-introduction-to-context-free-grammars-and-parsing">Section
+1: Introduction to Context-Free Grammars and Parsing</a>
+<ul>
+<li><a href="#key-features-of-larks-parsing-approach" id="toc-key-features-of-larks-parsing-approach">Key Features of Lark’s
+Parsing Approach</a></li>
+</ul></li>
+<li><a href="#section-2-working-with-lark" id="toc-section-2-working-with-lark">Section 2: Working with Lark</a>
+<ul>
+<li><a href="#defining-a-grammar-in-lark" id="toc-defining-a-grammar-in-lark">Defining a Grammar in Lark</a></li>
+<li><a href="#grammar-components-explained" id="toc-grammar-components-explained">Grammar Components
+Explained</a></li>
+<li><a href="#creating-a-parser-and-parsing-input" id="toc-creating-a-parser-and-parsing-input">Creating a Parser and
+Parsing Input</a></li>
+</ul></li>
+<li><a href="#section-3-understanding-parse-trees" id="toc-section-3-understanding-parse-trees">Section 3: Understanding
+Parse Trees</a>
+<ul>
+<li><a href="#parse-tree-structure" id="toc-parse-tree-structure">Parse
+Tree Structure</a></li>
+<li><a href="#navigating-the-parse-tree" id="toc-navigating-the-parse-tree">Navigating the Parse Tree</a></li>
+</ul></li>
+<li><a href="#section-4-pattern-matching-with-parse-trees" id="toc-section-4-pattern-matching-with-parse-trees">Section 4: Pattern
+Matching with Parse Trees</a></li>
+<li><a href="#section-5-transforming-parse-trees-to-asts" id="toc-section-5-transforming-parse-trees-to-asts">Section 5:
+Transforming Parse Trees to ASTs</a></li>
+<li><a href="#section-6-converting-parse-trees-to-asts" id="toc-section-6-converting-parse-trees-to-asts">Section 6: Converting
+Parse Trees to ASTs</a></li>
+<li><a href="#section-7-building-a-mini-interpreter" id="toc-section-7-building-a-mini-interpreter">Section 7: Building a
+Mini-Interpreter</a></li>
+<li><a href="#additional-resources-1" id="toc-additional-resources-1">Additional Resources</a></li>
+</ul></li>
 </ul>
 </nav>
 <h1 id="chapter-1-programming-language-design-and-implementation">Chapter 1:
@@ -1544,6 +1578,228 @@ Documentation</a></li>
 Python Type Checking</a></li>
 <li><a href="https://realpython.com/python-pattern-matching/">Real
 Python: Structural Pattern Matching in Python</a></li>
+</ul>
+<h1 id="chapter-3-parsing-and-mini-interpreters">Chapter 3: Parsing and
+Mini-Interpreters</h1>
+<h2 id="section-1-introduction-to-context-free-grammars-and-parsing">Section
+1: Introduction to Context-Free Grammars and Parsing</h2>
+<p>Lark is a parsing toolkit that works with Context-Free Grammars
+(CFGs). Context-free grammars are a formal grammar formalism that can
+express the syntax of most programming languages and many natural
+language constructs.</p>
+<h3 id="key-features-of-larks-parsing-approach">Key Features of Lark’s
+Parsing Approach</h3>
+<ul>
+<li><strong>Multiple Parsing Algorithms</strong>: Lark implements Earley
+and LALR(1) algorithms for parsing CFGs.</li>
+<li><strong>Ambiguity Support</strong>: Unlike PEG parsers, Lark’s
+Earley algorithm can handle ambiguous grammars gracefully.</li>
+<li><strong>Complete Language Coverage</strong>: Lark can parse all
+context-free languages, making it capable of handling almost any
+programming language.</li>
+<li><strong>EBNF Notation</strong>: Lark uses Extended Backus-Naur Form
+(EBNF) for grammar definition, which provides powerful and concise
+syntax.</li>
+</ul>
+<h2 id="section-2-working-with-lark">Section 2: Working with Lark</h2>
+<p>Lark is a modern parsing library for Python that implements parsers
+for Context-Free Grammars with additional features. It provides a clean
+interface for defining grammars and working with parse trees.</p>
+<h3 id="defining-a-grammar-in-lark">Defining a Grammar in Lark</h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>grammar <span class="op">=</span> <span class="vs">r&quot;&quot;&quot;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="vs">    </span><span class="op">?</span><span class="vs">expr: bin </span><span class="cf">|</span><span class="vs"> mono</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="vs">    mono: ground </span><span class="cf">|</span><span class="vs"> paren</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    paren: &quot;</span><span class="kw">(</span><span class="vs">&quot; expr &quot;</span><span class="kw">)</span><span class="vs">&quot;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    bin: mono op expr</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="vs">    ground: NUMBER</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="vs">    NUMBER: /</span><span class="pp">[0-9]</span><span class="op">+</span><span class="vs">/</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="vs">    op: &quot;</span><span class="op">+</span><span class="vs">&quot; </span><span class="cf">|</span><span class="vs"> &quot;-&quot; </span><span class="cf">|</span><span class="vs"> &quot;</span><span class="op">*</span><span class="vs">&quot;</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="vs">    %import common</span><span class="dv">.</span><span class="vs">WS</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="vs">    %ignore WS</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="vs">&quot;&quot;&quot;</span></span></code></pre></div>
+<h3 id="grammar-components-explained">Grammar Components Explained</h3>
+<ul>
+<li><strong>Rules</strong>: Non-terminals like <code>expr</code>,
+<code>mono</code>, and <code>bin</code> define the structure of the
+language.</li>
+<li><strong>Terminals</strong>: Items like <code>NUMBER</code> or
+literals like <code>&quot;(&quot;</code> match specific patterns in the
+input.</li>
+<li><strong>Special Rules</strong>: The <code>?expr</code> rule is an
+anonymous rule that doesn’t create a separate node in the parse
+tree.</li>
+<li><strong>Directives</strong>: <code>%import common.WS</code> and
+<code>%ignore WS</code> handle whitespace elegantly.</li>
+</ul>
+<h3 id="creating-a-parser-and-parsing-input">Creating a Parser and
+Parsing Input</h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lark <span class="im">import</span> Lark</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the Lark parser</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>parser <span class="op">=</span> Lark(grammar, start<span class="op">=</span><span class="st">&quot;expr&quot;</span>)</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse an input string</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>parse_tree <span class="op">=</span> parser.parse(<span class="st">&quot;(1 + 2) - 3&quot;</span>)</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the parse tree</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(parse_tree.pretty())</span></code></pre></div>
+<h2 id="section-3-understanding-parse-trees">Section 3: Understanding
+Parse Trees</h2>
+<p>Lark generates parse trees that represent the structure of the input
+according to the grammar rules. Each node in the tree corresponds to a
+rule in the grammar or a terminal value.</p>
+<h3 id="parse-tree-structure">Parse Tree Structure</h3>
+<p>For the expression <code>(1 + 2) - 3</code>, the parse tree looks
+like:</p>
+<pre><code>bin
++-- mono
+|   +-- paren
+|       +-- bin
+|           +-- mono
+|           |   +-- ground
+|           |       +-- 1
+|           +-- op
+|           |   +-- +
+|           +-- mono
+|               +-- ground
+|                   +-- 2
++-- op
+|   +-- -
++-- mono
+    +-- ground
+        +-- 3</code></pre>
+<h3 id="navigating-the-parse-tree">Navigating the Parse Tree</h3>
+<p>Parse trees can be navigated and inspected programmatically:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> print_tree(tree: ParseTree <span class="op">|</span> Token):</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> tree:</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span>data, children<span class="op">=</span>children):</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;Tree&quot;</span>, data)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> child <span class="kw">in</span> children:</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>                print_tree(child)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Token(<span class="bu">type</span><span class="op">=</span><span class="bu">type</span>, value<span class="op">=</span>value):</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;Token&quot;</span>, <span class="bu">type</span>, value)</span></code></pre></div>
+<h2 id="section-4-pattern-matching-with-parse-trees">Section 4: Pattern
+Matching with Parse Trees</h2>
+<p>Python 3.10’s pattern matching feature works exceptionally well with
+parse trees, allowing for declarative tree traversal:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> parse_tree:</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&#39;bin&#39;</span>, children<span class="op">=</span>[left, Tree(data<span class="op">=</span><span class="st">&#39;op&#39;</span>, children<span class="op">=</span>[Token(value<span class="op">=</span>op)]), right]):</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Found binary operation: </span><span class="sc">{</span>op<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Left: </span><span class="sc">{</span>left<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Right: </span><span class="sc">{</span>right<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&#39;mono&#39;</span>, children<span class="op">=</span>[Tree(data<span class="op">=</span><span class="st">&#39;ground&#39;</span>, children<span class="op">=</span>[Token(value<span class="op">=</span>number)])]):</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Found number: </span><span class="sc">{</span>number<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _:</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">&quot;Unknown tree structure&quot;</span>)</span></code></pre></div>
+<h2 id="section-5-transforming-parse-trees-to-asts">Section 5:
+Transforming Parse Trees to ASTs</h2>
+<p>Parse trees often contain more detail than needed for interpretation.
+We can define custom types and use pattern matching to convert parse
+trees into a more abstract syntax tree (AST):</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Literal</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define AST types for the expression language</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Op <span class="op">=</span> Literal[<span class="st">&quot;+&quot;</span>, <span class="st">&quot;-&quot;</span>, <span class="st">&quot;*&quot;</span>]</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Number:</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">int</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BinaryExpression:</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    op: Op</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    left: Expression</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>    right: Expression</span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Expression <span class="op">=</span> Number <span class="op">|</span> BinaryExpression</span></code></pre></div>
+<p>This AST representation is cleaner and more suitable for evaluation
+than the raw parse tree.</p>
+<h2 id="section-6-converting-parse-trees-to-asts">Section 6: Converting
+Parse Trees to ASTs</h2>
+<p>With our AST structure defined, we can convert parse trees into ASTs
+using pattern matching:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transform_parse_tree(tree: Tree) <span class="op">-&gt;</span> Expression:</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> tree:</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;mono&quot;</span>, children<span class="op">=</span>[subtree]):</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> transform_parse_tree(subtree)</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;ground&quot;</span>, children<span class="op">=</span>[Token(<span class="bu">type</span><span class="op">=</span><span class="st">&quot;NUMBER&quot;</span>, value<span class="op">=</span>value)]):</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> Number(value<span class="op">=</span><span class="bu">int</span>(value))</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;paren&quot;</span>, children<span class="op">=</span>[subtree]):</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> transform_parse_tree(subtree)</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>            data<span class="op">=</span><span class="st">&quot;bin&quot;</span>,</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>            children<span class="op">=</span>[</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>                left,</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>                Token(<span class="bu">type</span><span class="op">=</span><span class="st">&quot;OP&quot;</span>, value<span class="op">=</span>op),</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>                right,</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>            ],</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>        ):</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> BinaryExpression(</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>                op<span class="op">=</span>op,</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>                left<span class="op">=</span>transform_parse_tree(left),</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>                right<span class="op">=</span>transform_parse_tree(right),</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> _:</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unexpected parse tree structure&quot;</span>)</span></code></pre></div>
+<p>This approach provides much better type safety and makes the intent
+clearer than the Transformer class approach.</p>
+<h2 id="section-7-building-a-mini-interpreter">Section 7: Building a
+Mini-Interpreter</h2>
+<p>By combining parsing with evaluation, we can create a
+mini-interpreter:</p>
+<ol type="1">
+<li><strong>Parse</strong>: Convert the input string into a parse
+tree</li>
+<li><strong>Transform</strong>: Convert the parse tree into an AST</li>
+<li><strong>Evaluate</strong>: Traverse the AST to compute a result</li>
+</ol>
+<div class="sourceCode" id="cb38"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to parse a string and return an AST</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse_ast(expression: <span class="bu">str</span>) <span class="op">-&gt;</span> Expression:</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    parse_tree <span class="op">=</span> parser.parse(expression)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> transform_parse_tree(parse_tree)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>expression <span class="op">=</span> <span class="st">&quot;(1 + 2) - 3&quot;</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>ast <span class="op">=</span> parse_ast(expression)</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ast)  </span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate function (to be implemented)</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate(ast: Expression) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> ast:</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Number(value<span class="op">=</span>value):</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op<span class="op">=</span><span class="st">&quot;+&quot;</span>, left<span class="op">=</span>left, right<span class="op">=</span>right):</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> evaluate(left) <span class="op">+</span> evaluate(right)</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op<span class="op">=</span><span class="st">&quot;-&quot;</span>, left<span class="op">=</span>left, right<span class="op">=</span>right):</span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> evaluate(left) <span class="op">-</span> evaluate(right)</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op<span class="op">=</span><span class="st">&quot;*&quot;</span>, left<span class="op">=</span>left, right<span class="op">=</span>right):</span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> evaluate(left) <span class="op">*</span> evaluate(right)</span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> _:</span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown expression: </span><span class="sc">{</span>ast<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> evaluate(ast)</span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Result: </span><span class="sc">{</span>result<span class="sc">}</span><span class="ss">&quot;</span>)  <span class="co"># Output: Result: 0</span></span></code></pre></div>
+<p>This pattern-matching approach to evaluation is clear, concise, and
+type-safe.</p>
+<h2 id="additional-resources-1">Additional Resources</h2>
+<ul>
+<li><a href="https://lark-parser.readthedocs.io/en/latest/">Lark
+Documentation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Context-free_grammar">Context-Free
+Grammars (Wikipedia)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF
+Syntax (Wikipedia)</a></li>
+<li><a href="https://docs.python.org/3/reference/expressions.html#pattern-matching">Python
+Pattern Matching Documentation</a></li>
 </ul>
 </body>
 </html>

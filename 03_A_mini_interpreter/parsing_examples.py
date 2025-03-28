@@ -125,7 +125,7 @@ def parse_ast(expression: str) -> Expression:
     return transform_parse_tree(parse_tree)
 
 
-example = "    (   1  +   2  ) -  3   "
+example = "(1+2)-3"
 
 # example = "1+2"
 ast = parse_ast(example)
@@ -134,8 +134,9 @@ print(ast)
 
 # %%
 
-# %%
-
 # Exercise:
 # Add more operators. Implement the interpreter. Print the result. Add "/" and "%" operators.
 # Q: How will you handle division by zero?
+
+# Exercise:
+# Add a ternary conditional operator (like the COND ? THEN : ELSE operator in C)
