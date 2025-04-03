@@ -398,6 +398,8 @@ Parsing Approach</a></li>
 <li><a href="#defining-a-grammar-in-lark" id="toc-defining-a-grammar-in-lark">Defining a Grammar in Lark</a></li>
 <li><a href="#grammar-components-explained" id="toc-grammar-components-explained">Grammar Components
 Explained</a></li>
+<li><a href="#left-associativity-and-left-recursion" id="toc-left-associativity-and-left-recursion">Left-Associativity and
+Left Recursion</a></li>
 <li><a href="#creating-a-parser-and-parsing-input" id="toc-creating-a-parser-and-parsing-input">Creating a Parser and
 Parsing Input</a></li>
 </ul></li>
@@ -415,8 +417,84 @@ Transforming Parse Trees to ASTs</a></li>
 <li><a href="#section-6-converting-parse-trees-to-asts" id="toc-section-6-converting-parse-trees-to-asts">Section 6: Converting
 Parse Trees to ASTs</a></li>
 <li><a href="#section-7-building-a-mini-interpreter" id="toc-section-7-building-a-mini-interpreter">Section 7: Building a
-Mini-Interpreter</a></li>
+Mini-Interpreter</a>
+<ul>
+<li><a href="#repl-implementation" id="toc-repl-implementation">REPL
+Implementation</a></li>
+</ul></li>
 <li><a href="#additional-resources-1" id="toc-additional-resources-1">Additional Resources</a></li>
+</ul></li>
+<li><a href="#chapter-4-semantic-domains-and-environment-based-interpreters" id="toc-chapter-4-semantic-domains-and-environment-based-interpreters">Chapter
+4: Semantic Domains and Environment-Based Interpreters</a>
+<ul>
+<li><a href="#section-1-introduction-to-semantic-domains" id="toc-section-1-introduction-to-semantic-domains">Section 1:
+Introduction to Semantic Domains</a>
+<ul>
+<li><a href="#key-semantic-domains-in-programming-languages" id="toc-key-semantic-domains-in-programming-languages">Key Semantic
+Domains in Programming Languages</a></li>
+<li><a href="#core-semantic-domains" id="toc-core-semantic-domains">Core
+Semantic Domains</a></li>
+<li><a href="#side-effects-and-pure-functions" id="toc-side-effects-and-pure-functions">Side Effects and Pure
+Functions</a></li>
+</ul></li>
+<li><a href="#section-2-denotable-vs.-memorizable-values" id="toc-section-2-denotable-vs.-memorizable-values">Section 2: Denotable
+vs. Memorizable Values</a>
+<ul>
+<li><a href="#denotable-values-dval" id="toc-denotable-values-dval">Denotable Values (DVal)</a></li>
+<li><a href="#memorizable-values-mval" id="toc-memorizable-values-mval">Memorizable Values (MVal)</a></li>
+</ul></li>
+<li><a href="#section-3-environment-and-state-as-functions" id="toc-section-3-environment-and-state-as-functions">Section 3:
+Environment and State as Functions</a>
+<ul>
+<li><a href="#functional-programming-a-brief-digression" id="toc-functional-programming-a-brief-digression">Functional
+Programming: A Brief Digression</a></li>
+<li><a href="#environment-as-a-function" id="toc-environment-as-a-function">Environment as a Function</a></li>
+<li><a href="#state-as-a-function" id="toc-state-as-a-function">State as
+a Function</a></li>
+</ul></li>
+<li><a href="#section-4-functional-updates" id="toc-section-4-functional-updates">Section 4: Functional Updates</a>
+<ul>
+<li><a href="#environment-updates" id="toc-environment-updates">Environment Updates</a></li>
+<li><a href="#state-updates" id="toc-state-updates">State
+Updates</a></li>
+<li><a href="#empty-environment-and-state" id="toc-empty-environment-and-state">Empty Environment and
+State</a></li>
+<li><a href="#memory-allocation" id="toc-memory-allocation">Memory
+Allocation</a></li>
+<li><a href="#initial-environment-setup" id="toc-initial-environment-setup">Initial Environment Setup</a></li>
+</ul></li>
+<li><a href="#section-5-environment-based-interpretation" id="toc-section-5-environment-based-interpretation">Section 5:
+Environment-Based Interpretation</a>
+<ul>
+<li><a href="#traditional-approach-from-chapter-3" id="toc-traditional-approach-from-chapter-3">Traditional Approach (from
+Chapter 3)</a></li>
+<li><a href="#environment-based-approach" id="toc-environment-based-approach">Environment-Based Approach</a></li>
+<li><a href="#benefits-of-the-environment-based-approach" id="toc-benefits-of-the-environment-based-approach">Benefits of the
+Environment-Based Approach</a></li>
+</ul></li>
+<li><a href="#section-6-implementing-an-environment-based-interpreter" id="toc-section-6-implementing-an-environment-based-interpreter">Section
+6: Implementing an Environment-Based Interpreter</a></li>
+<li><a href="#section-7-extending-the-interpreter" id="toc-section-7-extending-the-interpreter">Section 7: Extending the
+Interpreter</a>
+<ul>
+<li><a href="#adding-new-operators" id="toc-adding-new-operators">Adding
+New Operators</a></li>
+<li><a href="#adding-variables" id="toc-adding-variables">Adding
+Variables</a></li>
+</ul></li>
+<li><a href="#additional-resources-2" id="toc-additional-resources-2">Additional Resources</a></li>
+<li><a href="#section-8-primitives-for-environment-and-memory" id="toc-section-8-primitives-for-environment-and-memory">Section 8:
+Primitives for Environment and Memory</a>
+<ul>
+<li><a href="#locations-as-a-semantic-domain" id="toc-locations-as-a-semantic-domain">Locations as a Semantic
+Domain</a></li>
+<li><a href="#memory-state-primitives" id="toc-memory-state-primitives">Memory (State) Primitives</a></li>
+<li><a href="#environment-primitives" id="toc-environment-primitives">Environment Primitives</a></li>
+<li><a href="#memory-allocation-1" id="toc-memory-allocation-1">Memory
+Allocation</a></li>
+<li><a href="#memory-and-environment-in-language-semantics" id="toc-memory-and-environment-in-language-semantics">Memory and
+Environment in Language Semantics</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </nav>
@@ -1614,7 +1692,7 @@ interface for defining grammars and working with parse trees.</p>
 <span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="vs">    ground: NUMBER</span></span>
 <span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="vs">    NUMBER: /</span><span class="pp">[0-9]</span><span class="op">+</span><span class="vs">/</span></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="vs">    op: &quot;</span><span class="op">+</span><span class="vs">&quot; </span><span class="cf">|</span><span class="vs"> &quot;-&quot; </span><span class="cf">|</span><span class="vs"> &quot;</span><span class="op">*</span><span class="vs">&quot;</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="vs">    op: &quot;</span><span class="op">+</span><span class="vs">&quot; </span><span class="cf">|</span><span class="vs"> &quot;-&quot; </span><span class="cf">|</span><span class="vs"> &quot;</span><span class="op">*</span><span class="vs">&quot; </span><span class="cf">|</span><span class="vs"> &quot;/&quot; </span><span class="cf">|</span><span class="vs"> &quot;%&quot;</span></span>
 <span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="vs">    %import common</span><span class="dv">.</span><span class="vs">WS</span></span>
 <span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="vs">    %ignore WS</span></span>
@@ -1633,18 +1711,31 @@ tree.</li>
 <li><strong>Directives</strong>: <code>%import common.WS</code> and
 <code>%ignore WS</code> handle whitespace elegantly.</li>
 </ul>
+<h3 id="left-associativity-and-left-recursion">Left-Associativity and
+Left Recursion</h3>
+<p>The grammar uses a left-recursive rule for binary operations to
+achieve left-associativity:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="bu">bin</span>: expr OP mono <span class="co">## left-associative</span></span></code></pre></div>
+<p>This approach ensures that expressions like <code>1 + 2 + 3</code>
+are evaluated from left to right as <code>(1 + 2) + 3</code>, which is
+the standard evaluation order for most arithmetic operations. Left
+recursion is traditionally challenging for many parser generators, but
+Lark can handle it efficiently, allowing for a more natural and
+intuitive grammar definition. For parser generators that cannot handle
+left recursion efficiently, there are transformations of the grammar
+that use only right recursion.</p>
 <h3 id="creating-a-parser-and-parsing-input">Creating a Parser and
 Parsing Input</h3>
-<div class="sourceCode" id="cb32"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lark <span class="im">import</span> Lark</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the Lark parser</span></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>parser <span class="op">=</span> Lark(grammar, start<span class="op">=</span><span class="st">&quot;expr&quot;</span>)</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse an input string</span></span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>parse_tree <span class="op">=</span> parser.parse(<span class="st">&quot;(1 + 2) - 3&quot;</span>)</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the parse tree</span></span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(parse_tree.pretty())</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lark <span class="im">import</span> Lark</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the Lark parser</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>parser <span class="op">=</span> Lark(grammar, start<span class="op">=</span><span class="st">&quot;expr&quot;</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse an input string</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>parse_tree <span class="op">=</span> parser.parse(<span class="st">&quot;(1 + 2) - 3&quot;</span>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the parse tree</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(parse_tree.pretty())</span></code></pre></div>
 <h2 id="section-3-understanding-parse-trees">Section 3: Understanding
 Parse Trees</h2>
 <p>Lark generates parse trees that represent the structure of the input
@@ -1672,84 +1763,84 @@ like:</p>
         +-- 3</code></pre>
 <h3 id="navigating-the-parse-tree">Navigating the Parse Tree</h3>
 <p>Parse trees can be navigated and inspected programmatically:</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> print_tree(tree: ParseTree <span class="op">|</span> Token):</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> tree:</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span>data, children<span class="op">=</span>children):</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;Tree&quot;</span>, data)</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> child <span class="kw">in</span> children:</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>                print_tree(child)</span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Token(<span class="bu">type</span><span class="op">=</span><span class="bu">type</span>, value<span class="op">=</span>value):</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;Token&quot;</span>, <span class="bu">type</span>, value)</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> print_tree(tree: ParseTree <span class="op">|</span> Token):</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> tree:</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span>data, children<span class="op">=</span>children):</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;Tree&quot;</span>, data)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> child <span class="kw">in</span> children:</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>                print_tree(child)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Token(<span class="bu">type</span><span class="op">=</span><span class="bu">type</span>, value<span class="op">=</span>value):</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;Token&quot;</span>, <span class="bu">type</span>, value)</span></code></pre></div>
 <h2 id="section-4-pattern-matching-with-parse-trees">Section 4: Pattern
 Matching with Parse Trees</h2>
 <p>Python 3.10’s pattern matching feature works exceptionally well with
 parse trees, allowing for declarative tree traversal:</p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> parse_tree:</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&#39;bin&#39;</span>, children<span class="op">=</span>[left, Tree(data<span class="op">=</span><span class="st">&#39;op&#39;</span>, children<span class="op">=</span>[Token(value<span class="op">=</span>op)]), right]):</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Found binary operation: </span><span class="sc">{</span>op<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Left: </span><span class="sc">{</span>left<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Right: </span><span class="sc">{</span>right<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&#39;mono&#39;</span>, children<span class="op">=</span>[Tree(data<span class="op">=</span><span class="st">&#39;ground&#39;</span>, children<span class="op">=</span>[Token(value<span class="op">=</span>number)])]):</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Found number: </span><span class="sc">{</span>number<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _:</span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">&quot;Unknown tree structure&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> parse_tree:</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&#39;bin&#39;</span>, children<span class="op">=</span>[left, Tree(data<span class="op">=</span><span class="st">&#39;op&#39;</span>, children<span class="op">=</span>[Token(value<span class="op">=</span>op)]), right]):</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Found binary operation: </span><span class="sc">{</span>op<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Left: </span><span class="sc">{</span>left<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Right: </span><span class="sc">{</span>right<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&#39;mono&#39;</span>, children<span class="op">=</span>[Tree(data<span class="op">=</span><span class="st">&#39;ground&#39;</span>, children<span class="op">=</span>[Token(value<span class="op">=</span>number)])]):</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f&quot;Found number: </span><span class="sc">{</span>number<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _:</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">&quot;Unknown tree structure&quot;</span>)</span></code></pre></div>
 <h2 id="section-5-transforming-parse-trees-to-asts">Section 5:
 Transforming Parse Trees to ASTs</h2>
 <p>Parse trees often contain more detail than needed for interpretation.
 We can define custom types and use pattern matching to convert parse
 trees into a more abstract syntax tree (AST):</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Literal</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define AST types for the expression language</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Op <span class="op">=</span> Literal[<span class="st">&quot;+&quot;</span>, <span class="st">&quot;-&quot;</span>, <span class="st">&quot;*&quot;</span>]</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Number:</span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">int</span></span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BinaryExpression:</span>
-<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    op: Op</span>
-<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    left: Expression</span>
-<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>    right: Expression</span>
-<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Expression <span class="op">=</span> Number <span class="op">|</span> BinaryExpression</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Literal</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define AST types for the expression language</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Op <span class="op">=</span> Literal[<span class="st">&quot;+&quot;</span>, <span class="st">&quot;-&quot;</span>, <span class="st">&quot;*&quot;</span>]</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Number:</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">int</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BinaryExpression:</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>    op: Op</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>    left: Expression</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>    right: Expression</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Expression <span class="op">=</span> Number <span class="op">|</span> BinaryExpression</span></code></pre></div>
 <p>This AST representation is cleaner and more suitable for evaluation
 than the raw parse tree.</p>
 <h2 id="section-6-converting-parse-trees-to-asts">Section 6: Converting
 Parse Trees to ASTs</h2>
 <p>With our AST structure defined, we can convert parse trees into ASTs
 using pattern matching:</p>
-<div class="sourceCode" id="cb37"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transform_parse_tree(tree: Tree) <span class="op">-&gt;</span> Expression:</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> tree:</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;mono&quot;</span>, children<span class="op">=</span>[subtree]):</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> transform_parse_tree(subtree)</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;ground&quot;</span>, children<span class="op">=</span>[Token(<span class="bu">type</span><span class="op">=</span><span class="st">&quot;NUMBER&quot;</span>, value<span class="op">=</span>value)]):</span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> Number(value<span class="op">=</span><span class="bu">int</span>(value))</span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;paren&quot;</span>, children<span class="op">=</span>[subtree]):</span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> transform_parse_tree(subtree)</span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(</span>
-<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>            data<span class="op">=</span><span class="st">&quot;bin&quot;</span>,</span>
-<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>            children<span class="op">=</span>[</span>
-<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>                left,</span>
-<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>                Token(<span class="bu">type</span><span class="op">=</span><span class="st">&quot;OP&quot;</span>, value<span class="op">=</span>op),</span>
-<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>                right,</span>
-<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>            ],</span>
-<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>        ):</span>
-<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> BinaryExpression(</span>
-<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>                op<span class="op">=</span>op,</span>
-<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>                left<span class="op">=</span>transform_parse_tree(left),</span>
-<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>                right<span class="op">=</span>transform_parse_tree(right),</span>
-<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> _:</span>
-<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unexpected parse tree structure&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transform_parse_tree(tree: Tree) <span class="op">-&gt;</span> Expression:</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> tree:</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;mono&quot;</span>, children<span class="op">=</span>[subtree]):</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> transform_parse_tree(subtree)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;ground&quot;</span>, children<span class="op">=</span>[Token(<span class="bu">type</span><span class="op">=</span><span class="st">&quot;NUMBER&quot;</span>, value<span class="op">=</span>value)]):</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> Number(value<span class="op">=</span><span class="bu">int</span>(value))</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(data<span class="op">=</span><span class="st">&quot;paren&quot;</span>, children<span class="op">=</span>[subtree]):</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> transform_parse_tree(subtree)</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Tree(</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>            data<span class="op">=</span><span class="st">&quot;bin&quot;</span>,</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>            children<span class="op">=</span>[</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>                left,</span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>                Token(<span class="bu">type</span><span class="op">=</span><span class="st">&quot;OP&quot;</span>, value<span class="op">=</span>op),</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>                right,</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>            ],</span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>        ):</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> BinaryExpression(</span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>                op<span class="op">=</span>op,</span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>                left<span class="op">=</span>transform_parse_tree(left),</span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>                right<span class="op">=</span>transform_parse_tree(right),</span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> _:</span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unexpected parse tree structure&quot;</span>)</span></code></pre></div>
 <p>This approach provides much better type safety and makes the intent
 clearer than the Transformer class approach.</p>
 <h2 id="section-7-building-a-mini-interpreter">Section 7: Building a
@@ -1762,34 +1853,60 @@ tree</li>
 <li><strong>Transform</strong>: Convert the parse tree into an AST</li>
 <li><strong>Evaluate</strong>: Traverse the AST to compute a result</li>
 </ol>
-<div class="sourceCode" id="cb38"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to parse a string and return an AST</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse_ast(expression: <span class="bu">str</span>) <span class="op">-&gt;</span> Expression:</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    parse_tree <span class="op">=</span> parser.parse(expression)</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> transform_parse_tree(parse_tree)</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>expression <span class="op">=</span> <span class="st">&quot;(1 + 2) - 3&quot;</span></span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>ast <span class="op">=</span> parse_ast(expression)</span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ast)  </span>
-<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate function (to be implemented)</span></span>
-<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate(ast: Expression) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
-<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> ast:</span>
-<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Number(value<span class="op">=</span>value):</span>
-<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
-<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op<span class="op">=</span><span class="st">&quot;+&quot;</span>, left<span class="op">=</span>left, right<span class="op">=</span>right):</span>
-<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> evaluate(left) <span class="op">+</span> evaluate(right)</span>
-<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op<span class="op">=</span><span class="st">&quot;-&quot;</span>, left<span class="op">=</span>left, right<span class="op">=</span>right):</span>
-<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> evaluate(left) <span class="op">-</span> evaluate(right)</span>
-<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op<span class="op">=</span><span class="st">&quot;*&quot;</span>, left<span class="op">=</span>left, right<span class="op">=</span>right):</span>
-<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> evaluate(left) <span class="op">*</span> evaluate(right)</span>
-<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> _:</span>
-<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown expression: </span><span class="sc">{</span>ast<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> evaluate(ast)</span>
-<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Result: </span><span class="sc">{</span>result<span class="sc">}</span><span class="ss">&quot;</span>)  <span class="co"># Output: Result: 0</span></span></code></pre></div>
-<p>This pattern-matching approach to evaluation is clear, concise, and
-type-safe.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to parse a string and return an AST</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse_ast(expression: <span class="bu">str</span>) <span class="op">-&gt;</span> Expression:</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    parse_tree <span class="op">=</span> parser.parse(expression)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> transform_parse_tree(parse_tree)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Example</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>expression <span class="op">=</span> <span class="st">&quot;(1 + 2) - 3&quot;</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>ast <span class="op">=</span> parse_ast(expression)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ast)  </span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate function </span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate(ast: Expression) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> ast:</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Number(value):</span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op, left, right):</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>            left_value <span class="op">=</span> evaluate(left)</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>            right_value <span class="op">=</span> evaluate(right)</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">match</span> op:</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="st">&quot;+&quot;</span>:</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> left_value <span class="op">+</span> right_value</span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="st">&quot;-&quot;</span>:</span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> left_value <span class="op">-</span> right_value</span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="st">&quot;*&quot;</span>:</span>
+<span id="cb39-25"><a href="#cb39-25" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> left_value <span class="op">*</span> right_value</span>
+<span id="cb39-26"><a href="#cb39-26" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="st">&quot;/&quot;</span>:</span>
+<span id="cb39-27"><a href="#cb39-27" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> right_value <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb39-28"><a href="#cb39-28" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;Division by zero&quot;</span>)</span>
+<span id="cb39-29"><a href="#cb39-29" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> left_value <span class="op">//</span> right_value</span>
+<span id="cb39-30"><a href="#cb39-30" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="st">&quot;%&quot;</span>:</span>
+<span id="cb39-31"><a href="#cb39-31" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> right_value <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb39-32"><a href="#cb39-32" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;Division by zero&quot;</span>)</span>
+<span id="cb39-33"><a href="#cb39-33" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> left_value <span class="op">%</span> right_value</span></code></pre></div>
+<p>The implementation handles division by zero by checking for zero
+divisors before performing division or modulo operations and raising a
+<code>ValueError</code> when detected.</p>
+<h3 id="repl-implementation">REPL Implementation</h3>
+<p>The interpreter is equipped with a Read-Evaluate-Print Loop (REPL)
+that allows users to interactively input expressions and see their
+evaluated results:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> REPL():</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    exit <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> exit:</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>        expression <span class="op">=</span> <span class="bu">input</span>(<span class="st">&quot;Enter an expression (exit to quit): &quot;</span>)</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expression <span class="op">==</span> <span class="st">&quot;exit&quot;</span>:</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>            exit <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">try</span>:</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>                <span class="bu">print</span>(evaluate_string(expression))</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>                <span class="bu">print</span>(e)</span></code></pre></div>
+<p>This pattern provides an interactive environment for testing the
+interpreter, handling errors gracefully, and allowing users to
+experiment with different expressions.</p>
 <h2 id="additional-resources-1">Additional Resources</h2>
 <ul>
 <li><a href="https://lark-parser.readthedocs.io/en/latest/">Lark
@@ -1801,5 +1918,543 @@ Syntax (Wikipedia)</a></li>
 <li><a href="https://docs.python.org/3/reference/expressions.html#pattern-matching">Python
 Pattern Matching Documentation</a></li>
 </ul>
+<h1 id="chapter-4-semantic-domains-and-environment-based-interpreters">Chapter
+4: Semantic Domains and Environment-Based Interpreters</h1>
+<h2 id="section-1-introduction-to-semantic-domains">Section 1:
+Introduction to Semantic Domains</h2>
+<p>In programming language semantics, <strong>semantic domains</strong>
+are mathematical structures used to give meaning to syntactic
+constructs. They provide the foundation for defining the behavior of
+programs in a precise, mathematical way.</p>
+<h3 id="key-semantic-domains-in-programming-languages">Key Semantic
+Domains in Programming Languages</h3>
+<ul>
+<li><strong>Syntactic Domains</strong>: Represent the structure of
+programs (tokens, parse trees, syntax trees).</li>
+<li><strong>Semantic Domains</strong>: Represent the meaning of programs
+(values, environments, states).</li>
+</ul>
+<p>The relationship between these domains is at the heart of language
+semantics:</p>
+<pre><code>Syntax -&gt; Semantics
+Program -&gt; Meaning</code></pre>
+<h3 id="core-semantic-domains">Core Semantic Domains</h3>
+<p>In our mini-interpreter, we’ll work with several fundamental semantic
+domains:</p>
+<ul>
+<li><strong>Expressible Values</strong>: Values that can be produced by
+evaluating expressions</li>
+<li><strong>Denotable Values (DVal)</strong>: Values that can be bound
+to identifiers in the environment</li>
+<li><strong>Memorizable Values (MVal)</strong>: Values that can be
+stored in memory/state</li>
+<li><strong>Environment</strong>: Maps identifiers to denotable values,
+representing the binding context</li>
+<li><strong>State</strong>: Maps memory locations to memorizable values,
+representing the program’s memory</li>
+</ul>
+<p>While these domains often overlap, they aren’t necessarily identical.
+Understanding the differences is crucial for language design.</p>
+<h3 id="side-effects-and-pure-functions">Side Effects and Pure
+Functions</h3>
+<p>A fundamental distinction in programming language semantics is
+between <strong>pure</strong> computations and those that produce
+<strong>side effects</strong>.</p>
+<h4 id="pure-functions">Pure Functions</h4>
+<p>A <strong>pure function</strong> is a computation that: 1. Always
+produces the same output for the same input 2. Has no observable effects
+beyond computing its result</p>
+<p>In mathematical terms, a pure function is simply a mapping from
+inputs to outputs, like mathematical functions (e.g., sin(x),
+log(x)).</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add(x: <span class="bu">int</span>, y: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">+</span> y  <span class="co"># Pure: same inputs always give same output</span></span></code></pre></div>
+<h4 id="side-effects">Side Effects</h4>
+<p>A <strong>side effect</strong> is any observable change to the system
+state that occurs during computation, beyond returning a value. Common
+side effects include:</p>
+<ol type="1">
+<li><p><strong>Memory updates</strong>: Modifying variables or data
+structures</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> <span class="dv">10</span>  <span class="co"># Changes the program&#39;s state</span></span></code></pre></div>
+<p>Q: in this context, what is a function that does <strong>not</strong>
+return always the same value for the same inputs?</p></li>
+<li><p><strong>Input/Output operations</strong>:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Hello&quot;</span>)  <span class="co"># Affects the external world (terminal)</span></span></code></pre></div></li>
+<li><p><strong>File operations</strong>:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">&quot;data.txt&quot;</span>, <span class="st">&quot;w&quot;</span>) <span class="im">as</span> f:</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    f.write(<span class="st">&quot;data&quot;</span>)  <span class="co"># Changes the file system</span></span></code></pre></div></li>
+<li><p><strong>Network operations</strong>:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>requests.get(<span class="st">&quot;https://example.com&quot;</span>)  <span class="co"># Interacts with external systems</span></span></code></pre></div></li>
+</ol>
+<h4 id="memory-updates-as-side-effects">Memory Updates as Side
+Effects</h4>
+<p>In our interpreter design, memory (state) updates are a primary form
+of side effect. When we update state:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_update(state: State, location: <span class="bu">int</span>, value: MVal) <span class="op">-&gt;</span> State:</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    new_state <span class="op">=</span> state.copy() </span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    new_state[location] <span class="op">=</span> value</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_state</span></code></pre></div>
+<p>We’re representing a change to the program’s memory. In a real
+computer, this would modify memory cells directly. Our functional
+implementation returns a new state rather than modifying the existing
+one, but conceptually it represents the same side effect.</p>
+<h4 id="side-effects-in-programming-languages">Side Effects in
+Programming Languages</h4>
+<p>Languages differ in how they handle side effects:</p>
+<ul>
+<li><strong>Purely functional languages</strong> (like Haskell) isolate
+side effects using type systems and monads</li>
+<li><strong>Imperative languages</strong> (like C, Python) embrace side
+effects as their primary mechanism for computation</li>
+<li><strong>Hybrid languages</strong> (like Scala, OCaml) support both
+styles</li>
+</ul>
+<p>Understanding side effects is crucial for language design because
+they impact: - Program correctness (pure functions are easier to reason
+about) - Parallelization (side effects complicate parallel execution) -
+Optimization (pure functions allow more aggressive optimizations)</p>
+<p>In our interpreter, we’ll model side effects using explicit state
+passing, maintaining the mathematical clarity of our semantics while
+accurately representing the behavior of stateful programs.</p>
+<h2 id="section-2-denotable-vs.-memorizable-values">Section 2: Denotable
+vs. Memorizable Values</h2>
+<h3 id="denotable-values-dval">Denotable Values (DVal)</h3>
+<p>Denotable values are those that can be bound to identifiers in an
+environment. In our implementation, they include:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Num <span class="op">=</span> <span class="bu">int</span>  <span class="co"># A type alias for integers</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> DenOperator <span class="op">=</span> Callable[[<span class="bu">int</span>, <span class="bu">int</span>], <span class="bu">int</span>]</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> DVal <span class="op">=</span> <span class="bu">int</span> <span class="op">|</span> DenOperator  <span class="co"># Denotable values</span></span></code></pre></div>
+<p>DVal includes: - <strong>Numbers</strong>: Simple integer values -
+<strong>Operators</strong>: Functions that take two integers and return
+an integer</p>
+<h3 id="memorizable-values-mval">Memorizable Values (MVal)</h3>
+<p>Memorizable values are those that can be stored in memory (the
+state). In our implementation:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> MVal <span class="op">=</span> <span class="bu">int</span>  <span class="co"># Memorizable values</span></span></code></pre></div>
+<p>MVal only includes integers, not functions. This highlights an
+important distinction:</p>
+<blockquote>
+<p>Not everything that can be bound to a name can be stored in
+memory.</p>
+</blockquote>
+<p>This distinction is crucial for understanding: - Why some languages
+don’t support first-class functions - Why some types require special
+treatment in memory management - How languages with different type
+systems handle values differently</p>
+<h2 id="section-3-environment-and-state-as-functions">Section 3:
+Environment and State as Functions</h2>
+<p>In our treatment of semantic domains, we adopt a purely functional
+approach where environments and states are represented as functions
+rather than data structures. This approach aligns with the mathematical
+view of semantic domains and provides a clean conceptual model for
+understanding program behavior.</p>
+<h3 id="functional-programming-a-brief-digression">Functional
+Programming: A Brief Digression</h3>
+<p>Before diving into our function-based implementation of environments
+and state, it’s worth taking a brief detour to discuss functional
+programming concepts, as they form the foundation of our approach.</p>
+<p>Functional programming is a paradigm where computations are treated
+as evaluations of mathematical functions, emphasizing immutable data and
+avoiding side effects. Python, while not a pure functional language,
+supports many functional programming techniques.</p>
+<h4 id="functions-as-first-class-citizens">Functions as First-Class
+Citizens</h4>
+<p>In functional programming, functions are “first-class citizens” —
+they can be: - Assigned to variables - Passed as arguments to other
+functions - Returned from functions - Stored in data structures</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function assigned to a variable</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>increment <span class="op">=</span> <span class="kw">lambda</span> x: x <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Function passed as an argument</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> apply_twice(f, x):</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> f(f(x))</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> apply_twice(increment, <span class="dv">3</span>)  <span class="co"># Returns 5</span></span></code></pre></div>
+<h4 id="higher-order-functions-map">Higher-Order Functions: Map</h4>
+<p>A common pattern in functional programming is applying a function to
+each element in a collection. Python’s <code>map</code> function does
+exactly this:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>numbers <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>]</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply a function to each element</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>squared <span class="op">=</span> <span class="bu">list</span>(<span class="bu">map</span>(<span class="kw">lambda</span> x: x<span class="op">**</span><span class="dv">2</span>, numbers))  <span class="co"># [1, 4, 9, 16, 25]</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Equivalent to a list comprehension</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>squared_alt <span class="op">=</span> [x<span class="op">**</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> numbers]  <span class="co"># [1, 4, 9, 16, 25]</span></span></code></pre></div>
+<h4 id="function-composition">Function Composition</h4>
+<p>Functional programming emphasizes building complex behaviors by
+composing simpler functions:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compose(f, g):</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> x: f(g(x))</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compose two functions</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>negate_and_square <span class="op">=</span> compose(<span class="kw">lambda</span> x: <span class="op">-</span>x, <span class="kw">lambda</span> x: x<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> negate_and_square(<span class="dv">5</span>)  <span class="co"># -25</span></span></code></pre></div>
+<h4 id="pure-functions-and-immutability">Pure Functions and
+Immutability</h4>
+<p>Pure functions always produce the same output for the same input and
+have no side effects. This property makes them predictable and easier to
+reason about:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pure function</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add(a, b):</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Impure function (has side effects)</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_and_print(a, b):</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> a <span class="op">+</span> b</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&quot;The result is </span><span class="sc">{</span>result<span class="sc">}</span><span class="ss">&quot;</span>)  <span class="co"># Side effect: printing</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span></code></pre></div>
+<h4 id="relevance-to-semantic-domains">Relevance to Semantic
+Domains</h4>
+<p>These functional programming concepts directly inform our approach to
+implementing semantic domains:</p>
+<ol type="1">
+<li>We represent environments and stores as functions, not data
+structures</li>
+<li>We use higher-order functions to create updated environments and
+stores</li>
+<li>We maintain immutability through functional updates rather than
+mutations</li>
+<li>We compose simple operations to build complex behaviors</li>
+</ol>
+<p>With this foundation in mind, let’s explore how we represent
+environments and states as functions.</p>
+<h3 id="environment-as-a-function">Environment as a Function</h3>
+<p>An environment is mathematically a function that maps identifiers to
+denotable values:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Environment <span class="op">=</span> Callable[[<span class="bu">str</span>], DVal]</span></code></pre></div>
+<p>This means an environment is a function that: - Takes an identifier
+(string) as input - Returns a denotable value (DVal) - Raises an error
+if the identifier is not defined</p>
+<p>While many practical implementations use dictionaries or hash tables
+for efficiency, conceptually an environment is simply a function:</p>
+<pre><code>Environment: Identifier → DVal</code></pre>
+<h3 id="state-as-a-function">State as a Function</h3>
+<p>Similarly, a state is a function that maps memory locations to
+memorizable values:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> State <span class="op">=</span> Callable[[Location], MVal]</span></code></pre></div>
+<p>This represents a state as: - A function taking a location as input -
+Returning the value stored at that location - Raising an error if the
+location is not allocated</p>
+<p>Conceptually:</p>
+<pre><code>State: Location → MVal</code></pre>
+<h2 id="section-4-functional-updates">Section 4: Functional Updates</h2>
+<p>In a purely functional approach, we don’t mutate existing
+environments or states. Instead, we create new functions that use the
+old ones but with modified behavior for specific inputs.</p>
+<h3 id="environment-updates">Environment Updates</h3>
+<p>Instead of modifying a dictionary, we define a new function that
+returns the new value for the updated identifier and delegates to the
+original environment for all other identifiers:</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> env_extend(env: Environment, name: <span class="bu">str</span>, value: DVal) <span class="op">-&gt;</span> Environment:</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new environment with an added binding&quot;&quot;&quot;</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_env(n: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> n <span class="op">==</span> name:</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(n)</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_env</span></code></pre></div>
+<p>This function returns a new environment that: - Returns
+<code>value</code> when asked for <code>name</code> - Delegates to the
+original environment for all other identifiers</p>
+<p>This approach: - Preserves referential transparency - Enables easy
+implementation of lexical scoping - Facilitates reasoning about program
+behavior - Models the mathematical concept of function extension</p>
+<h3 id="state-updates">State Updates</h3>
+<p>Similarly, state updates create new functions rather than modifying
+existing data structures:</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_update(state: State, location: Location, value: MVal) <span class="op">-&gt;</span> State:</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new state with an updated value at given location&quot;&quot;&quot;</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_state(loc: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loc <span class="op">==</span> location:</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state(loc)</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_state</span></code></pre></div>
+<p>This function creates a new state that: - Returns the new value when
+asked for the specified location - Delegates to the original state for
+all other locations</p>
+<h3 id="empty-environment-and-state">Empty Environment and State</h3>
+<p>The primitives for creating empty environments and states define
+functions that raise errors for any input, reflecting that nothing is
+defined initially:</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_environment() <span class="op">-&gt;</span> Environment:</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty environment function&quot;&quot;&quot;</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> env(name: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_memory() <span class="op">-&gt;</span> State:</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty memory state function&quot;&quot;&quot;</span></span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> state(location: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> state</span></code></pre></div>
+<h3 id="memory-allocation">Memory Allocation</h3>
+<p>Memory allocation is more complex when using pure functions, as we
+need to track the next available location:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MemoryAllocator:</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> allocate(<span class="va">self</span>, state: State, value: MVal) <span class="op">-&gt;</span> <span class="bu">tuple</span>[State, Location]:</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;Allocate a new memory location and store value there.&quot;&quot;&quot;</span></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>        location <span class="op">=</span> <span class="va">self</span>.next_location</span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>        new_state <span class="op">=</span> state_update(state, location, value)</span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> new_state, location</span></code></pre></div>
+<p>This demonstrates one of the challenges of pure functional
+approaches: maintaining state for things like memory allocation
+typically requires some controlled form of mutation or a monadic
+approach.</p>
+<h3 id="initial-environment-setup">Initial Environment Setup</h3>
+<p>In our functional implementation, the initial environment is built by
+starting with an empty environment and extending it with each
+operator:</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> create_initial_env() <span class="op">-&gt;</span> Environment:</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an environment populated with standard operators&quot;&quot;&quot;</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> empty_environment()</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> env_extend(env, <span class="st">&quot;+&quot;</span>, add)</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> env_extend(env, <span class="st">&quot;-&quot;</span>, subtract)</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> env_extend(env, <span class="st">&quot;*&quot;</span>, multiply)</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> env_extend(env, <span class="st">&quot;/&quot;</span>, divide)</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> env_extend(env, <span class="st">&quot;%&quot;</span>, modulo)</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env</span></code></pre></div>
+<p>This builds up the environment incrementally, adding each binding
+through functional extension.</p>
+<h2 id="section-5-environment-based-interpretation">Section 5:
+Environment-Based Interpretation</h2>
+<p>Traditional interpreters often use pattern matching on operators
+directly in the evaluation function. An environment-based approach takes
+a more abstract view, treating operators as first-class values in the
+environment.</p>
+<h3 id="traditional-approach-from-chapter-3">Traditional Approach (from
+Chapter 3)</h3>
+<div class="sourceCode" id="cb63"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate(ast: Expression) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> ast:</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Number(value):</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op, left, right):</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>            left_value <span class="op">=</span> evaluate(left)</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>            right_value <span class="op">=</span> evaluate(right)</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">match</span> op:</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="st">&quot;+&quot;</span>:</span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> left_value <span class="op">+</span> right_value</span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="st">&quot;-&quot;</span>:</span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> left_value <span class="op">-</span> right_value</span>
+<span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a>                <span class="co"># ... other operations</span></span></code></pre></div>
+<h3 id="environment-based-approach">Environment-Based Approach</h3>
+<div class="sourceCode" id="cb64"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate(ast: Expression, env: Environment) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> ast:</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Number(value):</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op, left, right):</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Get operator from environment</span></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>            operator <span class="op">=</span> env.get(op)</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> operator <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown operator: </span><span class="sc">{</span>op<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Ensure it&#39;s a DenOperator</span></span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(operator, Callable):</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;</span><span class="sc">{</span>op<span class="sc">}</span><span class="ss"> is not a function&quot;</span>)</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Evaluate operands and apply operator</span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>            left_value <span class="op">=</span> evaluate(left, env)</span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>            right_value <span class="op">=</span> evaluate(right, env)</span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Apply the operator to the evaluated operands</span></span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> operator(left_value, right_value)</span></code></pre></div>
+<h3 id="benefits-of-the-environment-based-approach">Benefits of the
+Environment-Based Approach</h3>
+<ul>
+<li><strong>Extensibility</strong>: New operators can be added to the
+environment without modifying the evaluator</li>
+<li><strong>First-class operations</strong>: Operators are values that
+can be passed, returned, and manipulated</li>
+<li><strong>Consistent treatment</strong>: Operators and other
+identifiers are handled uniformly</li>
+<li><strong>Semantic clarity</strong>: The environment explicitly
+represents the mapping from names to meanings</li>
+</ul>
+<h2 id="section-6-implementing-an-environment-based-interpreter">Section
+6: Implementing an Environment-Based Interpreter</h2>
+<p>Our <code>domains.py</code> file implements a complete
+environment-based interpreter:</p>
+<ol type="1">
+<li><strong>Define semantic domains</strong>: Denotable and memorizable
+values</li>
+<li><strong>Implement operators</strong>: Define functions for
+arithmetic operations</li>
+<li><strong>Create the environment</strong>: Populate with standard
+operators</li>
+<li><strong>Evaluate expressions</strong>: Using the environment to look
+up operators</li>
+<li><strong>REPL</strong>: Interactive environment for testing the
+interpreter</li>
+</ol>
+<h2 id="section-7-extending-the-interpreter">Section 7: Extending the
+Interpreter</h2>
+<p>This approach makes it easy to extend the language with new
+features:</p>
+<h3 id="adding-new-operators">Adding New Operators</h3>
+<p>To add a new operator, simply define its function and add it to the
+environment:</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power(x: <span class="bu">int</span>, y: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">**</span> y</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extend environment</span></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>env <span class="op">=</span> env_extend(create_initial_env(), <span class="st">&quot;**&quot;</span>, power)</span></code></pre></div>
+<h3 id="adding-variables">Adding Variables</h3>
+<p>To support variables, extend the AST with a variable node and update
+the evaluator:</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Variable:</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Update Expression type</span></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Expression <span class="op">=</span> Number <span class="op">|</span> BinaryExpression <span class="op">|</span> Variable</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Update evaluate function</span></span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate(ast: Expression, env: Environment) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> ast:</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Variable(name):</span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>            value <span class="op">=</span> env_lookup(env, name)</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Additional check might be needed if variables can only be Numbers</span></span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(value, <span class="bu">int</span>):</span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss"> is not a number&quot;</span>)</span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ... existing cases</span></span></code></pre></div>
+<h2 id="additional-resources-2">Additional Resources</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Denotational_semantics">Denotational
+Semantics (Wikipedia)</a></li>
+<li><a href="https://web.stanford.edu/class/cs242/materials/lectures/lecture6.pdf">Programming
+Language Semantics (Stanford)</a></li>
+<li><a href="https://www.cs.cornell.edu/courses/cs3110/2019sp/textbook/interp/lambda_calculus.html">Functional
+Programming and Lambda Calculus</a></li>
+<li><a href="https://www.cs.tufts.edu/comp/105/readings/environments/environments.html">Environment
+and Store in Programming Languages</a></li>
+</ul>
+<h2 id="section-8-primitives-for-environment-and-memory">Section 8:
+Primitives for Environment and Memory</h2>
+<p>In the formal semantics of programming languages, we work with
+primitives that define how environments and memory operate. These
+primitives capture the essential operations needed to model variable
+bindings and memory allocation.</p>
+<h3 id="locations-as-a-semantic-domain">Locations as a Semantic
+Domain</h3>
+<p>Before discussing memory operations, we must recognize
+<strong>Locations</strong> as a fundamental semantic domain:</p>
+<pre><code>type Location = int  # In our implementation, locations are integers</code></pre>
+<p>Locations (sometimes called addresses) are abstract entities that
+serve as references to memory cells. They are a semantic domain distinct
+from integers used in calculation, even though we might represent them
+as integers in an implementation. In a language’s formal semantics,
+locations are opaque values that only make sense in the context of
+memory operations.</p>
+<h3 id="memory-state-primitives">Memory (State) Primitives</h3>
+<p>Memory, also called the store or state, maps locations to memorizable
+values. The core operations include:</p>
+<ol type="1">
+<li><p><strong>empty_memory</strong>: Creates an initial, empty memory
+state</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_memory() <span class="op">-&gt;</span> State:</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty memory state function&quot;&quot;&quot;</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> state(location: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> state</span></code></pre></div></li>
+<li><p><strong>update</strong>: Modifies the memory at a specific
+location</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_update(state: State, location: Location, value: MVal) <span class="op">-&gt;</span> State:</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new state with an updated value at given location&quot;&quot;&quot;</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_state(loc: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loc <span class="op">==</span> location:</span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state(loc)</span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_state</span></code></pre></div></li>
+<li><p><strong>lookup</strong>: Retrieves a value from a location</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_lookup(state: State, location: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Look up a value at a given location&quot;&quot;&quot;</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state(location)</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
+<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div></li>
+</ol>
+<p>Memory in programming languages has a maximum size, determined by
+hardware or system configuration. When a program needs more memory than
+available:</p>
+<ul>
+<li>In simple interpreters: An “out of memory” error occurs</li>
+<li>In modern operating systems: Memory expansion mechanisms activate,
+such as:
+<ul>
+<li>Virtual memory paging to disk</li>
+<li>Heap expansion</li>
+<li>Garbage collection (freeing unused memory)</li>
+</ul></li>
+</ul>
+<h3 id="environment-primitives">Environment Primitives</h3>
+<p>The environment maps identifiers to denotable values. Its essential
+operations include:</p>
+<ol type="1">
+<li><p><strong>empty_environment</strong>: Creates an initial, empty
+environment</p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_environment() <span class="op">-&gt;</span> Environment:</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty environment function&quot;&quot;&quot;</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> env(name: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env</span></code></pre></div></li>
+<li><p><strong>bind</strong> (or <strong>extend</strong>): Adds a new
+binding to an environment</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> env_extend(env: Environment, name: <span class="bu">str</span>, value: DVal) <span class="op">-&gt;</span> Environment:</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new environment with an added binding&quot;&quot;&quot;</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_env(n: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> n <span class="op">==</span> name:</span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(n)</span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_env</span></code></pre></div></li>
+<li><p><strong>lookup</strong>: Retrieves a value bound to an
+identifier</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> env_lookup(env: Environment, name: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Look up an identifier in the environment&quot;&quot;&quot;</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(name)</span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div></li>
+</ol>
+<h3 id="memory-allocation-1">Memory Allocation</h3>
+<p>In a complete interpreter, we would also need memory allocation
+primitives:</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MemoryAllocator:</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> allocate(<span class="va">self</span>, state: State, value: MVal) <span class="op">-&gt;</span> <span class="bu">tuple</span>[State, Location]:</span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;Allocate a new memory location and store value there.&quot;&quot;&quot;</span></span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>        location <span class="op">=</span> <span class="va">self</span>.next_location</span>
+<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a>        new_state <span class="op">=</span> state_update(state, location, value)</span>
+<span id="cb74-10"><a href="#cb74-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> new_state, location</span></code></pre></div>
+<p>This demonstrates an interesting challenge in functional programming:
+maintaining the “next available location” requires some form of state.
+We use a stateful object to keep track of this, though in a purely
+functional language, this might be handled through a state monad or
+similar construct.</p>
+<h3 id="memory-and-environment-in-language-semantics">Memory and
+Environment in Language Semantics</h3>
+<p>The interaction between environments and memory is central to
+understanding language features:</p>
+<ul>
+<li><strong>Variables</strong>: Bind identifiers to locations (in the
+environment) which then hold values (in memory)</li>
+<li><strong>Assignment</strong>: Changes memory but not the environment
+(the variable still refers to the same location)</li>
+<li><strong>Scoping</strong>: Creates nested environments with different
+bindings for the same identifier</li>
+<li><strong>Parameter passing</strong>: Creates bindings between formal
+parameters and actual arguments</li>
+</ul>
+<p>This conceptual separation allows language designers to reason
+clearly about the effects of operations and ensure language features
+interact correctly.</p>
 </body>
 </html>

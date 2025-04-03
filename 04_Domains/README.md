@@ -1,32 +1,589 @@
-# Chapter 4: Semantic domains and expressions with identifiers and environment
+# Chapter 4: Semantic Domains and Environment-Based Interpreters
 
-# Syntactic domains
+## Section 1: Introduction to Semantic Domains
 
-- Files
+In programming language semantics, **semantic domains** are mathematical structures used to give meaning to syntactic constructs. They provide the foundation for defining the behavior of programs in a precise, mathematical way.
 
-- Strings
+### Key Semantic Domains in Programming Languages
 
-- Tokens
+- **Syntactic Domains**: Represent the structure of programs (tokens, parse trees, syntax trees).
+- **Semantic Domains**: Represent the meaning of programs (values, environments, states).
 
-- Parse tree
+The relationship between these domains is at the heart of language semantics:
 
-- Syntax tree
+```
+Syntax -> Semantics
+Program -> Meaning
+```
 
-# Semantic domains
+### Core Semantic Domains
 
-Numbers
+In our mini-interpreter, we'll work with several fundamental semantic domains:
 
-Identifiers (names of constants, variables, functions, etc.)
+- **Expressible Values**: Values that can be produced by evaluating expressions
+- **Denotable Values (DVal)**: Values that can be bound to identifiers in the environment
+- **Memorizable Values (MVal)**: Values that can be stored in memory/state
+- **Environment**: Maps identifiers to denotable values, representing the binding context
+- **State**: Maps memory locations to memorizable values, representing the program's memory
 
-Environment (maps identifiers to a semantic domain called "denotable values")
+While these domains often overlap, they aren't necessarily identical. Understanding the differences is crucial for language design.
 
-State (maps memory locations to a semantic domain called "memorizable values")
+### Side Effects and Pure Functions
 
-Expressible values: the semantic domain to which expressions evaluate.
+A fundamental distinction in programming language semantics is between **pure** computations and those that produce **side effects**.
 
-# Implementation of environment and state
+#### Pure Functions
 
-We adopt a purely mathematical standpoint. These domains are implemented using functions, and update is a map from functions to functions. 
+A **pure function** is a computation that:
+1. Always produces the same output for the same input
+2. Has no observable effects beyond computing its result
 
-Indeed, in practice, one uses hashtables (also nested ones) for the environment, which can also be eliminated in some cases by the compilation process, and pointers for memory. 
+In mathematical terms, a pure function is simply a mapping from inputs to outputs, like mathematical functions (e.g., sin(x), log(x)).
+
+```python
+def add(x: int, y: int) -> int:
+    return x + y  # Pure: same inputs always give same output
+```
+
+#### Side Effects
+
+A **side effect** is any observable change to the system state that occurs during computation, beyond returning a value. Common side effects include:
+
+1. **Memory updates**: Modifying variables or data structures
+   ```python
+   x = 10  # Changes the program's state
+   ```
+
+   Q: in this context, what is a function that does **not** return always the same value for the same inputs?
+
+2. **Input/Output operations**:
+   ```python
+   print("Hello")  # Affects the external world (terminal)
+   ```
+
+3. **File operations**:
+   ```python
+   with open("data.txt", "w") as f:
+       f.write("data")  # Changes the file system
+   ```
+
+4. **Network operations**:
+   ```python
+   requests.get("https://example.com")  # Interacts with external systems
+   ```
+
+#### Memory Updates as Side Effects
+
+In our interpreter design, memory (state) updates are a primary form of side effect. When we update state:
+
+```python
+def state_update(state: State, location: int, value: MVal) -> State:
+    new_state = state.copy() 
+    new_state[location] = value
+    return new_state
+```
+
+We're representing a change to the program's memory. In a real computer, this would modify memory cells directly. Our functional implementation returns a new state rather than modifying the existing one, but conceptually it represents the same side effect.
+
+#### Side Effects in Programming Languages
+
+Languages differ in how they handle side effects:
+
+- **Purely functional languages** (like Haskell) isolate side effects using type systems and monads
+- **Imperative languages** (like C, Python) embrace side effects as their primary mechanism for computation
+- **Hybrid languages** (like Scala, OCaml) support both styles
+
+Understanding side effects is crucial for language design because they impact:
+- Program correctness (pure functions are easier to reason about)
+- Parallelization (side effects complicate parallel execution)
+- Optimization (pure functions allow more aggressive optimizations)
+
+In our interpreter, we'll model side effects using explicit state passing, maintaining the mathematical clarity of our semantics while accurately representing the behavior of stateful programs.
+
+## Section 2: Denotable vs. Memorizable Values
+
+### Denotable Values (DVal)
+
+Denotable values are those that can be bound to identifiers in an environment. In our implementation, they include:
+
+```python
+type Num = int  # A type alias for integers
+type DenOperator = Callable[[int, int], int]
+type DVal = int | DenOperator  # Denotable values
+```
+
+DVal includes:
+- **Numbers**: Simple integer values
+- **Operators**: Functions that take two integers and return an integer
+
+### Memorizable Values (MVal)
+
+Memorizable values are those that can be stored in memory (the state). In our implementation:
+
+```python
+type MVal = int  # Memorizable values
+```
+
+MVal only includes integers, not functions. This highlights an important distinction:
+
+> Not everything that can be bound to a name can be stored in memory.
+
+This distinction is crucial for understanding:
+- Why some languages don't support first-class functions
+- Why some types require special treatment in memory management
+- How languages with different type systems handle values differently
+
+## Section 3: Environment and State as Functions
+
+In our treatment of semantic domains, we adopt a purely functional approach where environments and states are represented as functions rather than data structures. This approach aligns with the mathematical view of semantic domains and provides a clean conceptual model for understanding program behavior.
+
+### Functional Programming: A Brief Digression
+
+Before diving into our function-based implementation of environments and state, it's worth taking a brief detour to discuss functional programming concepts, as they form the foundation of our approach.
+
+Functional programming is a paradigm where computations are treated as evaluations of mathematical functions, emphasizing immutable data and avoiding side effects. Python, while not a pure functional language, supports many functional programming techniques.
+
+#### Functions as First-Class Citizens
+
+In functional programming, functions are "first-class citizens" — they can be:
+- Assigned to variables
+- Passed as arguments to other functions
+- Returned from functions
+- Stored in data structures
+
+For example:
+
+```python
+# Function assigned to a variable
+increment = lambda x: x + 1
+
+# Function passed as an argument
+def apply_twice(f, x):
+    return f(f(x))
+
+result = apply_twice(increment, 3)  # Returns 5
+```
+
+#### Higher-Order Functions: Map
+
+A common pattern in functional programming is applying a function to each element in a collection. Python's `map` function does exactly this:
+
+```python
+numbers = [1, 2, 3, 4, 5]
+
+# Apply a function to each element
+squared = list(map(lambda x: x**2, numbers))  # [1, 4, 9, 16, 25]
+
+# Equivalent to a list comprehension
+squared_alt = [x**2 for x in numbers]  # [1, 4, 9, 16, 25]
+```
+
+#### Function Composition
+
+Functional programming emphasizes building complex behaviors by composing simpler functions:
+
+```python
+def compose(f, g):
+    return lambda x: f(g(x))
+
+# Compose two functions
+negate_and_square = compose(lambda x: -x, lambda x: x**2)
+result = negate_and_square(5)  # -25
+```
+
+#### Pure Functions and Immutability
+
+Pure functions always produce the same output for the same input and have no side effects. This property makes them predictable and easier to reason about:
+
+```python
+# Pure function
+def add(a, b):
+    return a + b
+
+# Impure function (has side effects)
+def add_and_print(a, b):
+    result = a + b
+    print(f"The result is {result}")  # Side effect: printing
+    return result
+```
+
+#### Relevance to Semantic Domains
+
+These functional programming concepts directly inform our approach to implementing semantic domains:
+
+1. We represent environments and stores as functions, not data structures
+2. We use higher-order functions to create updated environments and stores
+3. We maintain immutability through functional updates rather than mutations
+4. We compose simple operations to build complex behaviors
+
+With this foundation in mind, let's explore how we represent environments and states as functions.
+
+### Environment as a Function
+
+An environment is mathematically a function that maps identifiers to denotable values:
+
+```python
+type Environment = Callable[[str], DVal]
+```
+
+This means an environment is a function that:
+- Takes an identifier (string) as input
+- Returns a denotable value (DVal)
+- Raises an error if the identifier is not defined
+
+While many practical implementations use dictionaries or hash tables for efficiency, conceptually an environment is simply a function:
+
+```
+Environment: Identifier → DVal
+```
+
+### State as a Function
+
+Similarly, a state is a function that maps memory locations to memorizable values:
+
+```python
+type State = Callable[[Location], MVal]
+```
+
+This represents a state as:
+- A function taking a location as input
+- Returning the value stored at that location
+- Raising an error if the location is not allocated
+
+Conceptually:
+
+```
+State: Location → MVal
+```
+
+## Section 4: Functional Updates
+
+In a purely functional approach, we don't mutate existing environments or states. Instead, we create new functions that use the old ones but with modified behavior for specific inputs.
+
+### Environment Updates
+
+Instead of modifying a dictionary, we define a new function that returns the new value for the updated identifier and delegates to the original environment for all other identifiers:
+
+```python
+def env_extend(env: Environment, name: str, value: DVal) -> Environment:
+    """Create new environment with an added binding"""
+    def new_env(n: str) -> DVal:
+        if n == name:
+            return value
+        return env(n)
+    return new_env
+```
+
+This function returns a new environment that:
+- Returns `value` when asked for `name`
+- Delegates to the original environment for all other identifiers
+
+This approach:
+- Preserves referential transparency
+- Enables easy implementation of lexical scoping
+- Facilitates reasoning about program behavior
+- Models the mathematical concept of function extension
+
+### State Updates
+
+Similarly, state updates create new functions rather than modifying existing data structures:
+
+```python
+def state_update(state: State, location: Location, value: MVal) -> State:
+    """Create new state with an updated value at given location"""
+    def new_state(loc: Location) -> MVal:
+        if loc == location:
+            return value
+        return state(loc)
+    return new_state
+```
+
+This function creates a new state that:
+- Returns the new value when asked for the specified location
+- Delegates to the original state for all other locations
+
+### Empty Environment and State
+
+The primitives for creating empty environments and states define functions that raise errors for any input, reflecting that nothing is defined initially:
+
+```python
+def empty_environment() -> Environment:
+    """Create an empty environment function"""
+    def env(name: str) -> DVal:
+        raise ValueError(f"Undefined identifier: {name}")
+    return env
+
+def empty_memory() -> State:
+    """Create an empty memory state function"""
+    def state(location: Location) -> MVal:
+        raise ValueError(f"Undefined memory location: {location}")
+    return state
+```
+
+### Memory Allocation
+
+Memory allocation is more complex when using pure functions, as we need to track the next available location:
+
+```python
+class MemoryAllocator:
+    def __init__(self):
+        self.next_location = 0
+    
+    def allocate(self, state: State, value: MVal) -> tuple[State, Location]:
+        """Allocate a new memory location and store value there."""
+        location = self.next_location
+        self.next_location += 1
+        new_state = state_update(state, location, value)
+        return new_state, location
+```
+
+This demonstrates one of the challenges of pure functional approaches: maintaining state for things like memory allocation typically requires some controlled form of mutation or a monadic approach.
+
+### Initial Environment Setup
+
+In our functional implementation, the initial environment is built by starting with an empty environment and extending it with each operator:
+
+```python
+def create_initial_env() -> Environment:
+    """Create an environment populated with standard operators"""
+    env = empty_environment()
+    env = env_extend(env, "+", add)
+    env = env_extend(env, "-", subtract)
+    env = env_extend(env, "*", multiply)
+    env = env_extend(env, "/", divide)
+    env = env_extend(env, "%", modulo)
+    return env
+```
+
+This builds up the environment incrementally, adding each binding through functional extension.
+
+## Section 5: Environment-Based Interpretation
+
+Traditional interpreters often use pattern matching on operators directly in the evaluation function. An environment-based approach takes a more abstract view, treating operators as first-class values in the environment.
+
+### Traditional Approach (from Chapter 3)
+
+```python
+def evaluate(ast: Expression) -> int:
+    match ast:
+        case Number(value):
+            return value
+        case BinaryExpression(op, left, right):
+            left_value = evaluate(left)
+            right_value = evaluate(right)
+            match op:
+                case "+":
+                    return left_value + right_value
+                case "-":
+                    return left_value - right_value
+                # ... other operations
+```
+
+### Environment-Based Approach
+
+```python
+def evaluate(ast: Expression, env: Environment) -> MVal:
+    match ast:
+        case Number(value):
+            return value
+        case BinaryExpression(op, left, right):
+            # Get operator from environment
+            operator = env.get(op)
+            if operator is None:
+                raise ValueError(f"Unknown operator: {op}")
+            
+            # Ensure it's a DenOperator
+            if not isinstance(operator, Callable):
+                raise ValueError(f"{op} is not a function")
+            
+            # Evaluate operands and apply operator
+            left_value = evaluate(left, env)
+            right_value = evaluate(right, env)
+            
+            # Apply the operator to the evaluated operands
+            return operator(left_value, right_value)
+```
+
+### Benefits of the Environment-Based Approach
+
+- **Extensibility**: New operators can be added to the environment without modifying the evaluator
+- **First-class operations**: Operators are values that can be passed, returned, and manipulated
+- **Consistent treatment**: Operators and other identifiers are handled uniformly
+- **Semantic clarity**: The environment explicitly represents the mapping from names to meanings
+
+## Section 6: Implementing an Environment-Based Interpreter
+
+Our `domains.py` file implements a complete environment-based interpreter:
+
+1. **Define semantic domains**: Denotable and memorizable values
+2. **Implement operators**: Define functions for arithmetic operations
+3. **Create the environment**: Populate with standard operators
+4. **Evaluate expressions**: Using the environment to look up operators
+5. **REPL**: Interactive environment for testing the interpreter
+
+## Section 7: Extending the Interpreter
+
+This approach makes it easy to extend the language with new features:
+
+### Adding New Operators
+
+To add a new operator, simply define its function and add it to the environment:
+
+```python
+def power(x: int, y: int) -> int:
+    return x ** y
+
+# Extend environment
+env = env_extend(create_initial_env(), "**", power)
+```
+
+### Adding Variables
+
+To support variables, extend the AST with a variable node and update the evaluator:
+
+```python
+@dataclass
+class Variable:
+    name: str
+
+# Update Expression type
+type Expression = Number | BinaryExpression | Variable
+
+# Update evaluate function
+def evaluate(ast: Expression, env: Environment) -> MVal:
+    match ast:
+        case Variable(name):
+            value = env_lookup(env, name)
+            # Additional check might be needed if variables can only be Numbers
+            if not isinstance(value, int):
+                raise ValueError(f"{name} is not a number")
+            return value
+        # ... existing cases
+```
+
+## Additional Resources
+- [Denotational Semantics (Wikipedia)](https://en.wikipedia.org/wiki/Denotational_semantics)
+- [Programming Language Semantics (Stanford)](https://web.stanford.edu/class/cs242/materials/lectures/lecture6.pdf)
+- [Functional Programming and Lambda Calculus](https://www.cs.cornell.edu/courses/cs3110/2019sp/textbook/interp/lambda_calculus.html)
+- [Environment and Store in Programming Languages](https://www.cs.tufts.edu/comp/105/readings/environments/environments.html)
+
+## Section 8: Primitives for Environment and Memory
+
+In the formal semantics of programming languages, we work with primitives that define how environments and memory operate. These primitives capture the essential operations needed to model variable bindings and memory allocation.
+
+### Locations as a Semantic Domain
+
+Before discussing memory operations, we must recognize **Locations** as a fundamental semantic domain:
+
+```
+type Location = int  # In our implementation, locations are integers
+```
+
+Locations (sometimes called addresses) are abstract entities that serve as references to memory cells. They are a semantic domain distinct from integers used in calculation, even though we might represent them as integers in an implementation. In a language's formal semantics, locations are opaque values that only make sense in the context of memory operations.
+
+### Memory (State) Primitives
+
+Memory, also called the store or state, maps locations to memorizable values. The core operations include:
+
+1. **empty_memory**: Creates an initial, empty memory state
+   ```python
+   def empty_memory() -> State:
+       """Create an empty memory state function"""
+       def state(location: Location) -> MVal:
+           raise ValueError(f"Undefined memory location: {location}")
+       return state
+   ```
+
+2. **update**: Modifies the memory at a specific location
+   ```python
+   def state_update(state: State, location: Location, value: MVal) -> State:
+       """Create new state with an updated value at given location"""
+       def new_state(loc: Location) -> MVal:
+           if loc == location:
+               return value
+           return state(loc)
+       return new_state
+   ```
+
+3. **lookup**: Retrieves a value from a location
+   ```python
+   def state_lookup(state: State, location: Location) -> MVal:
+       """Look up a value at a given location"""
+       try:
+           return state(location)
+       except ValueError:
+           raise ValueError(f"Undefined memory location: {location}")
+   ```
+
+Memory in programming languages has a maximum size, determined by hardware or system configuration. When a program needs more memory than available:
+
+- In simple interpreters: An "out of memory" error occurs
+- In modern operating systems: Memory expansion mechanisms activate, such as:
+  - Virtual memory paging to disk
+  - Heap expansion
+  - Garbage collection (freeing unused memory)
+
+### Environment Primitives
+
+The environment maps identifiers to denotable values. Its essential operations include:
+
+1. **empty_environment**: Creates an initial, empty environment
+   ```python
+   def empty_environment() -> Environment:
+       """Create an empty environment function"""
+       def env(name: str) -> DVal:
+           raise ValueError(f"Undefined identifier: {name}")
+       return env
+   ```
+
+2. **bind** (or **extend**): Adds a new binding to an environment
+   ```python
+   def env_extend(env: Environment, name: str, value: DVal) -> Environment:
+       """Create new environment with an added binding"""
+       def new_env(n: str) -> DVal:
+           if n == name:
+               return value
+           return env(n)
+       return new_env
+   ```
+
+3. **lookup**: Retrieves a value bound to an identifier
+   ```python
+   def env_lookup(env: Environment, name: str) -> DVal:
+       """Look up an identifier in the environment"""
+       try:
+           return env(name)
+       except ValueError:
+           raise ValueError(f"Undefined identifier: {name}")
+   ```
+
+### Memory Allocation
+
+In a complete interpreter, we would also need memory allocation primitives:
+
+```python
+class MemoryAllocator:
+    def __init__(self):
+        self.next_location = 0
+    
+    def allocate(self, state: State, value: MVal) -> tuple[State, Location]:
+        """Allocate a new memory location and store value there."""
+        location = self.next_location
+        self.next_location += 1
+        new_state = state_update(state, location, value)
+        return new_state, location
+```
+
+This demonstrates an interesting challenge in functional programming: maintaining the "next available location" requires some form of state. We use a stateful object to keep track of this, though in a purely functional language, this might be handled through a state monad or similar construct.
+
+### Memory and Environment in Language Semantics
+
+The interaction between environments and memory is central to understanding language features:
+
+- **Variables**: Bind identifiers to locations (in the environment) which then hold values (in memory)
+- **Assignment**: Changes memory but not the environment (the variable still refers to the same location)
+- **Scoping**: Creates nested environments with different bindings for the same identifier
+- **Parameter passing**: Creates bindings between formal parameters and actual arguments
+
+This conceptual separation allows language designers to reason clearly about the effects of operations and ensure language features interact correctly.
 
