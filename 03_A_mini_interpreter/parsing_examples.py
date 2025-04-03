@@ -3,18 +3,18 @@ from __future__ import annotations
 
 # %%
 
-from lark import Lark, ParseTree, Token, Transformer, Tree
+from lark import Lark, ParseTree, Token, Tree
 
 # Define the grammar in Lark's EBNF format
 grammar = r"""
     ?expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
-    bin: mono OP expr
+    bin: expr OP mono ## left-associative NB: "left recursive" parsing rule (look it up!)
     ground: NUMBER
 
     NUMBER: /[0-9]+/
-    OP: "+" | "-" | "*"
+    OP: "+" | "-" | "*" | "/" | "%"
 
     %import common.WS
     %ignore WS
@@ -25,7 +25,7 @@ parser = Lark(grammar, start="expr")
 
 parse_tree = parser.parse("(1 + 2) - 3")
 
-print(parse_tree.pretty())
+# print(parse_tree.pretty())
 
 # bin
 # ├── mono
@@ -55,7 +55,7 @@ def print_tree(tree: ParseTree | Token):
             print("Token", type, value)
 
 
-print_tree(parse_tree)
+# print_tree(parse_tree)
 
 
 # %%
@@ -88,8 +88,8 @@ def transform_parse_tree(tree: Tree) -> Expression:
         case Tree(data="mono", children=[subtree]):
             return transform_parse_tree(subtree)
 
-        case Tree(data="ground", children=[Token(type="NUMBER", value=value)]):
-            return Number(value=int(value))
+        case Tree(data="ground", children=[Token(type="NUMBER", value=actual_value)]):
+            return Number(value=int(actual_value))
 
         case Tree(data="paren", children=[subtree]):
             return transform_parse_tree(subtree)
@@ -122,7 +122,7 @@ example = "(1+2)-3"
 # example = "1+2"
 ast = parse_ast(example)
 
-print(ast)
+# print(ast)
 
 # %%
 
@@ -130,5 +130,52 @@ print(ast)
 # Add more operators. Implement the interpreter. Print the result. Add "/" and "%" operators.
 # Q: How will you handle division by zero?
 
-# Exercise:
-# Add a ternary conditional operator (like the COND ? THEN : ELSE operator in C)
+# %% Interpreter
+
+
+def evaluate(ast: Expression) -> int:
+    match ast:
+        case Number(value):
+            return value
+        case BinaryExpression(op, left, right):
+            left_value = evaluate(left)
+            right_value = evaluate(right)
+            match op:
+                case "+":
+                    return left_value + right_value
+                case "-":
+                    return left_value - right_value
+                case "*":
+                    return left_value * right_value
+                case "/":
+                    if right_value == 0:
+                        raise ValueError("Division by zero")
+                    return left_value // right_value
+                case "%":
+                    if right_value == 0:
+                        raise ValueError("Division by zero")
+                    return left_value % right_value
+
+
+def evaluate_string(expression: str) -> int:
+    ast = parse_ast(expression)
+    return evaluate(ast)
+
+
+# print(evaluate_string("1+2"))
+
+
+def REPL():
+    exit = False
+    while not exit:
+        expression = input("Enter an expression (exit to quit): ")
+        if expression == "exit":
+            exit = True
+        else:
+            try:
+                print(evaluate_string(expression))
+            except Exception as e:
+                print(e)
+
+
+REPL()

@@ -25,7 +25,7 @@ grammar = r"""
     ground: NUMBER
 
     NUMBER: /[0-9]+/
-    op: "+" | "-" | "*"
+    op: "+" | "-" | "*" | "/" | "%"
 
     %import common.WS
     %ignore WS
@@ -37,6 +37,16 @@ grammar = r"""
 - **Terminals**: Items like `NUMBER` or literals like `"("` match specific patterns in the input.
 - **Special Rules**: The `?expr` rule is an anonymous rule that doesn't create a separate node in the parse tree.
 - **Directives**: `%import common.WS` and `%ignore WS` handle whitespace elegantly.
+
+### Left-Associativity and Left Recursion
+
+The grammar uses a left-recursive rule for binary operations to achieve left-associativity:
+
+```python
+bin: expr OP mono ## left-associative
+```
+
+This approach ensures that expressions like `1 + 2 + 3` are evaluated from left to right as `(1 + 2) + 3`, which is the standard evaluation order for most arithmetic operations. Left recursion is traditionally challenging for many parser generators, but Lark can handle it efficiently, allowing for a more natural and intuitive grammar definition. For parser generators that cannot handle left recursion efficiently, there are transformations of the grammar that use only right recursion.
 
 ### Creating a Parser and Parsing Input
 
@@ -193,25 +203,52 @@ expression = "(1 + 2) - 3"
 ast = parse_ast(expression)
 print(ast)  
 
-# Evaluate function (to be implemented)
+# Evaluate function 
 def evaluate(ast: Expression) -> int:
     match ast:
-        case Number(value=value):
+        case Number(value):
             return value
-        case BinaryExpression(op="+", left=left, right=right):
-            return evaluate(left) + evaluate(right)
-        case BinaryExpression(op="-", left=left, right=right):
-            return evaluate(left) - evaluate(right)
-        case BinaryExpression(op="*", left=left, right=right):
-            return evaluate(left) * evaluate(right)
-        case _:
-            raise ValueError(f"Unknown expression: {ast}")
-
-result = evaluate(ast)
-print(f"Result: {result}")  # Output: Result: 0
+        case BinaryExpression(op, left, right):
+            left_value = evaluate(left)
+            right_value = evaluate(right)
+            match op:
+                case "+":
+                    return left_value + right_value
+                case "-":
+                    return left_value - right_value
+                case "*":
+                    return left_value * right_value
+                case "/":
+                    if right_value == 0:
+                        raise ValueError("Division by zero")
+                    return left_value // right_value
+                case "%":
+                    if right_value == 0:
+                        raise ValueError("Division by zero")
+                    return left_value % right_value
 ```
 
-This pattern-matching approach to evaluation is clear, concise, and type-safe.
+The implementation handles division by zero by checking for zero divisors before performing division or modulo operations and raising a `ValueError` when detected.
+
+### REPL Implementation
+
+The interpreter is equipped with a Read-Evaluate-Print Loop (REPL) that allows users to interactively input expressions and see their evaluated results:
+
+```python
+def REPL():
+    exit = False
+    while not exit:
+        expression = input("Enter an expression (exit to quit): ")
+        if expression == "exit":
+            exit = True
+        else:
+            try:
+                print(evaluate_string(expression))
+            except Exception as e:
+                print(e)
+```
+
+This pattern provides an interactive environment for testing the interpreter, handling errors gracefully, and allowing users to experiment with different expressions.
 
 ## Additional Resources
 - [Lark Documentation](https://lark-parser.readthedocs.io/en/latest/)
