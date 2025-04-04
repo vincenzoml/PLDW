@@ -41,7 +41,13 @@ def combine_markdown_files(output_file: str = "course_book.md"):
             with open(readme_path, "r", encoding="utf-8") as f:
                 # Add a newpage for PDF
                 content.append("\n\\newpage\n")
-                content.append(f.read())
+
+                # Read the content and strip out slide separators
+                chapter_content = f.read()
+                # Remove the HTML comment slide separators
+                chapter_content = re.sub(r"<!--\s*slide\s*-->", "", chapter_content)
+
+                content.append(chapter_content)
 
     # Write the combined content
     with open(output_file, "w", encoding="utf-8") as f:

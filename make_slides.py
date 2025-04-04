@@ -38,9 +38,9 @@ def main():
     # Prepare slides content
     slides_content = [
         "---",
-        f"title: Lecture {chapter_num}: {chapter_name}",
-        "author: Vincenzo Ciancia",
-        "date: \\today",
+        f'title: "Lecture {chapter_num}: {chapter_name}"',
+        'author: "Vincenzo Ciancia"',
+        'date: "\\today"',
         "---",
     ]
 
@@ -81,6 +81,15 @@ def main():
                 "--from=markdown",
                 "--to=beamer",
                 "--pdf-engine=xelatex",
+                "--variable=fontsize:10pt",
+                "--variable=theme:metropolis",
+                "--variable=colortheme:default",
+                "--variable=aspectratio:169",
+                "--highlight-style=tango",
+                "-V",
+                "monofont=Courier New",
+                "-V",
+                "monofontoptions:Scale=0.6",
             ],
             check=True,
         )

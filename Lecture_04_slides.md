@@ -1,7 +1,7 @@
 ---
 title: "Lecture 04: Domains"
-author: Vincenzo Ciancia
-date: \today
+author: "Vincenzo Ciancia"
+date: "\today"
 ---
 
 ---

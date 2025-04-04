@@ -1157,9 +1157,13 @@ This pattern provides an interactive environment for testing the interpreter, ha
 
 # Chapter 4: Semantic Domains and Environment-Based Interpreters
 
+
+
 ## Section 1: Introduction to Semantic Domains
 
 In programming language semantics, **semantic domains** are mathematical structures used to give meaning to syntactic constructs. They provide the foundation for defining the behavior of programs in a precise, mathematical way.
+
+
 
 ### Key Semantic Domains in Programming Languages
 
@@ -1172,6 +1176,8 @@ The relationship between these domains is at the heart of language semantics:
 Syntax -> Semantics
 Program -> Meaning
 ```
+
+
 
 ### Core Semantic Domains
 
@@ -1187,9 +1193,13 @@ In our mini-interpreter, we'll work with several fundamental semantic domains:
 
 While these domains often overlap, they aren't necessarily identical. Understanding the differences is crucial for language design.
 
+
+
 ### Side Effects and Pure Functions
 
 A fundamental distinction in programming language semantics is between **pure** computations and those that produce **side effects**.
+
+
 
 #### Pure Functions
 
@@ -1203,6 +1213,8 @@ In mathematical terms, a pure function is simply a mapping from inputs to output
 def add(x: int, y: int) -> int:
     return x + y  # Pure: same inputs always give same output
 ```
+
+
 
 #### Side Effects
 
@@ -1231,6 +1243,8 @@ A **side effect** is any observable change to the system state that occurs durin
    requests.get("https://example.com")  # Interacts with external systems
    ```
 
+
+
 #### Memory Updates as Side Effects
 
 In our interpreter design, memory (state) updates are a primary form of side effect. When we update state:
@@ -1243,6 +1257,8 @@ def state_update(state: State, location: int, value: MVal) -> State:
 ```
 
 We're representing a change to the program's memory. In a real computer, this would modify memory cells directly. Our functional implementation returns a new state rather than modifying the existing one, but conceptually it represents the same side effect.
+
+
 
 #### Side Effects in Programming Languages
 
@@ -1259,7 +1275,11 @@ Understanding side effects is crucial for language design because they impact:
 
 In our interpreter, we'll model side effects using explicit state passing, maintaining the mathematical clarity of our semantics while accurately representing the behavior of stateful programs.
 
+
+
 ## Section 2: Denotable vs. Memorizable Values
+
+
 
 ### Denotable Values (DVal)
 
@@ -1274,6 +1294,8 @@ type DVal = int | DenOperator  # Denotable values
 DVal includes:
 - **Numbers**: Simple integer values
 - **Operators**: Functions that take two integers and return an integer
+
+
 
 ### Memorizable Values (MVal)
 
@@ -1292,15 +1314,21 @@ This distinction is crucial for understanding:
 - Why some types require special treatment in memory management
 - How languages with different type systems handle values differently
 
+
+
 ## Section 3: Environment and State as Functions
 
 In our treatment of semantic domains, we adopt a purely functional approach where environments are represented as functions, and states are represented as dataclasses containing store functions, rather than mutable data structures. This approach aligns with the mathematical view of semantic domains and provides a clean conceptual model for understanding program behavior.
+
+
 
 ### Functional Programming: A Brief Digression
 
 Before diving into our function-based implementation of environments and state, it's worth taking a brief detour to discuss functional programming concepts, as they form the foundation of our approach.
 
 Functional programming is a paradigm where computations are treated as evaluations of mathematical functions, emphasizing immutable data and avoiding side effects. Python, while not a pure functional language, supports many functional programming techniques.
+
+
 
 #### Functions as First-Class Citizens
 
@@ -1323,6 +1351,8 @@ def apply_twice(f, x):
 result = apply_twice(increment, 3)  # Returns 5
 ```
 
+
+
 #### Higher-Order Functions: Map
 
 A common pattern in functional programming is applying a function to each element in a collection. Python's `map` function does exactly this:
@@ -1337,6 +1367,8 @@ squared = list(map(lambda x: x**2, numbers))  # [1, 4, 9, 16, 25]
 squared_alt = [x**2 for x in numbers]  # [1, 4, 9, 16, 25]
 ```
 
+
+
 #### Function Composition
 
 Functional programming emphasizes building complex behaviors by composing simpler functions:
@@ -1349,6 +1381,8 @@ def compose(f, g):
 negate_and_square = compose(lambda x: -x, lambda x: x**2)
 result = negate_and_square(5)  # -25
 ```
+
+
 
 #### Pure Functions and Immutability
 
@@ -1366,6 +1400,8 @@ def add_and_print(a, b):
     return result
 ```
 
+
+
 #### Relevance to Semantic Domains
 
 These functional programming concepts directly inform our approach to implementing semantic domains:
@@ -1376,6 +1412,8 @@ These functional programming concepts directly inform our approach to implementi
 4. We compose simple operations to build complex behaviors
 
 With this foundation in mind, let's explore how we represent environments and states as functions.
+
+
 
 ### Environment as a Function
 
@@ -1395,6 +1433,8 @@ While many practical implementations use dictionaries or hash tables for efficie
 ```
 Environment: Identifier → DVal
 ```
+
+
 
 ### State as a Dataclass
 
@@ -1420,9 +1460,13 @@ Store: Location → MVal
 
 While the next_loc component tracks allocation state.
 
+
+
 ## Section 4: Functional Updates
 
 In a purely functional approach, we don't mutate existing environments or states. Instead, we create new functions or dataclasses that encapsulate the updated behavior.
+
+
 
 ### Environment Updates
 
@@ -1448,6 +1492,8 @@ This approach:
 - Facilitates reasoning about program behavior
 - Models the mathematical concept of function extension
 
+
+
 ### State Updates
 
 Similarly, state updates create new State objects with updated store functions:
@@ -1466,6 +1512,8 @@ This function creates a new State object that:
 - Contains a new store function that returns the new value when asked for the specified location
 - Delegates to the original state's store function for all other locations
 - Preserves the next_loc value from the original state
+
+
 
 ### Empty Environment and State
 
@@ -1486,6 +1534,8 @@ def empty_memory() -> State:
 ```
 
 Note that empty_memory returns a State dataclass initialized with an empty store function and next_loc set to 0.
+
+
 
 ### Memory Allocation
 
@@ -1508,6 +1558,8 @@ This function:
 
 By bundling the store function with the next_loc counter in our State dataclass, we maintain a purely functional approach while elegantly handling the allocation challenge. This design demonstrates how functional programming can manage state without side effects by making state changes explicit in the return values of functions.
 
+
+
 ### Initial Environment Setup
 
 In our functional implementation, the initial environment is built by starting with an empty environment and extending it with each operator:
@@ -1526,9 +1578,13 @@ def create_initial_env() -> Environment:
 
 This builds up the environment incrementally, adding each binding through functional extension.
 
+
+
 ## Section 5: Environment-Based Interpretation
 
 Traditional interpreters often use pattern matching on operators directly in the evaluation function. An environment-based approach takes a more abstract view, treating operators as first-class values in the environment.
+
+
 
 ### Traditional Approach (from Chapter 3)
 
@@ -1547,6 +1603,8 @@ def evaluate(ast: Expression) -> int:
                     return left_value - right_value
                 # ... other operations
 ```
+
+
 
 ### Environment-Based Approach
 
@@ -1574,12 +1632,16 @@ def evaluate(ast: Expression, env: Environment) -> MVal:
                 raise ValueError(f"Evaluation error: {e}")
 ```
 
+
+
 ### Benefits of the Environment-Based Approach
 
 - **Extensibility**: New operators can be added to the environment without modifying the evaluator
 - **First-class operations**: Operators are values that can be passed, returned, and manipulated
 - **Consistent treatment**: Operators and other identifiers are handled uniformly
 - **Semantic clarity**: The environment explicitly represents the mapping from names to meanings
+
+
 
 ## Section 6: Implementing an Environment-Based Interpreter
 
@@ -1591,9 +1653,13 @@ Our `domains.py` file implements a complete environment-based interpreter:
 4. **Evaluate expressions**: Using the environment to look up operators
 5. **REPL**: Interactive environment for testing the interpreter
 
+
+
 ## Section 7: Extending the Interpreter
 
 This approach makes it easy to extend the language with new features:
+
+
 
 ### Adding New Operators
 
@@ -1606,6 +1672,8 @@ def power(x: int, y: int) -> int:
 # Extend environment
 env = env_extend(create_initial_env(), "**", power)
 ```
+
+
 
 ### Adding Variables
 
@@ -1631,15 +1699,21 @@ def evaluate(ast: Expression, env: Environment) -> MVal:
         # ... existing cases
 ```
 
+
+
 ## Additional Resources
 - [Denotational Semantics (Wikipedia)](https://en.wikipedia.org/wiki/Denotational_semantics)
 - [Programming Language Semantics (Stanford)](https://web.stanford.edu/class/cs242/materials/lectures/lecture6.pdf)
 - [Functional Programming and Lambda Calculus](https://www.cs.cornell.edu/courses/cs3110/2019sp/textbook/interp/lambda_calculus.html)
 - [Environment and Store in Programming Languages](https://www.cs.tufts.edu/comp/105/readings/environments/environments.html)
 
+
+
 ## Section 8: Primitives for Environment and Memory
 
 In the formal semantics of programming languages, we work with primitives that define how environments and memory operate. These primitives capture the essential operations needed to model variable bindings and memory allocation.
+
+
 
 ### Locations as a Semantic Domain
 
@@ -1650,6 +1724,8 @@ type Location = int  # In our implementation, locations are integers
 ```
 
 Locations (sometimes called addresses) are abstract entities that serve as references to memory cells. They are a semantic domain distinct from integers used in calculation, even though we might represent them as integers in an implementation. In a language's formal semantics, locations are opaque values that only make sense in the context of memory operations.
+
+
 
 ### Memory (State) Primitives
 
@@ -1685,6 +1761,8 @@ Memory, also called the store or state, is represented by the State dataclass wh
            raise ValueError(f"Undefined memory location: {location}")
    ```
 
+
+
 Memory in programming languages has a maximum size, determined by hardware or system configuration. When a program needs more memory than available:
 
 - In simple interpreters: An "out of memory" error occurs
@@ -1692,6 +1770,8 @@ Memory in programming languages has a maximum size, determined by hardware or sy
   - Virtual memory paging to disk
   - Heap expansion
   - Garbage collection (freeing unused memory)
+
+
 
 ### Environment Primitives
 
@@ -1726,6 +1806,8 @@ The environment maps identifiers to denotable values. Its essential operations i
        except ValueError:
            raise ValueError(f"Undefined identifier: {name}")
    ```
+
+
 
 ### Memory and Environment in Language Semantics
 
