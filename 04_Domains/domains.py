@@ -24,12 +24,15 @@ grammar = r"""
     NUMBER: /[0-9]+/
     OP: "+" | "-" | "*" | "/" | "%"
 
+    IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
     %import common.WS
     %ignore WS
 """
 # Note: bin rule is left-associative, implementing left recursive parsing
-
+# The IDENTIFIER rule is used to match variable names, but it's unused now. As an exercise, you will use it to extend the language with numeric constants.
 # Create the Lark parser
+
 parser = Lark(grammar, start="expr")
 
 
