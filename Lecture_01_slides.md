@@ -1,7 +1,7 @@
 ---
 title: "Lecture 01: Introduction"
 author: "Vincenzo Ciancia"
-date: "\today"
+date: "April 04, 2025"
 ---
 
 ## Section 1: What is a Programming Language?

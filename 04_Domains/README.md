@@ -518,6 +518,7 @@ env = env_extend(create_initial_env(), "**", power)
 
 <!-- slide -->
 
+```python
 ### Adding Variables
 
 To support variables, extend the AST with a variable node and update the evaluator:
@@ -529,6 +530,8 @@ class Variable:
 
 # Update Expression type
 type Expression = Number | BinaryExpression | Variable
+```
+
 
 # Update evaluate function
 def evaluate(ast: Expression, env: Environment) -> MVal:

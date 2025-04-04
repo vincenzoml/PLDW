@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 import argparse
+from datetime import date
 
 
 def find_lecture_dirs():
@@ -19,11 +20,12 @@ def find_lecture_dirs():
 def combine_markdown_files(output_file: str = "course_book.md"):
     """Combine all README.md files into a single markdown file."""
     # Start with title page
+    current_date = date.today().strftime("%B %d, %Y")
     title_content = [
         "---",
         "title: Programming Languages Design Workshop",
         "author: Vincenzo Ciancia",
-        "date: \\today",
+        f"date: {current_date}",
         "---",
         "",
         "\\newpage",
@@ -170,12 +172,15 @@ def generate_slides_for_chapter(chapter_dir):
 
     # Create slides markdown
     with open(slides_markdown, "w", encoding="utf-8") as f:
+        # Get current date in a more readable format
+        current_date = date.today().strftime("%B %d, %Y")
+
         # Write YAML header with quoted title
         f.write(
             f"""---
 title: "Lecture {chapter_num}: {chapter_name}"
 author: "Vincenzo Ciancia"
-date: "\\today"
+date: "{current_date}"
 ---
 
 """
