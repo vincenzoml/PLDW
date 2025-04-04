@@ -713,3 +713,138 @@ The interaction between environments and memory is central to understanding lang
 
 This conceptual separation allows language designers to reason clearly about the effects of operations and ensure language features interact correctly.
 
+
+---
+
+## Section 9: Practical Implementation and Testing
+
+Our environment-based interpreter includes practical components for execution and testing, demonstrating how theoretical concepts translate to code.
+
+
+---
+
+### Parsing and AST Construction
+
+In our implementation, we use the Lark parser to convert text expressions into parse trees:
+
+```python
+def parse_ast(expression: str) -> Expression:
+    """Parse a string expression into an AST"""
+    parse_tree = parser.parse(expression)
+    return transform_parse_tree(parse_tree)
+```
+
+The `transform_parse_tree` function then converts these parse trees into our AST representation, ready for evaluation.
+
+
+---
+
+### Interactive REPL
+
+A Read-Eval-Print Loop allows interactive testing of the interpreter:
+
+```python
+def REPL():
+    """Read-Evaluate-Print Loop with environment"""
+    env = create_initial_env()
+    
+    print("Mini-interpreter with environment (type 'exit' to quit)")
+    print("Available operators: +, -, *, /, %")
+    
+    while True:
+        expression = input("Enter an expression (exit to quit): ")
+        if expression == "exit":
+            break
+        
+        try:
+            ast = parse_ast(expression)
+            result = evaluate(ast, env)
+            print(result)
+        except Exception as e:
+            print(f"Error: {e}")
+```
+
+The REPL shows how our environment-based interpreter integrates with user interaction.
+
+
+---
+
+### Automated Tests
+
+Testing ensures the interpreter behaves as expected across various expressions:
+
+```python
+def run_tests():
+    """Run test expressions to verify the parser and evaluator"""
+    test_expressions = [
+        "1+2",
+        "3*4",
+        "5-3",
+        "10/2",
+        "10%3",
+        "(1+2)*3",
+        "1+(2*3)",
+        "10/(2+3)",
+        "10%(2+3)",
+    ]
+    
+    env = create_initial_env()
+    
+    for expr in test_expressions:
+        try:
+            ast = parse_ast(expr)
+            result = evaluate(ast, env)
+            print(f"{expr} = {result}")
+        except Exception as e:
+            print(f"{expr} -> Error: {e}")
+```
+
+These tests validate core functionality while providing examples of valid expressions.
+
+
+---
+
+## Section 10: Conclusion and Next Steps
+
+
+---
+
+### Summary of Key Concepts
+
+In this chapter, we've explored:
+
+1. **Semantic domains** as mathematical structures that give meaning to programs
+2. **Environment-based interpretation** as a flexible approach to language implementation
+3. **Functional representations** of environments and state
+4. **Primitive operations** for manipulating environments and memory
+5. **The distinction** between denotable and memorizable values
+
+These concepts form the foundation for understanding more complex language features in subsequent chapters.
+
+
+---
+
+### Looking Forward
+
+The environment-based approach introduced here will be extended in future chapters to support:
+
+1. **Variables and assignment**: Using environments to bind identifiers to memory locations
+2. **Scoping mechanisms**: Creating nested environments for block-structured code
+3. **Functions and closures**: Capturing environments for later execution
+4. **Typing systems**: Adding constraints on what values expressions can produce
+
+By building on these semantic foundations, we can construct a rich understanding of programming language design and implementation.
+
+
+---
+
+### Exercises for the Reader
+
+1. Extend the interpreter to support variables using the Variable AST node described in Section 7
+2. Add support for multi-character operators (e.g., "**" for exponentiation)
+3. Implement a memory system with the primitives described in Section 8
+4. Add support for conditional expressions (if-then-else)
+5. Implement a simple block structure with local variables
+
+These exercises will deepen your understanding of language semantics and interpreter design while preparing you for more advanced topics in the next chapters.
+
