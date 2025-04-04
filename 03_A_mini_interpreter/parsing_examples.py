@@ -3,14 +3,14 @@ from __future__ import annotations
 
 # %%
 
-from lark import Lark, ParseTree, Token, Tree
+from lark import Lark, Token, Tree
 
 # Define the grammar in Lark's EBNF format
 grammar = r"""
     ?expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
-    bin: expr OP mono ## left-associative NB: "left recursive" parsing rule (look it up!)
+    bin: expr OP mono
     ground: NUMBER
 
     NUMBER: /[0-9]+/
@@ -45,7 +45,7 @@ parse_tree = parser.parse("(1 + 2) - 3")
 
 
 # %%
-def print_tree(tree: ParseTree | Token):
+def print_tree(tree: Tree | Token):
     match tree:
         case Tree(data=data, children=children):
             print("Tree", data)

@@ -8,7 +8,7 @@ from lark import Lark, Token, Tree
 # Define the semantic domains
 # Using Python 3.13 simplified syntax for union types
 type DenOperator = Callable[[int, int], int]
-type DVal = int | DenOperator  # Denotable values: can be stored in environment
+type DVal = DenOperator  # Denotable values: can be stored in environment
 
 # Environment as a function
 type Environment = Callable[[str], DVal]
@@ -18,8 +18,10 @@ grammar = r"""
     ?expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
-    bin: expr OP mono    
-    ground: NUMBER
+    bin: expr OP mono        
+    ground: NUMBER 
+    ident: IDENTIFIER
+
 
     NUMBER: /[0-9]+/
     OP: "+" | "-" | "*" | "/" | "%"

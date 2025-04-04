@@ -492,16 +492,6 @@ New Operators</a></li>
 <li><a href="#update-evaluate-function" id="toc-update-evaluate-function">Update evaluate function</a>
 <ul>
 <li><a href="#additional-resources-1" id="toc-additional-resources-1">Additional Resources</a></li>
-<li><a href="#section-8-primitives-for-environment-and-memory" id="toc-section-8-primitives-for-environment-and-memory">Section 8:
-Primitives for Environment and Memory</a>
-<ul>
-<li><a href="#locations-as-a-semantic-domain" id="toc-locations-as-a-semantic-domain">Locations as a Semantic
-Domain</a></li>
-<li><a href="#memory-state-primitives" id="toc-memory-state-primitives">Memory (State) Primitives</a></li>
-<li><a href="#environment-primitives" id="toc-environment-primitives">Environment Primitives</a></li>
-<li><a href="#memory-and-environment-in-language-semantics" id="toc-memory-and-environment-in-language-semantics">Memory and
-Environment in Language Semantics</a></li>
-</ul></li>
 <li><a href="#section-9-practical-implementation-and-testing" id="toc-section-9-practical-implementation-and-testing">Section 9:
 Practical Implementation and Testing</a>
 <ul>
@@ -2171,112 +2161,6 @@ Programming and Lambda Calculus</a></li>
 <li><a href="https://www.cs.tufts.edu/comp/105/readings/environments/environments.html">Environment
 and Store in Programming Languages</a></li>
 </ul>
-<h2 id="section-8-primitives-for-environment-and-memory">Section 8:
-Primitives for Environment and Memory</h2>
-<p>In the formal semantics of programming languages, we work with
-primitives that define how environments and memory operate. These
-primitives capture the essential operations needed to model variable
-bindings and memory allocation.</p>
-<h3 id="locations-as-a-semantic-domain">Locations as a Semantic
-Domain</h3>
-<p>Before discussing memory operations, we must recognize
-<strong>Locations</strong> as a fundamental semantic domain:</p>
-<pre><code>type Location = int  # In our implementation, locations are integers</code></pre>
-<p>Locations (sometimes called addresses) are abstract entities that
-serve as references to memory cells. They are a semantic domain distinct
-from integers used in calculation, even though we might represent them
-as integers in an implementation. In a language’s formal semantics,
-locations are opaque values that only make sense in the context of
-memory operations.</p>
-<h3 id="memory-state-primitives">Memory (State) Primitives</h3>
-<p>Memory, also called the store or state, is represented by the State
-dataclass which contains both a store function mapping locations to
-memorizable values and a next_loc field. The core operations
-include:</p>
-<ol type="1">
-<li><p><strong>empty_memory</strong>: Creates an initial, empty memory
-state</p>
-<div class="sourceCode" id="cb69"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_memory() <span class="op">-&gt;</span> State:</span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty memory state&quot;&quot;&quot;</span></span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> store(location: Location) <span class="op">-&gt;</span> MVal:</span>
-<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>store, next_loc<span class="op">=</span><span class="dv">0</span>)</span></code></pre></div></li>
-<li><p><strong>update</strong>: Modifies the memory at a specific
-location</p>
-<div class="sourceCode" id="cb70"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_update(state: State, location: Location, value: MVal) <span class="op">-&gt;</span> State:</span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new state with an updated value at given location&quot;&quot;&quot;</span></span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_store(loc: Location) <span class="op">-&gt;</span> MVal:</span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loc <span class="op">==</span> location:</span>
-<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
-<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state.store(loc)</span>
-<span id="cb70-7"><a href="#cb70-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>new_store, next_loc<span class="op">=</span>state.next_loc)</span></code></pre></div></li>
-<li><p><strong>lookup</strong>: Retrieves a value from a location</p>
-<div class="sourceCode" id="cb71"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_lookup(state: State, location: Location) <span class="op">-&gt;</span> MVal:</span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Look up a value at a given location&quot;&quot;&quot;</span></span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state.store(location)</span>
-<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
-<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div></li>
-</ol>
-<p>Memory in programming languages has a maximum size, determined by
-hardware or system configuration. When a program needs more memory than
-available:</p>
-<ul>
-<li>In simple interpreters: An “out of memory” error occurs</li>
-<li>In modern operating systems: Memory expansion mechanisms activate,
-such as:
-<ul>
-<li>Virtual memory paging to disk</li>
-<li>Heap expansion</li>
-<li>Garbage collection (freeing unused memory)</li>
-</ul></li>
-</ul>
-<h3 id="environment-primitives">Environment Primitives</h3>
-<p>The environment maps identifiers to denotable values. Its essential
-operations include:</p>
-<ol type="1">
-<li><p><strong>empty_environment</strong>: Creates an initial, empty
-environment</p>
-<div class="sourceCode" id="cb72"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_environment() <span class="op">-&gt;</span> Environment:</span>
-<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty environment function&quot;&quot;&quot;</span></span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> env(name: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
-<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env</span></code></pre></div></li>
-<li><p><strong>bind</strong> (or <strong>extend</strong>): Adds a new
-binding to an environment</p>
-<div class="sourceCode" id="cb73"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> env_extend(env: Environment, name: <span class="bu">str</span>, value: DVal) <span class="op">-&gt;</span> Environment:</span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new environment with an added binding&quot;&quot;&quot;</span></span>
-<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_env(n: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
-<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> n <span class="op">==</span> name:</span>
-<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
-<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(n)</span>
-<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_env</span></code></pre></div></li>
-<li><p><strong>lookup</strong>: Retrieves a value bound to an
-identifier</p>
-<div class="sourceCode" id="cb74"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> env_lookup(env: Environment, name: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
-<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Look up an identifier in the environment&quot;&quot;&quot;</span></span>
-<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
-<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(name)</span>
-<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
-<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div></li>
-</ol>
-<h3 id="memory-and-environment-in-language-semantics">Memory and
-Environment in Language Semantics</h3>
-<p>The interaction between environments and memory is central to
-understanding language features:</p>
-<ul>
-<li><strong>Variables</strong>: Bind identifiers to locations (in the
-environment) which then hold values (in memory)</li>
-<li><strong>Assignment</strong>: Changes memory but not the environment
-(the variable still refers to the same location)</li>
-<li><strong>Scoping</strong>: Creates nested environments with different
-bindings for the same identifier</li>
-<li><strong>Parameter passing</strong>: Creates bindings between formal
-parameters and actual arguments</li>
-</ul>
-<p>This conceptual separation allows language designers to reason
-clearly about the effects of operations and ensure language features
-interact correctly.</p>
 <h2 id="section-9-practical-implementation-and-testing">Section 9:
 Practical Implementation and Testing</h2>
 <p>Our environment-based interpreter includes practical components for
@@ -2285,61 +2169,61 @@ to code.</p>
 <h3 id="parsing-and-ast-construction">Parsing and AST Construction</h3>
 <p>In our implementation, we use the Lark parser to convert text
 expressions into parse trees:</p>
-<div class="sourceCode" id="cb75"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse_ast(expression: <span class="bu">str</span>) <span class="op">-&gt;</span> Expression:</span>
-<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Parse a string expression into an AST&quot;&quot;&quot;</span></span>
-<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>    parse_tree <span class="op">=</span> parser.parse(expression)</span>
-<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> transform_parse_tree(parse_tree)</span></code></pre></div>
+<div class="sourceCode" id="cb68"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse_ast(expression: <span class="bu">str</span>) <span class="op">-&gt;</span> Expression:</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Parse a string expression into an AST&quot;&quot;&quot;</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    parse_tree <span class="op">=</span> parser.parse(expression)</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> transform_parse_tree(parse_tree)</span></code></pre></div>
 <p>The <code>transform_parse_tree</code> function then converts these
 parse trees into our AST representation, ready for evaluation.</p>
 <h3 id="interactive-repl">Interactive REPL</h3>
 <p>A Read-Eval-Print Loop allows interactive testing of the
 interpreter:</p>
-<div class="sourceCode" id="cb76"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> REPL():</span>
-<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Read-Evaluate-Print Loop with environment&quot;&quot;&quot;</span></span>
-<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> create_initial_env()</span>
-<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;Mini-interpreter with environment (type &#39;exit&#39; to quit)&quot;</span>)</span>
-<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;Available operators: +, -, *, /, %&quot;</span>)</span>
-<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb76-9"><a href="#cb76-9" aria-hidden="true" tabindex="-1"></a>        expression <span class="op">=</span> <span class="bu">input</span>(<span class="st">&quot;Enter an expression (exit to quit): &quot;</span>)</span>
-<span id="cb76-10"><a href="#cb76-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expression <span class="op">==</span> <span class="st">&quot;exit&quot;</span>:</span>
-<span id="cb76-11"><a href="#cb76-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
-<span id="cb76-12"><a href="#cb76-12" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb76-13"><a href="#cb76-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
-<span id="cb76-14"><a href="#cb76-14" aria-hidden="true" tabindex="-1"></a>            ast <span class="op">=</span> parse_ast(expression)</span>
-<span id="cb76-15"><a href="#cb76-15" aria-hidden="true" tabindex="-1"></a>            result <span class="op">=</span> evaluate(ast, env)</span>
-<span id="cb76-16"><a href="#cb76-16" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(result)</span>
-<span id="cb76-17"><a href="#cb76-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
-<span id="cb76-18"><a href="#cb76-18" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&quot;Error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb69"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> REPL():</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Read-Evaluate-Print Loop with environment&quot;&quot;&quot;</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> create_initial_env()</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;Mini-interpreter with environment (type &#39;exit&#39; to quit)&quot;</span>)</span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">&quot;Available operators: +, -, *, /, %&quot;</span>)</span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a>        expression <span class="op">=</span> <span class="bu">input</span>(<span class="st">&quot;Enter an expression (exit to quit): &quot;</span>)</span>
+<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expression <span class="op">==</span> <span class="st">&quot;exit&quot;</span>:</span>
+<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb69-14"><a href="#cb69-14" aria-hidden="true" tabindex="-1"></a>            ast <span class="op">=</span> parse_ast(expression)</span>
+<span id="cb69-15"><a href="#cb69-15" aria-hidden="true" tabindex="-1"></a>            result <span class="op">=</span> evaluate(ast, env)</span>
+<span id="cb69-16"><a href="#cb69-16" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(result)</span>
+<span id="cb69-17"><a href="#cb69-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb69-18"><a href="#cb69-18" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&quot;Error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
 <p>The REPL shows how our environment-based interpreter integrates with
 user interaction.</p>
 <h3 id="automated-tests">Automated Tests</h3>
 <p>Testing ensures the interpreter behaves as expected across various
 expressions:</p>
-<div class="sourceCode" id="cb77"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_tests():</span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Run test expressions to verify the parser and evaluator&quot;&quot;&quot;</span></span>
-<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>    test_expressions <span class="op">=</span> [</span>
-<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;1+2&quot;</span>,</span>
-<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;3*4&quot;</span>,</span>
-<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;5-3&quot;</span>,</span>
-<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10/2&quot;</span>,</span>
-<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10%3&quot;</span>,</span>
-<span id="cb77-9"><a href="#cb77-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;(1+2)*3&quot;</span>,</span>
-<span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;1+(2*3)&quot;</span>,</span>
-<span id="cb77-11"><a href="#cb77-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10/(2+3)&quot;</span>,</span>
-<span id="cb77-12"><a href="#cb77-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10%(2+3)&quot;</span>,</span>
-<span id="cb77-13"><a href="#cb77-13" aria-hidden="true" tabindex="-1"></a>    ]</span>
-<span id="cb77-14"><a href="#cb77-14" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb77-15"><a href="#cb77-15" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> create_initial_env()</span>
-<span id="cb77-16"><a href="#cb77-16" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb77-17"><a href="#cb77-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> expr <span class="kw">in</span> test_expressions:</span>
-<span id="cb77-18"><a href="#cb77-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
-<span id="cb77-19"><a href="#cb77-19" aria-hidden="true" tabindex="-1"></a>            ast <span class="op">=</span> parse_ast(expr)</span>
-<span id="cb77-20"><a href="#cb77-20" aria-hidden="true" tabindex="-1"></a>            result <span class="op">=</span> evaluate(ast, env)</span>
-<span id="cb77-21"><a href="#cb77-21" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>result<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb77-22"><a href="#cb77-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
-<span id="cb77-23"><a href="#cb77-23" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss"> -&gt; Error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb70"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_tests():</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Run test expressions to verify the parser and evaluator&quot;&quot;&quot;</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    test_expressions <span class="op">=</span> [</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;1+2&quot;</span>,</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;3*4&quot;</span>,</span>
+<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;5-3&quot;</span>,</span>
+<span id="cb70-7"><a href="#cb70-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10/2&quot;</span>,</span>
+<span id="cb70-8"><a href="#cb70-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10%3&quot;</span>,</span>
+<span id="cb70-9"><a href="#cb70-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;(1+2)*3&quot;</span>,</span>
+<span id="cb70-10"><a href="#cb70-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;1+(2*3)&quot;</span>,</span>
+<span id="cb70-11"><a href="#cb70-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10/(2+3)&quot;</span>,</span>
+<span id="cb70-12"><a href="#cb70-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;10%(2+3)&quot;</span>,</span>
+<span id="cb70-13"><a href="#cb70-13" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb70-14"><a href="#cb70-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb70-15"><a href="#cb70-15" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> create_initial_env()</span>
+<span id="cb70-16"><a href="#cb70-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb70-17"><a href="#cb70-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> expr <span class="kw">in</span> test_expressions:</span>
+<span id="cb70-18"><a href="#cb70-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb70-19"><a href="#cb70-19" aria-hidden="true" tabindex="-1"></a>            ast <span class="op">=</span> parse_ast(expr)</span>
+<span id="cb70-20"><a href="#cb70-20" aria-hidden="true" tabindex="-1"></a>            result <span class="op">=</span> evaluate(ast, env)</span>
+<span id="cb70-21"><a href="#cb70-21" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>result<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb70-22"><a href="#cb70-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb70-23"><a href="#cb70-23" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss"> -&gt; Error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
 <p>These tests validate core functionality while providing examples of
 valid expressions.</p>
 <h2 id="section-10-conclusion-and-next-steps">Section 10: Conclusion and

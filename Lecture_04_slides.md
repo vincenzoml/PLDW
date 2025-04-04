@@ -842,9 +842,8 @@ By building on these semantic foundations, we can construct a rich understanding
 
 1. Extend the interpreter to support variables using the Variable AST node described in Section 7
 2. Add support for multi-character operators (e.g., "**" for exponentiation)
-3. Implement a memory system with the primitives described in Section 8
-4. Add support for conditional expressions (if-then-else)
-5. Implement a simple block structure with local variables
+3. Add support for conditional expressions (if-then-else)
+4. Implement a simple block structure with local variables
 
 These exercises will deepen your understanding of language semantics and interpreter design while preparing you for more advanced topics in the next chapters.
 
