@@ -114,49 +114,33 @@ type Expression = Number | BinaryExpression
 
 
 # Parse tree transformation function
-def transform_parse_tree(tree: Tree | Token) -> Expression:
-    """Transform a parse tree into an AST"""
-    if isinstance(tree, Token):
-        if tree.type == "NUMBER":
-            return Number(value=int(tree.value))
-        raise ValueError(f"Unexpected token: {tree}")
+def transform_parse_tree(tree: Tree) -> Expression:
+    match tree:
+        case Tree(data="mono", children=[subtree]):
+            return transform_parse_tree(subtree)
 
-    match tree.data:
-        case "mono":
-            if len(tree.children) == 1:
-                return transform_parse_tree(tree.children[0])
-            raise ValueError(f"Unexpected mono structure: {tree}")
+        case Tree(data="ground", children=[Token(type="NUMBER", value=actual_value)]):
+            return Number(value=int(actual_value))
 
-        case "ground":
-            if (
-                len(tree.children) == 1
-                and isinstance(tree.children[0], Token)
-                and tree.children[0].type == "NUMBER"
-            ):
-                return Number(value=int(tree.children[0].value))
-            raise ValueError(f"Unexpected ground structure: {tree}")
+        case Tree(data="paren", children=[subtree]):
+            return transform_parse_tree(subtree)
 
-        case "paren":
-            if len(tree.children) == 1:
-                return transform_parse_tree(tree.children[0])
-            raise ValueError(f"Unexpected paren structure: {tree}")
-
-        case "bin":
-            if len(tree.children) == 3:
-                left = tree.children[0]
-                op_token = tree.children[1]
-                right = tree.children[2]
-
-                if isinstance(op_token, Token) and op_token.type == "OP":
-                    return BinaryExpression(
-                        op=op_token.value,
-                        left=transform_parse_tree(left),
-                        right=transform_parse_tree(right),
-                    )
-            raise ValueError(f"Unexpected bin structure: {tree}")
+        case Tree(
+            data="bin",
+            children=[
+                left,
+                Token(type="OP", value=op),
+                right,
+            ],
+        ):
+            return BinaryExpression(
+                op=op,
+                left=transform_parse_tree(left),
+                right=transform_parse_tree(right),
+            )
 
         case _:
-            raise ValueError(f"Unexpected parse tree structure: {tree}")
+            raise ValueError(f"Unexpected parse tree structure")
 
 
 def parse_ast(expression: str) -> Expression:
