@@ -25,9 +25,10 @@ This workshop consists of 10 lectures (2 hours each) that combine theoretical fo
 - Abstract Syntax Trees (AST)
 - Program semantics
 
-### Lecture 3: TBA
-
-### Lecture 4: TBA
+### Lecture 4: Semantic Domains and Environment-Based Interpreters
+- Semantic domains: expressible values, denotable values, and environments
+- Environment-based interpreters
+- Implementing a simple language with variables, functions, and recursion
 
 ### Lecture 5: TBA
 
@@ -51,6 +52,36 @@ Each lecture has its own directory containing:
 - A detailed README.md with lecture notes and exercises
 - Python modules with examples and implementations
 - Additional resources and references when applicable
+
+## Building the Course Materials
+
+### Requirements
+```
+pip install -r requirements.txt
+```
+
+### Generating Materials
+Use the `build.py` script to generate course materials:
+
+```bash
+# Generate slides for all chapters
+python build.py --slides
+
+# Generate slides for a specific chapter
+python build.py --slides --chapter 01
+
+# Generate the course book (PDF and HTML)
+python build.py --book
+
+# Generate both slides and course book
+python build.py --slides --book
+```
+
+The slides are generated from the README.md files in each lecture directory. Slide separators are indicated by HTML comments (`<!-- slide -->`).
+
+### Output Files
+- Slides: `Lecture_XX.pdf` (where XX is the chapter number)
+- Course book: `course_book.pdf` and `course_book.html`
 
 ## Getting Started
 1. Clone this repository

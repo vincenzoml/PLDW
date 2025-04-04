@@ -1,12 +1,15 @@
-# Chapter 3: Building a Mini Interpreter
-
-<!-- slide -->
+---
+title: "Lecture 03: A_mini_interpreter"
+author: "Vincenzo Ciancia"
+date: "\today"
+---
 
 ## Section 1: Introduction to Interpreters
 
 An interpreter is a program that executes source code directly, without requiring compilation to machine code. Let's explore how interpreters work and how to build a simple one in Python.
 
-<!-- slide -->
+
+---
 
 ### The Role of Interpreters
 
@@ -20,7 +23,8 @@ Interpreters serve several important purposes in programming language implementa
 
 Languages like Python, JavaScript, and Ruby primarily use interpreters, while others like Java use a hybrid approach with compilation to bytecode followed by interpretation.
 
-<!-- slide -->
+
+---
 
 ### Components of an Interpreter
 
@@ -34,13 +38,15 @@ A typical interpreter includes the following components:
 
 We'll implement each of these components in our mini interpreter.
 
-<!-- slide -->
+
+---
 
 ## Section 2: Lexical Analysis
 
 The first step in interpreting code is breaking it down into tokens - the smallest meaningful units in the language.
 
-<!-- slide -->
+
+---
 
 ### Tokens and Lexical Structure
 
@@ -52,7 +58,8 @@ Tokens are the building blocks of a language, similar to words in natural langua
 - **Operators**: Symbols that perform operations (`+`, `-`, `*`, `/`)
 - **Punctuation**: Symbols that structure the code (`;`, `,`, `{}`, `()`)
 
-<!-- slide -->
+
+---
 
 ### Implementing a Lexer
 
@@ -122,7 +129,8 @@ def tokenize(text: str) -> List[Token]:
     return tokens
 ```
 
-<!-- slide -->
+
+---
 
 ### Testing the Lexer
 
@@ -152,13 +160,15 @@ def test_lexer():
 test_lexer()
 ```
 
-<!-- slide -->
+
+---
 
 ## Section 3: Parsing and Abstract Syntax Trees
 
 Once we have tokens, we need to organize them into a structured representation of the program - an Abstract Syntax Tree (AST).
 
-<!-- slide -->
+
+---
 
 ### Understanding Abstract Syntax Trees
 
@@ -176,7 +186,8 @@ For example, the expression `3 + 4 * 2` would be represented as:
 
 The tree captures the structure and precedence of operations.
 
-<!-- slide -->
+
+---
 
 ### Defining AST Nodes
 
@@ -200,7 +211,8 @@ class BinaryOp:
 Expression = Union[Number, BinaryOp]
 ```
 
-<!-- slide -->
+
+---
 
 ### Implementing a Recursive Descent Parser
 
@@ -298,7 +310,8 @@ factor     → primary (("*"|"/") primary)*
 primary    → NUMBER | "(" expression ")"
 ```
 
-<!-- slide -->
+
+---
 
 ### Testing the Parser
 
@@ -327,13 +340,15 @@ def test_parser():
 test_parser()
 ```
 
-<!-- slide -->
+
+---
 
 ## Section 4: Evaluating Expressions
 
 Now that we have an AST, we can evaluate it to produce a result.
 
-<!-- slide -->
+
+---
 
 ### The Evaluation Process
 
@@ -343,7 +358,8 @@ Evaluation is the process of computing the result of an expression. It typically
 2. Computing the value of each node based on its type and children
 3. Combining results according to the language semantics
 
-<!-- slide -->
+
+---
 
 ### Implementing an Evaluator
 
@@ -374,7 +390,8 @@ def evaluate(expr: Expression) -> float:
                     raise ValueError(f"Unknown operator: {operator}")
 ```
 
-<!-- slide -->
+
+---
 
 ### Testing the Evaluator
 
@@ -404,13 +421,15 @@ def test_evaluator():
 test_evaluator()
 ```
 
-<!-- slide -->
+
+---
 
 ## Section 5: Putting It All Together
 
 Now we'll combine our lexer, parser, and evaluator into a complete mini interpreter.
 
-<!-- slide -->
+
+---
 
 ### The Full Interpreter
 
@@ -450,7 +469,8 @@ if __name__ == "__main__":
     run_repl()
 ```
 
-<!-- slide -->
+
+---
 
 ### Example Usage
 
@@ -471,13 +491,15 @@ Error: Division by zero
 Goodbye!
 ```
 
-<!-- slide -->
+
+---
 
 ## Section 6: Extending the Interpreter
 
 Our mini interpreter is very basic, but we can extend it with more features.
 
-<!-- slide -->
+
+---
 
 ### Adding Variables
 
@@ -510,7 +532,8 @@ class Environment:
         raise ValueError(f"Undefined variable: {name}")
 ```
 
-<!-- slide -->
+
+---
 
 ### New AST Nodes for Variables
 
@@ -528,7 +551,8 @@ class Assignment:
 Expression = Union[Number, BinaryOp, Variable, Assignment]
 ```
 
-<!-- slide -->
+
+---
 
 ### Updating the Parser
 
@@ -553,7 +577,8 @@ class Parser:
     # ... update tokenize() to handle identifiers and '=' ...
 ```
 
-<!-- slide -->
+
+---
 
 ### Updating the Evaluator
 
@@ -573,7 +598,8 @@ def evaluate(expr: Expression, env: Environment) -> float:
             # ... existing code ...
 ```
 
-<!-- slide -->
+
+---
 
 ### Adding Control Flow
 
@@ -600,13 +626,15 @@ def evaluate(expr: Expression, env: Environment) -> float:
                 return evaluate(else_branch, env)
 ```
 
-<!-- slide -->
+
+---
 
 ## Section 7: Further Exploration
 
 Here are some ways you could extend our mini interpreter further:
 
-<!-- slide -->
+
+---
 
 ### Additional Features to Implement
 
@@ -617,7 +645,8 @@ Here are some ways you could extend our mini interpreter further:
 5. **Type System**: Add a simple type system
 6. **Standard Library**: Implement built-in functions for common operations
 
-<!-- slide -->
+
+---
 
 ### Learning Resources
 
@@ -627,7 +656,8 @@ To learn more about interpreters and language implementation:
 - **"Programming Language Pragmatics"** by Michael Scott: Covers theoretical aspects of language design
 - **"Structure and Interpretation of Computer Programs"** by Abelson and Sussman: A classic text on programming language concepts
 
-<!-- slide -->
+
+---
 
 ## Conclusion
 
@@ -639,3 +669,4 @@ Building a mini interpreter helps understand how programming languages work unde
 4. Extend the interpreter with new features
 
 This foundation can be expanded to build more complex languages and tools.
+

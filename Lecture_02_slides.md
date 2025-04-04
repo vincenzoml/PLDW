@@ -1,10 +1,13 @@
-# Chapter 2: Types and Pattern Matching in Python
-
-<!-- slide -->
+---
+title: "Lecture 02: Types_And_Pattern_Matching"
+author: "Vincenzo Ciancia"
+date: "\today"
+---
 
 ## Section 1: Python's Type System
 
-<!-- slide -->
+
+---
 
 ### What are Type Annotations?
 Python's type system allows developers to add optional type hints to variables, function parameters, and return values. These annotations help catch errors early, improve code documentation, and enhance IDE support without changing the runtime behavior of the code.
@@ -16,7 +19,8 @@ def greet(name: str) -> str:
 
 Type annotations are part of the Python Enhancement Proposal (PEP) 484 and have been continuously improved in subsequent PEPs. They provide a way to make Python code more robust through static type checking, although Python remains dynamically typed at runtime.
 
-<!-- slide -->
+
+---
 
 ### Basic Types in Python
 Python provides several built-in types for annotations:
@@ -33,7 +37,8 @@ my_list: list[int] = [1, 2, 3, 4, 5]
 
 These annotations tell the type checker that `my_tuple` is a 3-element tuple containing an integer, a string, and a float, while `my_list` is a list containing only integers.
 
-<!-- slide -->
+
+---
 
 ### Generic Types
 Generic types allow you to create reusable, type-safe components. In Python 3.12+, the syntax for generic classes uses square brackets:
@@ -63,7 +68,8 @@ stack_1.push(1)  # Valid
 stack_1.push("hello")  # Type error: expected int, got str
 ```
 
-<!-- slide -->
+
+---
 
 ### Union Types and Optional Values
 Union types allow a variable to have multiple possible types, expressed using the `|` operator (introduced in Python 3.10):
@@ -83,7 +89,8 @@ def pop(self) -> T | None:  # Use | for union types
 
 This indicates that the `pop` method returns either a value of type `T` or `None` if the stack is empty.
 
-<!-- slide -->
+
+---
 
 ### Type Aliases
 Type aliases help simplify complex type annotations:
@@ -102,7 +109,8 @@ type Expr = int | Sum
 
 These aliases make the code more readable and allow for recursive type definitions.
 
-<!-- slide -->
+
+---
 
 ### Literal Types
 Literal types restrict values to specific constants:
@@ -123,11 +131,13 @@ class Human:
 
 This constrains the `drivingLicense` attribute to be either `True` or `False` only.
 
-<!-- slide -->
+
+---
 
 ## Section 2: Structural Pattern Matching
 
-<!-- slide -->
+
+---
 
 ### Introduction to Pattern Matching
 Introduced in Python 3.10, the `match` statement provides powerful pattern matching capabilities, similar to switch statements in other languages but with more expressive power:
@@ -147,7 +157,8 @@ def describe(value):
 
 Pattern matching allows for more concise and readable code, especially when dealing with complex data structures and multiple conditions.
 
-<!-- slide -->
+
+---
 
 ### Basic Patterns
 Basic patterns match against simple values and types:
@@ -166,7 +177,8 @@ match x:
 
 The `_` pattern is a wildcard that matches anything and is often used as a catch-all case.
 
-<!-- slide -->
+
+---
 
 ### Sequence Patterns
 Sequence patterns match against sequence types like lists and tuples:
@@ -182,7 +194,8 @@ def process_lst(lst: list[int]) -> None:
 
 This example shows destructuring a list into its head (first element) and tail (remaining elements), demonstrating how pattern matching facilitates recursive list processing.
 
-<!-- slide -->
+
+---
 
 ### Class Patterns and Attribute Matching
 Pattern matching works particularly well with dataclasses:
@@ -200,11 +213,13 @@ def greet(person: Person | str) -> None:
 
 This example shows matching against specific attribute values and binding attributes to variables.
 
-<!-- slide -->
+
+---
 
 ### Complex Pattern Matching Examples
 
-<!-- slide -->
+
+---
 
 #### Recursive Pattern Matching
 Pattern matching excels at handling recursive data structures:
@@ -220,7 +235,8 @@ def sum_list_2(lst: MyBaseList[int]) -> int:
 
 This function processes a custom linked list structure using pattern matching to handle the base case (None) and recursive case elegantly.
 
-<!-- slide -->
+
+---
 
 #### Parsing Expressions
 Pattern matching can implement simple interpreters:
@@ -355,3 +371,4 @@ function that takes AST as input to define a mini-interpreter.
 - [Mypy Type Checker Documentation](https://mypy.readthedocs.io/en/stable/)
 - [Real Python: Python Type Checking](https://realpython.com/python-type-checking/)
 - [Real Python: Structural Pattern Matching in Python](https://realpython.com/python-pattern-matching/)
+

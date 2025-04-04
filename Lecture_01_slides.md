@@ -1,12 +1,15 @@
-# Chapter 1: Introduction to Programming Language Design
-
-<!-- slide -->
+---
+title: "Lecture 01: Introduction"
+author: "Vincenzo Ciancia"
+date: "\today"
+---
 
 ## Section 1: What is a Programming Language?
 
 A **programming language** is a formal language comprising a set of strings (instructions) that produce various kinds of machine output. Programming languages are used in computer programming to implement algorithms.
 
-<!-- slide -->
+
+---
 
 ### Key Characteristics of Programming Languages
 
@@ -16,7 +19,8 @@ A **programming language** is a formal language comprising a set of strings (ins
 - **Runtime Model**: How the language executes on a computer, including memory management
 - **Standard Library**: Common functionality provided out of the box
 
-<!-- slide -->
+
+---
 
 ### Programming Languages vs. Natural Languages
 
@@ -28,13 +32,15 @@ Programming languages differ from natural languages in several important ways:
 4. **Evolution**: Programming languages evolve through explicit design decisions, not organic usage
 5. **Purpose**: Programming languages are designed to instruct machines, not primarily for human communication
 
-<!-- slide -->
+
+---
 
 ## Section 2: The Importance of Programming Language Design
 
 Why should we care about programming language design?
 
-<!-- slide -->
+
+---
 
 ### Programming Languages Shape How We Think
 
@@ -45,7 +51,8 @@ Programming languages are not just tools for instructing computers; they are fra
 - **Object-oriented languages** (Java, C++, Python) organize code around objects and their interactions
 - **Logic languages** (Prolog) express programs as logical relations
 
-<!-- slide -->
+
+---
 
 ### Language Design Affects Software Quality
 
@@ -57,7 +64,8 @@ The design of a programming language can significantly impact:
 - **Security**: How easily can programmers avoid security vulnerabilities?
 - **Developer Productivity**: How quickly can developers write and debug code?
 
-<!-- slide -->
+
+---
 
 ### The Evolution of Programming Languages
 
@@ -72,13 +80,15 @@ Programming languages have evolved dramatically over time, reflecting changes in
 - **2010s**: Go, Rust, Swift, and the focus on safety and concurrency
 - **2020s**: Continued evolution with AI assistance, type inference improvements, and more
 
-<!-- slide -->
+
+---
 
 ## Section 3: Modern Language Design Principles
 
 What principles guide the design of modern programming languages?
 
-<!-- slide -->
+
+---
 
 ### Abstraction
 
@@ -90,7 +100,8 @@ Abstraction is the process of removing details to focus on the essential feature
 - Interfaces abstract expected behaviors
 - Modules abstract related functionality
 
-<!-- slide -->
+
+---
 
 ### Expressiveness
 
@@ -102,7 +113,8 @@ Expressiveness refers to how easily and concisely a language can express computa
 - Pattern matching
 - Concise syntax for common operations
 
-<!-- slide -->
+
+---
 
 ### Safety
 
@@ -115,7 +127,8 @@ Safety features help prevent programmers from making mistakes or make it easier 
 - Exception handling systems
 - Null safety features
 
-<!-- slide -->
+
+---
 
 ### Performance
 
@@ -128,7 +141,8 @@ Performance considerations affect how efficiently a language can be implemented 
 - Optimization opportunities
 - Support for concurrency and parallelism
 
-<!-- slide -->
+
+---
 
 ### Consistency
 
@@ -140,13 +154,15 @@ Consistency in language design makes languages easier to learn and use correctly
 - Orthogonal features (features that can be used in any combination)
 - Principle of least surprise (intuitive behavior)
 
-<!-- slide -->
+
+---
 
 ## Section 4: Using Python to Explore Programming Language Concepts
 
 Why use Python for studying programming language design?
 
-<!-- slide -->
+
+---
 
 ### Python's Suitability for Language Implementation
 
@@ -158,7 +174,8 @@ Python is well-suited for implementing language interpreters and exploring langu
 - **Rich standard library**: Includes parsing tools, regular expressions, and other useful utilities
 - **Interactive development**: Makes experimenting with language features easier
 
-<!-- slide -->
+
+---
 
 ### Python 3.10+ Features Relevant to Language Design
 
@@ -170,13 +187,15 @@ Recent Python versions have introduced features that make it particularly intere
 - **Functional programming tools**: Map, filter, reduce, lambdas, and comprehensions
 - **AST module**: Allows inspection and manipulation of Python's abstract syntax tree
 
-<!-- slide -->
+
+---
 
 ## Section 5: Implementing Language Features in Python
 
 Let's explore how we can implement core language components in Python.
 
-<!-- slide -->
+
+---
 
 ### Representing Syntax: Abstract Syntax Trees (ASTs)
 
@@ -216,7 +235,8 @@ expr = BinaryOp(
 )
 ```
 
-<!-- slide -->
+
+---
 
 ### Implementing an Evaluator
 
@@ -250,7 +270,8 @@ def evaluate(expr: Expr, environment: dict = None) -> float:
             raise ValueError(f"Unknown operator: {expr.operator}")
 ```
 
-<!-- slide -->
+
+---
 
 ### Pattern Matching for AST Processing
 
@@ -286,7 +307,8 @@ def evaluate_with_match(expr: Expr, environment: dict = None) -> float:
                     raise ValueError(f"Unknown operator: {operator}")
 ```
 
-<!-- slide -->
+
+---
 
 ### Simple Type Checking
 
@@ -328,13 +350,15 @@ def type_check(expr: Expr, type_env: Dict[str, Type]) -> Type:
                 raise ValueError(f"Unknown operator: {operator}")
 ```
 
-<!-- slide -->
+
+---
 
 ## Section 6: Course Structure
 
 This course will introduce you to programming language design concepts through hands-on implementation in Python.
 
-<!-- slide -->
+
+---
 
 ### Course Topics
 
@@ -364,7 +388,8 @@ Throughout this course, we will cover:
    - Evaluation strategies
    - Introduction to compilation concepts
 
-<!-- slide -->
+
+---
 
 ### Projects and Exercises
 
@@ -375,11 +400,13 @@ The course will include:
 - Exploration of existing language implementations
 - Analysis of language design trade-offs
 
-<!-- slide -->
+
+---
 
 ## Section 7: Prerequisites and Setup
 
-<!-- slide -->
+
+---
 
 ### Knowledge Prerequisites
 
@@ -392,7 +419,8 @@ To get the most out of this course, you should have:
 
 No prior experience with compiler or interpreter development is required.
 
-<!-- slide -->
+
+---
 
 ### Python Environment Setup
 
@@ -410,11 +438,13 @@ To follow along with the course examples and exercises:
    - mypy for static type checking
    - pytest for testing your implementations
 
-<!-- slide -->
+
+---
 
 ## Section 8: Additional Resources
 
-<!-- slide -->
+
+---
 
 ### Books on Programming Language Design
 
@@ -424,7 +454,8 @@ To follow along with the course examples and exercises:
 - **"Concepts of Programming Languages"** by Robert Sebesta
 - **"Structure and Interpretation of Computer Programs"** by Abelson and Sussman
 
-<!-- slide -->
+
+---
 
 ### Online Resources
 
@@ -433,5 +464,4 @@ To follow along with the course examples and exercises:
 - [Pattern Matching in Python 3.10](https://docs.python.org/3/whatsnew/3.10.html#pep-634-structural-pattern-matching)
 - [The AST Module](https://docs.python.org/3/library/ast.html)
 - [Building a Simple Interpreter](https://ruslanspivak.com/lsbasi-part1/)
-
 
