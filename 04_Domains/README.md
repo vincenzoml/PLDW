@@ -75,6 +75,8 @@ A **side effect** is any observable change to the system state that occurs durin
    print("Hello")  # Affects the external world (terminal)
    ```
 
+<!--slide -->
+
 3. **File operations**:
    ```python
    with open("data.txt", "w") as f:
@@ -534,6 +536,8 @@ type Expression = Number | BinaryExpression | Variable
 
 
 # Update evaluate function
+
+```python
 def evaluate(ast: Expression, env: Environment) -> MVal:
     match ast:
         case Variable(name):

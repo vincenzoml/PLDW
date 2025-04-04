@@ -1,7 +1,7 @@
 ---
 title: "Lecture 04: Domains"
 author: "Vincenzo Ciancia"
-date: "\today"
+date: "April 04, 2025"
 ---
 
 ## Section 1: Introduction to Semantic Domains
@@ -81,6 +81,9 @@ A **side effect** is any observable change to the system state that occurs durin
    ```python
    print("Hello")  # Affects the external world (terminal)
    ```
+
+
+---
 
 3. **File operations**:
    ```python
@@ -553,6 +556,7 @@ env = env_extend(create_initial_env(), "**", power)
 
 ---
 
+```python
 ### Adding Variables
 
 To support variables, extend the AST with a variable node and update the evaluator:
@@ -564,8 +568,12 @@ class Variable:
 
 # Update Expression type
 type Expression = Number | BinaryExpression | Variable
+```
+
 
 # Update evaluate function
+
+```python
 def evaluate(ast: Expression, env: Environment) -> MVal:
     match ast:
         case Variable(name):
