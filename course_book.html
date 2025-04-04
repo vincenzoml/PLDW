@@ -449,8 +449,8 @@ Environment and State as Functions</a>
 <li><a href="#functional-programming-a-brief-digression" id="toc-functional-programming-a-brief-digression">Functional
 Programming: A Brief Digression</a></li>
 <li><a href="#environment-as-a-function" id="toc-environment-as-a-function">Environment as a Function</a></li>
-<li><a href="#state-as-a-function" id="toc-state-as-a-function">State as
-a Function</a></li>
+<li><a href="#state-as-a-dataclass" id="toc-state-as-a-dataclass">State
+as a Dataclass</a></li>
 </ul></li>
 <li><a href="#section-4-functional-updates" id="toc-section-4-functional-updates">Section 4: Functional Updates</a>
 <ul>
@@ -490,8 +490,6 @@ Primitives for Environment and Memory</a>
 Domain</a></li>
 <li><a href="#memory-state-primitives" id="toc-memory-state-primitives">Memory (State) Primitives</a></li>
 <li><a href="#environment-primitives" id="toc-environment-primitives">Environment Primitives</a></li>
-<li><a href="#memory-allocation-1" id="toc-memory-allocation-1">Memory
-Allocation</a></li>
 <li><a href="#memory-and-environment-in-language-semantics" id="toc-memory-and-environment-in-language-semantics">Memory and
 Environment in Language Semantics</a></li>
 </ul></li>
@@ -1948,6 +1946,9 @@ evaluating expressions</li>
 to identifiers in the environment</li>
 <li><strong>Memorizable Values (MVal)</strong>: Values that can be
 stored in memory/state</li>
+<li><strong>Identifiers</strong>: Names of constants, variables,
+functions, modules, etc.</li>
+<li><strong>Locations</strong>: Memory addresses of variables</li>
 <li><strong>Environment</strong>: Maps identifiers to denotable values,
 representing the binding context</li>
 <li><strong>State</strong>: Maps memory locations to memorizable values,
@@ -2045,9 +2046,10 @@ systems handle values differently</p>
 <h2 id="section-3-environment-and-state-as-functions">Section 3:
 Environment and State as Functions</h2>
 <p>In our treatment of semantic domains, we adopt a purely functional
-approach where environments and states are represented as functions
-rather than data structures. This approach aligns with the mathematical
-view of semantic domains and provides a clean conceptual model for
+approach where environments are represented as functions, and states are
+represented as dataclasses containing store functions, rather than
+mutable data structures. This approach aligns with the mathematical view
+of semantic domains and provides a clean conceptual model for
 understanding program behavior.</p>
 <h3 id="functional-programming-a-brief-digression">Functional
 Programming: A Brief Digression</h3>
@@ -2131,19 +2133,24 @@ if the identifier is not defined</p>
 <p>While many practical implementations use dictionaries or hash tables
 for efficiency, conceptually an environment is simply a function:</p>
 <pre><code>Environment: Identifier → DVal</code></pre>
-<h3 id="state-as-a-function">State as a Function</h3>
-<p>Similarly, a state is a function that maps memory locations to
-memorizable values:</p>
-<div class="sourceCode" id="cb56"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> State <span class="op">=</span> Callable[[Location], MVal]</span></code></pre></div>
-<p>This represents a state as: - A function taking a location as input -
-Returning the value stored at that location - Raising an error if the
-location is not allocated</p>
-<p>Conceptually:</p>
-<pre><code>State: Location → MVal</code></pre>
+<h3 id="state-as-a-dataclass">State as a Dataclass</h3>
+<p>Unlike environment, which is purely a function, a state encapsulates
+both a store function and allocation information:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> State:</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    store: Callable[[Location], MVal]  <span class="co"># The store function</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    next_loc: <span class="bu">int</span>                      <span class="co"># Next available location</span></span></code></pre></div>
+<p>This represents a state as: - A dataclass containing a store function
+and next location counter - The store function takes a location as input
+and returns the value at that location - The next_loc field tracks the
+next available memory location for allocation</p>
+<p>Conceptually, the store component maintains the mapping:</p>
+<pre><code>Store: Location → MVal</code></pre>
+<p>While the next_loc component tracks allocation state.</p>
 <h2 id="section-4-functional-updates">Section 4: Functional Updates</h2>
 <p>In a purely functional approach, we don’t mutate existing
-environments or states. Instead, we create new functions that use the
-old ones but with modified behavior for specific inputs.</p>
+environments or states. Instead, we create new functions or dataclasses
+that encapsulate the updated behavior.</p>
 <h3 id="environment-updates">Environment Updates</h3>
 <p>Instead of modifying a dictionary, we define a new function that
 returns the new value for the updated identifier and delegates to the
@@ -2162,22 +2169,23 @@ original environment for all other identifiers</p>
 implementation of lexical scoping - Facilitates reasoning about program
 behavior - Models the mathematical concept of function extension</p>
 <h3 id="state-updates">State Updates</h3>
-<p>Similarly, state updates create new functions rather than modifying
-existing data structures:</p>
+<p>Similarly, state updates create new State objects with updated store
+functions:</p>
 <div class="sourceCode" id="cb59"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_update(state: State, location: Location, value: MVal) <span class="op">-&gt;</span> State:</span>
 <span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new state with an updated value at given location&quot;&quot;&quot;</span></span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_state(loc: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_store(loc: Location) <span class="op">-&gt;</span> MVal:</span>
 <span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loc <span class="op">==</span> location:</span>
 <span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
-<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state(loc)</span>
-<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_state</span></code></pre></div>
-<p>This function creates a new state that: - Returns the new value when
-asked for the specified location - Delegates to the original state for
-all other locations</p>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state.store(loc)</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>new_store, next_loc<span class="op">=</span>state.next_loc)</span></code></pre></div>
+<p>This function creates a new State object that: - Contains a new store
+function that returns the new value when asked for the specified
+location - Delegates to the original state’s store function for all
+other locations - Preserves the next_loc value from the original
+state</p>
 <h3 id="empty-environment-and-state">Empty Environment and State</h3>
 <p>The primitives for creating empty environments and states define
-functions that raise errors for any input, reflecting that nothing is
-defined initially:</p>
+initial values:</p>
 <div class="sourceCode" id="cb60"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_environment() <span class="op">-&gt;</span> Environment:</span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty environment function&quot;&quot;&quot;</span></span>
 <span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> env(name: <span class="bu">str</span>) <span class="op">-&gt;</span> DVal:</span>
@@ -2185,27 +2193,31 @@ defined initially:</p>
 <span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env</span>
 <span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_memory() <span class="op">-&gt;</span> State:</span>
-<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty memory state function&quot;&quot;&quot;</span></span>
-<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> state(location: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty memory state&quot;&quot;&quot;</span></span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> store(location: Location) <span class="op">-&gt;</span> MVal:</span>
 <span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> state</span></code></pre></div>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>store, next_loc<span class="op">=</span><span class="dv">0</span>)</span></code></pre></div>
+<p>Note that empty_memory returns a State dataclass initialized with an
+empty store function and next_loc set to 0.</p>
 <h3 id="memory-allocation">Memory Allocation</h3>
-<p>Memory allocation is more complex when using pure functions, as we
-need to track the next available location:</p>
-<div class="sourceCode" id="cb61"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MemoryAllocator:</span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> allocate(<span class="va">self</span>, state: State, value: MVal) <span class="op">-&gt;</span> <span class="bu">tuple</span>[State, Location]:</span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;Allocate a new memory location and store value there.&quot;&quot;&quot;</span></span>
-<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>        location <span class="op">=</span> <span class="va">self</span>.next_location</span>
-<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>        new_state <span class="op">=</span> state_update(state, location, value)</span>
-<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> new_state, location</span></code></pre></div>
-<p>This demonstrates one of the challenges of pure functional
-approaches: maintaining state for things like memory allocation
-typically requires some controlled form of mutation or a monadic
-approach.</p>
+<p>In a complete interpreter, we use the State dataclass to implement
+memory allocation elegantly:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> allocate(state: State, value: MVal) <span class="op">-&gt;</span> <span class="bu">tuple</span>[State, Location]:</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Allocate a new memory location and store a value there.</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns the updated state and the new location.&quot;&quot;&quot;</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    location <span class="op">=</span> state.next_loc</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    new_state <span class="op">=</span> state_update(state, location, value)</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Return state with incremented next_loc and the allocated location</span></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>new_state.store, next_loc<span class="op">=</span>location <span class="op">+</span> <span class="dv">1</span>), location</span></code></pre></div>
+<p>This function: 1. Gets the next available location from the state 2.
+Updates the store function to map this location to the provided value 3.
+Returns a new state with the incremented next_loc and the allocated
+location</p>
+<p>By bundling the store function with the next_loc counter in our State
+dataclass, we maintain a purely functional approach while elegantly
+handling the allocation challenge. This design demonstrates how
+functional programming can manage state without side effects by making
+state changes explicit in the return values of functions.</p>
 <h3 id="initial-environment-setup">Initial Environment Setup</h3>
 <p>In our functional implementation, the initial environment is built by
 starting with an empty environment and extending it with each
@@ -2248,21 +2260,22 @@ Chapter 3)</h3>
 <span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Number(value):</span>
 <span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
 <span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> BinaryExpression(op, left, right):</span>
-<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Get operator from environment</span></span>
-<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>            operator <span class="op">=</span> env.get(op)</span>
-<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> operator <span class="kw">is</span> <span class="va">None</span>:</span>
-<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown operator: </span><span class="sc">{</span>op<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Ensure it&#39;s a DenOperator</span></span>
-<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(operator, Callable):</span>
-<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;</span><span class="sc">{</span>op<span class="sc">}</span><span class="ss"> is not a function&quot;</span>)</span>
-<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Evaluate operands and apply operator</span></span>
-<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>            left_value <span class="op">=</span> evaluate(left, env)</span>
-<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>            right_value <span class="op">=</span> evaluate(right, env)</span>
-<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Apply the operator to the evaluated operands</span></span>
-<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> operator(left_value, right_value)</span></code></pre></div>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">try</span>:</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Get operator from environment</span></span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>                operator <span class="op">=</span> env_lookup(env, op)</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Ensure it&#39;s a DenOperator</span></span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(operator, Callable):</span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;</span><span class="sc">{</span>op<span class="sc">}</span><span class="ss"> is not a function&quot;</span>)</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Evaluate operands and apply operator</span></span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>                left_value <span class="op">=</span> evaluate(left, env)</span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>                right_value <span class="op">=</span> evaluate(right, env)</span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Apply the operator to the evaluated operands</span></span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> operator(left_value, right_value)</span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">except</span> <span class="pp">ValueError</span> <span class="im">as</span> e:</span>
+<span id="cb64-21"><a href="#cb64-21" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Evaluation error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
 <h3 id="benefits-of-the-environment-based-approach">Benefits of the
 Environment-Based Approach</h3>
 <ul>
@@ -2352,30 +2365,32 @@ as integers in an implementation. In a language’s formal semantics,
 locations are opaque values that only make sense in the context of
 memory operations.</p>
 <h3 id="memory-state-primitives">Memory (State) Primitives</h3>
-<p>Memory, also called the store or state, maps locations to memorizable
-values. The core operations include:</p>
+<p>Memory, also called the store or state, is represented by the State
+dataclass which contains both a store function mapping locations to
+memorizable values and a next_loc field. The core operations
+include:</p>
 <ol type="1">
 <li><p><strong>empty_memory</strong>: Creates an initial, empty memory
 state</p>
 <div class="sourceCode" id="cb68"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_memory() <span class="op">-&gt;</span> State:</span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty memory state function&quot;&quot;&quot;</span></span>
-<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> state(location: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty memory state&quot;&quot;&quot;</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> store(location: Location) <span class="op">-&gt;</span> MVal:</span>
 <span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> state</span></code></pre></div></li>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>store, next_loc<span class="op">=</span><span class="dv">0</span>)</span></code></pre></div></li>
 <li><p><strong>update</strong>: Modifies the memory at a specific
 location</p>
 <div class="sourceCode" id="cb69"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_update(state: State, location: Location, value: MVal) <span class="op">-&gt;</span> State:</span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new state with an updated value at given location&quot;&quot;&quot;</span></span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_state(loc: Location) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_store(loc: Location) <span class="op">-&gt;</span> MVal:</span>
 <span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loc <span class="op">==</span> location:</span>
 <span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
-<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state(loc)</span>
-<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_state</span></code></pre></div></li>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state.store(loc)</span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>new_store, next_loc<span class="op">=</span>state.next_loc)</span></code></pre></div></li>
 <li><p><strong>lookup</strong>: Retrieves a value from a location</p>
 <div class="sourceCode" id="cb70"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> state_lookup(state: State, location: Location) <span class="op">-&gt;</span> MVal:</span>
 <span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Look up a value at a given location&quot;&quot;&quot;</span></span>
 <span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state(location)</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state.store(location)</span>
 <span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
 <span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined memory location: </span><span class="sc">{</span>location<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div></li>
 </ol>
@@ -2421,24 +2436,6 @@ identifier</p>
 <span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
 <span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div></li>
 </ol>
-<h3 id="memory-allocation-1">Memory Allocation</h3>
-<p>In a complete interpreter, we would also need memory allocation
-primitives:</p>
-<div class="sourceCode" id="cb74"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MemoryAllocator:</span>
-<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
-<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> allocate(<span class="va">self</span>, state: State, value: MVal) <span class="op">-&gt;</span> <span class="bu">tuple</span>[State, Location]:</span>
-<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;Allocate a new memory location and store value there.&quot;&quot;&quot;</span></span>
-<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>        location <span class="op">=</span> <span class="va">self</span>.next_location</span>
-<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_location <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a>        new_state <span class="op">=</span> state_update(state, location, value)</span>
-<span id="cb74-10"><a href="#cb74-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> new_state, location</span></code></pre></div>
-<p>This demonstrates an interesting challenge in functional programming:
-maintaining the “next available location” requires some form of state.
-We use a stateful object to keep track of this, though in a purely
-functional language, this might be handled through a state monad or
-similar construct.</p>
 <h3 id="memory-and-environment-in-language-semantics">Memory and
 Environment in Language Semantics</h3>
 <p>The interaction between environments and memory is central to

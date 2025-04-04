@@ -1,20 +1,36 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict, Literal, TypeAlias, Union
+from typing import Any, Callable, Literal, TypeAlias, Union
+from lark import Lark, Token, Tree
 
 
 # Define the semantic domains
 # Using Python 3.13 simplified syntax for union types
-type Num = int  # A type alias for integers
 type DenOperator = Callable[[int, int], int]
 type DVal = int | DenOperator  # Denotable values: can be stored in environment
-type MVal = int  # Memorizable values: can be stored in memory/state
-type Location = int  # Memory locations
 
-# Environment and State as functions
+# Environment as a function
 type Environment = Callable[[str], DVal]
-type State = Callable[[Location], MVal]
+
+# Define grammar for parsing
+grammar = r"""
+    ?expr: bin | mono
+    mono: ground | paren
+    paren: "(" expr ")"
+    bin: expr OP mono    
+    ground: NUMBER
+
+    NUMBER: /[0-9]+/
+    OP: "+" | "-" | "*" | "/" | "%"
+
+    %import common.WS
+    %ignore WS
+"""
+# Note: bin rule is left-associative, implementing left recursive parsing
+
+# Create the Lark parser
+parser = Lark(grammar, start="expr")
 
 
 # Define operators
@@ -54,10 +70,7 @@ def empty_environment() -> Environment:
 
 def env_lookup(env: Environment, name: str) -> DVal:
     """Look up an identifier in the environment"""
-    try:
-        return env(name)
-    except ValueError:
-        raise ValueError(f"Undefined identifier: {name}")
+    return env(name)
 
 
 def env_extend(env: Environment, name: str, value: DVal) -> Environment:
@@ -69,59 +82,6 @@ def env_extend(env: Environment, name: str, value: DVal) -> Environment:
         return env(n)
 
     return new_env
-
-
-# Memory (State) primitives
-def empty_memory() -> State:
-    """Create an empty memory state function"""
-
-    def state(location: Location) -> MVal:
-        raise ValueError(f"Undefined memory location: {location}")
-
-    return state
-
-
-def state_lookup(state: State, location: Location) -> MVal:
-    """Look up a value at a given location in the state"""
-    try:
-        return state(location)
-    except ValueError:
-        raise ValueError(f"Undefined memory location: {location}")
-
-
-def state_update(state: State, location: Location, value: MVal) -> State:
-    """Create new state with an updated value at given location"""
-
-    def new_state(loc: Location) -> MVal:
-        if loc == location:
-            return value
-        return state(loc)
-
-    return new_state
-
-
-# Memory allocation requires a bit more sophistication when using functions
-# We'll need to track the next available location
-class MemoryAllocator:
-    def __init__(self):
-        self.next_location = 0
-
-    def allocate(self, state: State, value: MVal) -> tuple[State, Location]:
-        """Allocate a new memory location and store value there.
-        Returns the updated state and the new location."""
-        location = self.next_location
-        self.next_location += 1
-        new_state = state_update(state, location, value)
-        return new_state, location
-
-
-# Create a global allocator instance
-memory_allocator = MemoryAllocator()
-
-
-def allocate(state: State, value: MVal) -> tuple[State, Location]:
-    """Allocate a new memory location and store a value there."""
-    return memory_allocator.allocate(state, value)
 
 
 # Create initial environment with operators
@@ -153,8 +113,60 @@ class BinaryExpression:
 type Expression = Number | BinaryExpression
 
 
+# Parse tree transformation function
+def transform_parse_tree(tree: Tree | Token) -> Expression:
+    """Transform a parse tree into an AST"""
+    if isinstance(tree, Token):
+        if tree.type == "NUMBER":
+            return Number(value=int(tree.value))
+        raise ValueError(f"Unexpected token: {tree}")
+
+    match tree.data:
+        case "mono":
+            if len(tree.children) == 1:
+                return transform_parse_tree(tree.children[0])
+            raise ValueError(f"Unexpected mono structure: {tree}")
+
+        case "ground":
+            if (
+                len(tree.children) == 1
+                and isinstance(tree.children[0], Token)
+                and tree.children[0].type == "NUMBER"
+            ):
+                return Number(value=int(tree.children[0].value))
+            raise ValueError(f"Unexpected ground structure: {tree}")
+
+        case "paren":
+            if len(tree.children) == 1:
+                return transform_parse_tree(tree.children[0])
+            raise ValueError(f"Unexpected paren structure: {tree}")
+
+        case "bin":
+            if len(tree.children) == 3:
+                left = tree.children[0]
+                op_token = tree.children[1]
+                right = tree.children[2]
+
+                if isinstance(op_token, Token) and op_token.type == "OP":
+                    return BinaryExpression(
+                        op=op_token.value,
+                        left=transform_parse_tree(left),
+                        right=transform_parse_tree(right),
+                    )
+            raise ValueError(f"Unexpected bin structure: {tree}")
+
+        case _:
+            raise ValueError(f"Unexpected parse tree structure: {tree}")
+
+
+def parse_ast(expression: str) -> Expression:
+    """Parse a string expression into an AST"""
+    parse_tree = parser.parse(expression)
+    return transform_parse_tree(parse_tree)
+
+
 # Evaluate a parse tree with environment
-def evaluate(ast: Expression, env: Environment) -> MVal:
+def evaluate(ast: Expression, env: Environment) -> int:
     """Evaluate an expression with given environment"""
     match ast:
         case Number(value):
@@ -178,24 +190,7 @@ def evaluate(ast: Expression, env: Environment) -> MVal:
                 raise ValueError(f"Evaluation error: {e}")
 
 
-# Parse function (simplified, would be replaced by actual parser)
-def parse_ast(expression: str) -> Expression:
-    """Parse a string expression into an AST (simplified example)"""
-    # This is a placeholder - in a real implementation,
-    # this would use the Lark parser from Chapter 3
-    if expression == "1+2":
-        return BinaryExpression(op="+", left=Number(value=1), right=Number(value=2))
-    elif expression == "3*4":
-        return BinaryExpression(op="*", left=Number(value=3), right=Number(value=4))
-    else:
-        # Very basic fallback
-        try:
-            return Number(value=int(expression))
-        except ValueError:
-            raise ValueError(f"Cannot parse expression: {expression}")
-
-
-def evaluate_string(expression: str) -> MVal:
+def evaluate_string(expression: str) -> int:
     """Evaluate a string expression using the initial environment"""
     ast = parse_ast(expression)
     env = create_initial_env()
@@ -210,6 +205,7 @@ def REPL():
 
     print("Mini-interpreter with environment (type 'exit' to quit)")
     print("Available operators: +, -, *, /, %")
+    print("Example inputs: 1+2, 3*4, 5-3, 10/2, 10%3")
 
     while not exit:
         expression = input("Enter an expression (exit to quit): ")
@@ -226,5 +222,35 @@ def REPL():
                 print(e)
 
 
+def run_tests():
+    """Run some test expressions to verify the parser and evaluator"""
+    test_expressions = [
+        "1+2",
+        "3*4",
+        "5-3",
+        "10/2",
+        "10%3",
+        "(1+2)*3",
+        "1+(2*3)",
+        "10/(2+3)",
+        "10%(2+3)",
+    ]
+
+    env = create_initial_env()
+
+    print("Running tests:")
+    for expr in test_expressions:
+        try:
+            ast = parse_ast(expr)
+            result = evaluate(ast, env)
+            print(f"{expr} = {result}")
+        except Exception as e:
+            print(f"{expr} -> Error: {e}")
+
+
 if __name__ == "__main__":
-    REPL()
+    # Uncomment to run the interactive REPL
+    # REPL()
+
+    # Run the tests
+    run_tests()

@@ -23,6 +23,8 @@ In our mini-interpreter, we'll work with several fundamental semantic domains:
 - **Expressible Values**: Values that can be produced by evaluating expressions
 - **Denotable Values (DVal)**: Values that can be bound to identifiers in the environment
 - **Memorizable Values (MVal)**: Values that can be stored in memory/state
+- **Identifiers**: Names of constants, variables, functions, modules, etc.
+- **Locations**: Memory addresses of variables
 - **Environment**: Maps identifiers to denotable values, representing the binding context
 - **State**: Maps memory locations to memorizable values, representing the program's memory
 
@@ -135,7 +137,7 @@ This distinction is crucial for understanding:
 
 ## Section 3: Environment and State as Functions
 
-In our treatment of semantic domains, we adopt a purely functional approach where environments and states are represented as functions rather than data structures. This approach aligns with the mathematical view of semantic domains and provides a clean conceptual model for understanding program behavior.
+In our treatment of semantic domains, we adopt a purely functional approach where environments are represented as functions, and states are represented as dataclasses containing store functions, rather than mutable data structures. This approach aligns with the mathematical view of semantic domains and provides a clean conceptual model for understanding program behavior.
 
 ### Functional Programming: A Brief Digression
 
@@ -237,28 +239,33 @@ While many practical implementations use dictionaries or hash tables for efficie
 Environment: Identifier → DVal
 ```
 
-### State as a Function
+### State as a Dataclass
 
-Similarly, a state is a function that maps memory locations to memorizable values:
+Unlike environment, which is purely a function, a state encapsulates both a store function and allocation information:
 
 ```python
-type State = Callable[[Location], MVal]
+@dataclass
+class State:
+    store: Callable[[Location], MVal]  # The store function
+    next_loc: int                      # Next available location
 ```
 
 This represents a state as:
-- A function taking a location as input
-- Returning the value stored at that location
-- Raising an error if the location is not allocated
+- A dataclass containing a store function and next location counter
+- The store function takes a location as input and returns the value at that location
+- The next_loc field tracks the next available memory location for allocation
 
-Conceptually:
+Conceptually, the store component maintains the mapping:
 
 ```
-State: Location → MVal
+Store: Location → MVal
 ```
+
+While the next_loc component tracks allocation state.
 
 ## Section 4: Functional Updates
 
-In a purely functional approach, we don't mutate existing environments or states. Instead, we create new functions that use the old ones but with modified behavior for specific inputs.
+In a purely functional approach, we don't mutate existing environments or states. Instead, we create new functions or dataclasses that encapsulate the updated behavior.
 
 ### Environment Updates
 
@@ -286,25 +293,26 @@ This approach:
 
 ### State Updates
 
-Similarly, state updates create new functions rather than modifying existing data structures:
+Similarly, state updates create new State objects with updated store functions:
 
 ```python
 def state_update(state: State, location: Location, value: MVal) -> State:
     """Create new state with an updated value at given location"""
-    def new_state(loc: Location) -> MVal:
+    def new_store(loc: Location) -> MVal:
         if loc == location:
             return value
-        return state(loc)
-    return new_state
+        return state.store(loc)
+    return State(store=new_store, next_loc=state.next_loc)
 ```
 
-This function creates a new state that:
-- Returns the new value when asked for the specified location
-- Delegates to the original state for all other locations
+This function creates a new State object that:
+- Contains a new store function that returns the new value when asked for the specified location
+- Delegates to the original state's store function for all other locations
+- Preserves the next_loc value from the original state
 
 ### Empty Environment and State
 
-The primitives for creating empty environments and states define functions that raise errors for any input, reflecting that nothing is defined initially:
+The primitives for creating empty environments and states define initial values:
 
 ```python
 def empty_environment() -> Environment:
@@ -314,30 +322,34 @@ def empty_environment() -> Environment:
     return env
 
 def empty_memory() -> State:
-    """Create an empty memory state function"""
-    def state(location: Location) -> MVal:
+    """Create an empty memory state"""
+    def store(location: Location) -> MVal:
         raise ValueError(f"Undefined memory location: {location}")
-    return state
+    return State(store=store, next_loc=0)
 ```
+
+Note that empty_memory returns a State dataclass initialized with an empty store function and next_loc set to 0.
 
 ### Memory Allocation
 
-Memory allocation is more complex when using pure functions, as we need to track the next available location:
+In a complete interpreter, we use the State dataclass to implement memory allocation elegantly:
 
 ```python
-class MemoryAllocator:
-    def __init__(self):
-        self.next_location = 0
-    
-    def allocate(self, state: State, value: MVal) -> tuple[State, Location]:
-        """Allocate a new memory location and store value there."""
-        location = self.next_location
-        self.next_location += 1
-        new_state = state_update(state, location, value)
-        return new_state, location
+def allocate(state: State, value: MVal) -> tuple[State, Location]:
+    """Allocate a new memory location and store a value there.
+    Returns the updated state and the new location."""
+    location = state.next_loc
+    new_state = state_update(state, location, value)
+    # Return state with incremented next_loc and the allocated location
+    return State(store=new_state.store, next_loc=location + 1), location
 ```
 
-This demonstrates one of the challenges of pure functional approaches: maintaining state for things like memory allocation typically requires some controlled form of mutation or a monadic approach.
+This function:
+1. Gets the next available location from the state
+2. Updates the store function to map this location to the provided value
+3. Returns a new state with the incremented next_loc and the allocated location
+
+By bundling the store function with the next_loc counter in our State dataclass, we maintain a purely functional approach while elegantly handling the allocation challenge. This design demonstrates how functional programming can manage state without side effects by making state changes explicit in the return values of functions.
 
 ### Initial Environment Setup
 
@@ -387,21 +399,22 @@ def evaluate(ast: Expression, env: Environment) -> MVal:
         case Number(value):
             return value
         case BinaryExpression(op, left, right):
-            # Get operator from environment
-            operator = env.get(op)
-            if operator is None:
-                raise ValueError(f"Unknown operator: {op}")
-            
-            # Ensure it's a DenOperator
-            if not isinstance(operator, Callable):
-                raise ValueError(f"{op} is not a function")
-            
-            # Evaluate operands and apply operator
-            left_value = evaluate(left, env)
-            right_value = evaluate(right, env)
-            
-            # Apply the operator to the evaluated operands
-            return operator(left_value, right_value)
+            try:
+                # Get operator from environment
+                operator = env_lookup(env, op)
+                
+                # Ensure it's a DenOperator
+                if not isinstance(operator, Callable):
+                    raise ValueError(f"{op} is not a function")
+                
+                # Evaluate operands and apply operator
+                left_value = evaluate(left, env)
+                right_value = evaluate(right, env)
+                
+                # Apply the operator to the evaluated operands
+                return operator(left_value, right_value)
+            except ValueError as e:
+                raise ValueError(f"Evaluation error: {e}")
 ```
 
 ### Benefits of the Environment-Based Approach
@@ -483,26 +496,26 @@ Locations (sometimes called addresses) are abstract entities that serve as refer
 
 ### Memory (State) Primitives
 
-Memory, also called the store or state, maps locations to memorizable values. The core operations include:
+Memory, also called the store or state, is represented by the State dataclass which contains both a store function mapping locations to memorizable values and a next_loc field. The core operations include:
 
 1. **empty_memory**: Creates an initial, empty memory state
    ```python
    def empty_memory() -> State:
-       """Create an empty memory state function"""
-       def state(location: Location) -> MVal:
+       """Create an empty memory state"""
+       def store(location: Location) -> MVal:
            raise ValueError(f"Undefined memory location: {location}")
-       return state
+       return State(store=store, next_loc=0)
    ```
 
 2. **update**: Modifies the memory at a specific location
    ```python
    def state_update(state: State, location: Location, value: MVal) -> State:
        """Create new state with an updated value at given location"""
-       def new_state(loc: Location) -> MVal:
+       def new_store(loc: Location) -> MVal:
            if loc == location:
                return value
-           return state(loc)
-       return new_state
+           return state.store(loc)
+       return State(store=new_store, next_loc=state.next_loc)
    ```
 
 3. **lookup**: Retrieves a value from a location
@@ -510,7 +523,7 @@ Memory, also called the store or state, maps locations to memorizable values. Th
    def state_lookup(state: State, location: Location) -> MVal:
        """Look up a value at a given location"""
        try:
-           return state(location)
+           return state.store(location)
        except ValueError:
            raise ValueError(f"Undefined memory location: {location}")
    ```
@@ -556,25 +569,6 @@ The environment maps identifiers to denotable values. Its essential operations i
        except ValueError:
            raise ValueError(f"Undefined identifier: {name}")
    ```
-
-### Memory Allocation
-
-In a complete interpreter, we would also need memory allocation primitives:
-
-```python
-class MemoryAllocator:
-    def __init__(self):
-        self.next_location = 0
-    
-    def allocate(self, state: State, value: MVal) -> tuple[State, Location]:
-        """Allocate a new memory location and store value there."""
-        location = self.next_location
-        self.next_location += 1
-        new_state = state_update(state, location, value)
-        return new_state, location
-```
-
-This demonstrates an interesting challenge in functional programming: maintaining the "next available location" requires some form of state. We use a stateful object to keep track of this, though in a purely functional language, this might be handled through a state monad or similar construct.
 
 ### Memory and Environment in Language Semantics
 
