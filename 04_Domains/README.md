@@ -318,7 +318,7 @@ In a purely functional approach, we don't mutate existing environments or states
 Instead of modifying a dictionary, we define a new function that returns the new value for the updated identifier and delegates to the original environment for all other identifiers:
 
 ```python
-def env_extend(env: Environment, name: str, value: DVal) -> Environment:
+def bind(env: Environment, name: str, value: DVal) -> Environment:
     """Create new environment with an added binding"""
     def new_env(n: str) -> DVal:
         if n == name:
@@ -413,11 +413,11 @@ In our functional implementation, the initial environment is built by starting w
 def create_initial_env() -> Environment:
     """Create an environment populated with standard operators"""
     env = empty_environment()
-    env = env_extend(env, "+", add)
-    env = env_extend(env, "-", subtract)
-    env = env_extend(env, "*", multiply)
-    env = env_extend(env, "/", divide)
-    env = env_extend(env, "%", modulo)
+    env = bind(env, "+", add)
+    env = bind(env, "-", subtract)
+    env = bind(env, "*", multiply)
+    env = bind(env, "/", divide)
+    env = bind(env, "%", modulo)
     return env
 ```
 
@@ -461,7 +461,7 @@ def evaluate(ast: Expression, env: Environment) -> MVal:
         case BinaryExpression(op, left, right):
             try:
                 # Get operator from environment
-                operator = env_lookup(env, op)
+                operator = lookup(env, op)
                 
                 # Ensure it's a DenOperator
                 if not isinstance(operator, Callable):
@@ -515,7 +515,7 @@ def power(x: int, y: int) -> int:
     return x ** y
 
 # Extend environment
-env = env_extend(create_initial_env(), "**", power)
+env = bind(create_initial_env(), "**", power)
 ```
 
 <!-- slide -->
@@ -541,7 +541,7 @@ type Expression = Number | BinaryExpression | Variable
 def evaluate(ast: Expression, env: Environment) -> MVal:
     match ast:
         case Variable(name):
-            value = env_lookup(env, name)
+            value = lookup(env, name)
             # Additional check might be needed if variables can only be Numbers
             if not isinstance(value, int):
                 raise ValueError(f"{name} is not a number")

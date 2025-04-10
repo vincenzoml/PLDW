@@ -1,27 +1,44 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, TypeAlias, Union
+from typing import Callable
 from lark import Lark, Token, Tree
 
 
 # Define the semantic domains
-# Using Python 3.13 simplified syntax for union types
 type DenOperator = Callable[[int, int], int]
-type DVal = DenOperator  # Denotable values: can be stored in environment
+type DVal = DenOperator | int  # Denotable values: can be stored in environment
 
 # Environment as a function
 type Environment = Callable[[str], DVal]
 
+
+def lookup(env: Environment, name: str) -> DVal:
+    """Look up an identifier in the environment"""
+    return env(name)
+
+
+def bind(env: Environment, name: str, value: DVal) -> Environment:
+    """Create new environment with an added binding"""
+
+    def new_env(n: str) -> DVal:
+        if n == name:
+            return value
+        return env(n)
+
+    return new_env
+
+
 # Define grammar for parsing
 grammar = r"""
-    ?expr: bin | mono
-    mono: ground | paren
+    ?expr: bin | mono | let 
+    mono: ground | paren | var
     paren: "(" expr ")"
     bin: expr OP mono        
     ground: NUMBER 
     ident: IDENTIFIER
-
+    let: "let" IDENTIFIER "=" expr "in" expr
+    var: IDENTIFIER
 
     NUMBER: /[0-9]+/
     OP: "+" | "-" | "*" | "/" | "%"
@@ -73,22 +90,6 @@ def empty_environment() -> Environment:
     return env
 
 
-def lookup(env: Environment, name: str) -> DVal:
-    """Look up an identifier in the environment"""
-    return env(name)
-
-
-def bind(env: Environment, name: str, value: DVal) -> Environment:
-    """Create new environment with an added binding"""
-
-    def new_env(n: str) -> DVal:
-        if n == name:
-            return value
-        return env(n)
-
-    return new_env
-
-
 # Create initial environment with operators
 def create_initial_env() -> Environment:
     """Create an environment populated with standard operators"""
@@ -108,6 +109,18 @@ class Number:
 
 
 @dataclass
+class Var:
+    name: str
+
+
+@dataclass
+class Let:
+    name: str
+    expr: Expression
+    body: Expression
+
+
+@dataclass
 class BinaryExpression:
     op: str
     left: Expression
@@ -115,7 +128,7 @@ class BinaryExpression:
 
 
 # Define Expression as a union type using the simplified Python 3.13 syntax
-type Expression = Number | BinaryExpression
+type Expression = Number | BinaryExpression | Let | Var
 
 
 # Parse tree transformation function
@@ -144,7 +157,27 @@ def transform_parse_tree(tree: Tree) -> Expression:
                 right=transform_parse_tree(right),
             )
 
-        case _:
+        case Tree(data="var", children=[Token(type="IDENTIFIER", value=name)]):
+            return Var(name=name)
+
+        case Tree(
+            data="let",
+            children=[
+                Token(type="IDENTIFIER", value=name),
+                expr,
+                body,
+            ],
+        ):
+            return Let(
+                name=name,
+                expr=transform_parse_tree(expr),
+                body=transform_parse_tree(body),
+            )
+
+        case x:
+            print("******")
+            print(x.pretty())
+            print("******")
             raise ValueError(f"Unexpected parse tree structure")
 
 
@@ -177,6 +210,23 @@ def evaluate(ast: Expression, env: Environment) -> int:
                 return operator(left_value, right_value)
             except ValueError as e:
                 raise ValueError(f"Evaluation error: {e}")
+        # case Let(name, expr, body):
+        #     value = evaluate(expr, env)
+        #     extended_env = bind(env, name, value)
+        #     return evaluate(body, extended_env)
+        # case Var(name):
+        #     return lookup(env, name)
+        case Let(name, expr, body):
+            value = evaluate(expr, env)
+            extended_env = bind(env, name, value)
+            return evaluate(body, extended_env)
+        case Var(name):
+            x = lookup(env, name)
+            match x:
+                case int():
+                    return x
+                case _:
+                    raise ValueError(f"Unexpected value type: {type(x)}")
 
 
 def evaluate_string(expression: str) -> int:
@@ -194,7 +244,6 @@ def REPL():
 
     print("Mini-interpreter with environment (type 'exit' to quit)")
     print("Available operators: +, -, *, /, %")
-    print("Example inputs: 1+2, 3*4, 5-3, 10/2, 10%3")
 
     while not exit:
         expression = input("Enter an expression (exit to quit): ")
@@ -223,6 +272,9 @@ def run_tests():
         "1+(2*3)",
         "10/(2+3)",
         "10%(2+3)",
+        "let x = 10 in x+1",
+        "let x = 10 in let y = 20 in (x*(y+2))",
+        "let x = 1 in let y = 2 in x + y",
     ]
 
     env = create_initial_env()
@@ -232,7 +284,7 @@ def run_tests():
         try:
             ast = parse_ast(expr)
             result = evaluate(ast, env)
-            print(f"{expr} = {result}")
+            print(f"{expr} --> {result}")
         except Exception as e:
             print(f"{expr} -> Error: {e}")
 
