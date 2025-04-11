@@ -1,7 +1,7 @@
 ---
 title: "Lecture 04: Domains"
 author: "Vincenzo Ciancia"
-date: "April 04, 2025"
+date: "April 11, 2025"
 ---
 
 ## Section 1: Introduction to Semantic Domains
@@ -342,7 +342,7 @@ In a purely functional approach, we don't mutate existing environments or states
 Instead of modifying a dictionary, we define a new function that returns the new value for the updated identifier and delegates to the original environment for all other identifiers:
 
 ```python
-def env_extend(env: Environment, name: str, value: DVal) -> Environment:
+def bind(env: Environment, name: str, value: DVal) -> Environment:
     """Create new environment with an added binding"""
     def new_env(n: str) -> DVal:
         if n == name:
@@ -441,11 +441,11 @@ In our functional implementation, the initial environment is built by starting w
 def create_initial_env() -> Environment:
     """Create an environment populated with standard operators"""
     env = empty_environment()
-    env = env_extend(env, "+", add)
-    env = env_extend(env, "-", subtract)
-    env = env_extend(env, "*", multiply)
-    env = env_extend(env, "/", divide)
-    env = env_extend(env, "%", modulo)
+    env = bind(env, "+", add)
+    env = bind(env, "-", subtract)
+    env = bind(env, "*", multiply)
+    env = bind(env, "/", divide)
+    env = bind(env, "%", modulo)
     return env
 ```
 
@@ -492,7 +492,7 @@ def evaluate(ast: Expression, env: Environment) -> MVal:
         case BinaryExpression(op, left, right):
             try:
                 # Get operator from environment
-                operator = env_lookup(env, op)
+                operator = lookup(env, op)
                 
                 # Ensure it's a DenOperator
                 if not isinstance(operator, Callable):
@@ -550,7 +550,7 @@ def power(x: int, y: int) -> int:
     return x ** y
 
 # Extend environment
-env = env_extend(create_initial_env(), "**", power)
+env = bind(create_initial_env(), "**", power)
 ```
 
 
@@ -577,7 +577,7 @@ type Expression = Number | BinaryExpression | Variable
 def evaluate(ast: Expression, env: Environment) -> MVal:
     match ast:
         case Variable(name):
-            value = env_lookup(env, name)
+            value = lookup(env, name)
             # Additional check might be needed if variables can only be Numbers
             if not isinstance(value, int):
                 raise ValueError(f"{name} is not a number")
@@ -593,125 +593,6 @@ def evaluate(ast: Expression, env: Environment) -> MVal:
 - [Programming Language Semantics (Stanford)](https://web.stanford.edu/class/cs242/materials/lectures/lecture6.pdf)
 - [Functional Programming and Lambda Calculus](https://www.cs.cornell.edu/courses/cs3110/2019sp/textbook/interp/lambda_calculus.html)
 - [Environment and Store in Programming Languages](https://www.cs.tufts.edu/comp/105/readings/environments/environments.html)
-
-
----
-
-## Section 8: Primitives for Environment and Memory
-
-In the formal semantics of programming languages, we work with primitives that define how environments and memory operate. These primitives capture the essential operations needed to model variable bindings and memory allocation.
-
-
----
-
-### Locations as a Semantic Domain
-
-Before discussing memory operations, we must recognize **Locations** as a fundamental semantic domain:
-
-```
-type Location = int  # In our implementation, locations are integers
-```
-
-Locations (sometimes called addresses) are abstract entities that serve as references to memory cells. They are a semantic domain distinct from integers used in calculation, even though we might represent them as integers in an implementation. In a language's formal semantics, locations are opaque values that only make sense in the context of memory operations.
-
-
----
-
-### Memory (State) Primitives
-
-Memory, also called the store or state, is represented by the State dataclass which contains both a store function mapping locations to memorizable values and a next_loc field. The core operations include:
-
-1. **empty_memory**: Creates an initial, empty memory state
-   ```python
-   def empty_memory() -> State:
-       """Create an empty memory state"""
-       def store(location: Location) -> MVal:
-           raise ValueError(f"Undefined memory location: {location}")
-       return State(store=store, next_loc=0)
-   ```
-
-2. **update**: Modifies the memory at a specific location
-   ```python
-   def state_update(state: State, location: Location, value: MVal) -> State:
-       """Create new state with an updated value at given location"""
-       def new_store(loc: Location) -> MVal:
-           if loc == location:
-               return value
-           return state.store(loc)
-       return State(store=new_store, next_loc=state.next_loc)
-   ```
-
-3. **lookup**: Retrieves a value from a location
-   ```python
-   def state_lookup(state: State, location: Location) -> MVal:
-       """Look up a value at a given location"""
-       try:
-           return state.store(location)
-       except ValueError:
-           raise ValueError(f"Undefined memory location: {location}")
-   ```
-
-
----
-
-Memory in programming languages has a maximum size, determined by hardware or system configuration. When a program needs more memory than available:
-
-- In simple interpreters: An "out of memory" error occurs
-- In modern operating systems: Memory expansion mechanisms activate, such as:
-  - Virtual memory paging to disk
-  - Heap expansion
-  - Garbage collection (freeing unused memory)
-
-
----
-
-### Environment Primitives
-
-The environment maps identifiers to denotable values. Its essential operations include:
-
-1. **empty_environment**: Creates an initial, empty environment
-   ```python
-   def empty_environment() -> Environment:
-       """Create an empty environment function"""
-       def env(name: str) -> DVal:
-           raise ValueError(f"Undefined identifier: {name}")
-       return env
-   ```
-
-2. **bind** (or **extend**): Adds a new binding to an environment
-   ```python
-   def env_extend(env: Environment, name: str, value: DVal) -> Environment:
-       """Create new environment with an added binding"""
-       def new_env(n: str) -> DVal:
-           if n == name:
-               return value
-           return env(n)
-       return new_env
-   ```
-
-3. **lookup**: Retrieves a value bound to an identifier
-   ```python
-   def env_lookup(env: Environment, name: str) -> DVal:
-       """Look up an identifier in the environment"""
-       try:
-           return env(name)
-       except ValueError:
-           raise ValueError(f"Undefined identifier: {name}")
-   ```
-
-
----
-
-### Memory and Environment in Language Semantics
-
-The interaction between environments and memory is central to understanding language features:
-
-- **Variables**: Bind identifiers to locations (in the environment) which then hold values (in memory)
-- **Assignment**: Changes memory but not the environment (the variable still refers to the same location)
-- **Scoping**: Creates nested environments with different bindings for the same identifier
-- **Parameter passing**: Creates bindings between formal parameters and actual arguments
-
-This conceptual separation allows language designers to reason clearly about the effects of operations and ensure language features interact correctly.
 
 
 ---
@@ -842,8 +723,9 @@ By building on these semantic foundations, we can construct a rich understanding
 
 1. Extend the interpreter to support variables using the Variable AST node described in Section 7
 2. Add support for multi-character operators (e.g., "**" for exponentiation)
-3. Add support for conditional expressions (if-then-else)
-4. Implement a simple block structure with local variables
+3. Implement a memory system with the primitives described in Section 8
+4. Add support for conditional expressions (if-then-else)
+5. Implement a simple block structure with local variables
 
 These exercises will deepen your understanding of language semantics and interpreter design while preparing you for more advanced topics in the next chapters.
 
