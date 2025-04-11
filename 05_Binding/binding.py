@@ -13,6 +13,28 @@ type DVal = DenOperator | int  # Denotable values: can be stored in environment
 type Environment = Callable[[str], DVal]
 
 
+# Environment primitives
+def empty_environment() -> Environment:
+    """Create an empty environment function"""
+
+    def env(name: str) -> DVal:
+        raise ValueError(f"Undefined identifier: {name}")
+
+    return env
+
+
+# Create initial environment with operators
+def create_initial_env() -> Environment:
+    """Create an environment populated with standard operators"""
+    env = empty_environment()
+    env = bind(env, "+", add)
+    env = bind(env, "-", subtract)
+    env = bind(env, "*", multiply)
+    env = bind(env, "/", divide)
+    env = bind(env, "%", modulo)
+    return env
+
+
 def lookup(env: Environment, name: str) -> DVal:
     """Look up an identifier in the environment"""
     return env(name)
@@ -78,28 +100,6 @@ def modulo(x: int, y: int) -> int:
     if y == 0:
         raise ValueError("Division by zero")
     return x % y
-
-
-# Environment primitives
-def empty_environment() -> Environment:
-    """Create an empty environment function"""
-
-    def env(name: str) -> DVal:
-        raise ValueError(f"Undefined identifier: {name}")
-
-    return env
-
-
-# Create initial environment with operators
-def create_initial_env() -> Environment:
-    """Create an environment populated with standard operators"""
-    env = empty_environment()
-    env = bind(env, "+", add)
-    env = bind(env, "-", subtract)
-    env = bind(env, "*", multiply)
-    env = bind(env, "/", divide)
-    env = bind(env, "%", modulo)
-    return env
 
 
 # AST Definitions (based on the mini-interpreter from Lecture 3)
@@ -274,7 +274,13 @@ def run_tests():
         "10%(2+3)",
         "let x = 10 in x+1",
         "let x = 10 in let y = 20 in (x*(y+2))",
+        "let x = 1 in let y = 2 in y + 1",
+        "let x = 1 in let y = 2 in 1 + y",
+        "let x = 1 in let y = 2 in (x + y)",
         "let x = 1 in let y = 2 in x + y",
+        "let x = 1 in let y = 2 in y + x",
+        "let x = 1 in let y = 2 in x + 1",
+        "let x = 1 in let y = x+2 in 1 + x",
     ]
 
     env = create_initial_env()
