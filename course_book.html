@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Vincenzo Ciancia" />
-  <meta name="dcterms.date" content="2025-04-11" />
+  <meta name="dcterms.date" content="2025-05-01" />
   <title>Programming Languages Design Workshop</title>
   <style>
 html {
@@ -237,7 +237,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; }
 <header id="title-block-header">
 <h1 class="title">Programming Languages Design Workshop</h1>
 <p class="author">Vincenzo Ciancia</p>
-<p class="date">April 11, 2025</p>
+<p class="date">May 01, 2025</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -541,6 +541,56 @@ First-Class Citizen</a></li>
 <li><a href="#parser-and-grammar-extensions" id="toc-parser-and-grammar-extensions">Parser and Grammar
 Extensions</a></li>
 </ul></li>
+</ul></li>
+<li><a href="#chapter-6-conditionals-and-booleans" id="toc-chapter-6-conditionals-and-booleans">Chapter 6: Conditionals and
+Booleans</a>
+<ul>
+<li><a href="#section-1-introduction-to-booleans-and-conditionals" id="toc-section-1-introduction-to-booleans-and-conditionals">Section 1:
+Introduction to Booleans and Conditionals</a>
+<ul>
+<li><a href="#why-booleans-and-conditionals" id="toc-why-booleans-and-conditionals">Why Booleans and
+Conditionals?</a></li>
+</ul></li>
+<li><a href="#section-2-boolean-expressions" id="toc-section-2-boolean-expressions">Section 2: Boolean
+Expressions</a>
+<ul>
+<li><a href="#syntax-and-semantics" id="toc-syntax-and-semantics">Syntax
+and Semantics</a></li>
+<li><a href="#ast-representation-1" id="toc-ast-representation-1">AST
+Representation</a></li>
+</ul></li>
+<li><a href="#section-3-conditional-expressions" id="toc-section-3-conditional-expressions">Section 3: Conditional
+Expressions</a>
+<ul>
+<li><a href="#syntax-and-semantics-1" id="toc-syntax-and-semantics-1">Syntax and Semantics</a></li>
+<li><a href="#ast-representation-2" id="toc-ast-representation-2">AST
+Representation</a></li>
+</ul></li>
+<li><a href="#section-4-parser-and-evaluation-changes" id="toc-section-4-parser-and-evaluation-changes">Section 4: Parser and
+Evaluation Changes</a>
+<ul>
+<li><a href="#parser-extensions" id="toc-parser-extensions">Parser
+Extensions</a></li>
+<li><a href="#evaluation-extensions" id="toc-evaluation-extensions">Evaluation Extensions</a></li>
+</ul></li>
+<li><a href="#section-5-short-circuit-evaluation" id="toc-section-5-short-circuit-evaluation">Section 5: Short-Circuit
+Evaluation</a>
+<ul>
+<li><a href="#example-avoiding-division-by-zero" id="toc-example-avoiding-division-by-zero">Example: Avoiding Division by
+Zero</a></li>
+</ul></li>
+<li><a href="#section-6-non-trivial-examples" id="toc-section-6-non-trivial-examples">Section 6: Non-trivial
+Examples</a>
+<ul>
+<li><a href="#example-1-simple-conditional-with-binding" id="toc-example-1-simple-conditional-with-binding">Example 1: Simple
+Conditional with Binding</a></li>
+<li><a href="#example-2-nested-binding-and-conditionals" id="toc-example-2-nested-binding-and-conditionals">Example 2: Nested
+Binding and Conditionals</a></li>
+<li><a href="#example-3-short-circuiting-to-avoid-errors" id="toc-example-3-short-circuiting-to-avoid-errors">Example 3:
+Short-circuiting to Avoid Errors</a></li>
+</ul></li>
+<li><a href="#section-7-conclusion-and-next-steps" id="toc-section-7-conclusion-and-next-steps">Section 7: Conclusion and
+Next Steps</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -2501,5 +2551,167 @@ function:</li>
 definitions and references while maintaining the core evaluation
 semantics from Lecture 4 that will be useful in the second part of the
 course.</p>
+<h1 id="chapter-6-conditionals-and-booleans">Chapter 6: Conditionals and
+Booleans</h1>
+<h2 id="section-1-introduction-to-booleans-and-conditionals">Section 1:
+Introduction to Booleans and Conditionals</h2>
+<p>In this chapter, we extend our mini-interpreter to support
+<strong>boolean expressions</strong> and <strong>conditional
+(if-then-else) expressions</strong>. These features are essential for
+making decisions in programs and are foundational to all programming
+languages.</p>
+<h3 id="why-booleans-and-conditionals">Why Booleans and
+Conditionals?</h3>
+<ul>
+<li><strong>Booleans</strong> allow us to represent truth values
+(<code>True</code> and <code>False</code>).</li>
+<li><strong>Conditionals</strong> enable programs to choose between
+different actions based on boolean conditions.</li>
+<li>Together, they make our language expressive enough to encode logic
+and control flow.</li>
+</ul>
+<h2 id="section-2-boolean-expressions">Section 2: Boolean
+Expressions</h2>
+<h3 id="syntax-and-semantics">Syntax and Semantics</h3>
+<p>We extend our language with boolean literals and boolean
+operations:</p>
+<ul>
+<li>Boolean literals: <code>True</code>, <code>False</code></li>
+<li>Comparison operators: <code>==</code>, <code>!=</code>,
+<code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>,
+<code>&gt;=</code></li>
+<li>Logical operators: <code>and</code>, <code>or</code></li>
+</ul>
+<h3 id="ast-representation-1">AST Representation</h3>
+<p>We add new AST node types for booleans and binary operations:</p>
+<div class="sourceCode" id="cb88"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Boolean:</span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">bool</span></span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BinOp:</span>
+<span id="cb88-7"><a href="#cb88-7" aria-hidden="true" tabindex="-1"></a>    op: <span class="bu">str</span>  <span class="co"># &#39;+&#39;, &#39;-&#39;, &#39;*&#39;, &#39;/&#39;, &#39;==&#39;, &#39;!=&#39;, &#39;&lt;&#39;, &#39;&gt;&#39;, &#39;&lt;=&#39;, &#39;&gt;=&#39;, &#39;and&#39;, &#39;or&#39;</span></span>
+<span id="cb88-8"><a href="#cb88-8" aria-hidden="true" tabindex="-1"></a>    left: Expression</span>
+<span id="cb88-9"><a href="#cb88-9" aria-hidden="true" tabindex="-1"></a>    right: Expression</span></code></pre></div>
+<h2 id="section-3-conditional-expressions">Section 3: Conditional
+Expressions</h2>
+<h3 id="syntax-and-semantics-1">Syntax and Semantics</h3>
+<p>We add the <code>if</code> expression to our language:</p>
+<pre><code>if: &quot;if&quot; expr &quot;then&quot; expr &quot;else&quot; expr</code></pre>
+<p>This allows us to write expressions like:</p>
+<pre><code>if x &gt; 0 then x else -x</code></pre>
+<h3 id="ast-representation-2">AST Representation</h3>
+<div class="sourceCode" id="cb91"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> If:</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a>    then_branch: Expression</span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a>    else_branch: Expression</span></code></pre></div>
+<h2 id="section-4-parser-and-evaluation-changes">Section 4: Parser and
+Evaluation Changes</h2>
+<h3 id="parser-extensions">Parser Extensions</h3>
+<p>The parser is extended to recognize boolean literals, comparison and
+logical operators, and conditional expressions. For demonstration, we
+use a simple tuple-based parser:</p>
+<div class="sourceCode" id="cb92"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse(expr):</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">int</span>):</span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Number(expr)</span>
+<span id="cb92-4"><a href="#cb92-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">bool</span>):</span>
+<span id="cb92-5"><a href="#cb92-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Boolean(expr)</span>
+<span id="cb92-6"><a href="#cb92-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">str</span>):</span>
+<span id="cb92-7"><a href="#cb92-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Var(expr)</span>
+<span id="cb92-8"><a href="#cb92-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">tuple</span>):</span>
+<span id="cb92-9"><a href="#cb92-9" aria-hidden="true" tabindex="-1"></a>        tag <span class="op">=</span> expr[<span class="dv">0</span>]</span>
+<span id="cb92-10"><a href="#cb92-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;let&#39;</span>:</span>
+<span id="cb92-11"><a href="#cb92-11" aria-hidden="true" tabindex="-1"></a>            _, name, value_expr, body_expr <span class="op">=</span> expr</span>
+<span id="cb92-12"><a href="#cb92-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> Let(name, parse(value_expr), parse(body_expr))</span>
+<span id="cb92-13"><a href="#cb92-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;if&#39;</span>:</span>
+<span id="cb92-14"><a href="#cb92-14" aria-hidden="true" tabindex="-1"></a>            _, cond, then_branch, else_branch <span class="op">=</span> expr</span>
+<span id="cb92-15"><a href="#cb92-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> If(parse(cond), parse(then_branch), parse(else_branch))</span>
+<span id="cb92-16"><a href="#cb92-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="kw">in</span> {<span class="st">&#39;+&#39;</span>, <span class="st">&#39;-&#39;</span>, <span class="st">&#39;*&#39;</span>, <span class="st">&#39;/&#39;</span>, <span class="st">&#39;==&#39;</span>, <span class="st">&#39;!=&#39;</span>, <span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;&lt;=&#39;</span>, <span class="st">&#39;&gt;=&#39;</span>, <span class="st">&#39;and&#39;</span>, <span class="st">&#39;or&#39;</span>}:</span>
+<span id="cb92-17"><a href="#cb92-17" aria-hidden="true" tabindex="-1"></a>            _, left, right <span class="op">=</span> expr</span>
+<span id="cb92-18"><a href="#cb92-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> BinOp(tag, parse(left), parse(right))</span>
+<span id="cb92-19"><a href="#cb92-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Cannot parse: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<h3 id="evaluation-extensions">Evaluation Extensions</h3>
+<p>The evaluation function is extended to handle booleans, binary
+operations, and conditionals:</p>
+<div class="sourceCode" id="cb93"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> eval_expr(expr: Expression, env: Environment) <span class="op">-&gt;</span> DVal:</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Number):</span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Boolean):</span>
+<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
+<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Var):</span>
+<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(expr.name)</span>
+<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Let):</span>
+<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> eval_expr(expr.expr, env)</span>
+<span id="cb93-10"><a href="#cb93-10" aria-hidden="true" tabindex="-1"></a>        extended_env <span class="op">=</span> bind(env, expr.name, value)</span>
+<span id="cb93-11"><a href="#cb93-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> eval_expr(expr.body, extended_env)</span>
+<span id="cb93-12"><a href="#cb93-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, BinOp):</span>
+<span id="cb93-13"><a href="#cb93-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Short-circuit for &#39;and&#39; and &#39;or&#39;</span></span>
+<span id="cb93-14"><a href="#cb93-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;and&#39;</span>:</span>
+<span id="cb93-15"><a href="#cb93-15" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
+<span id="cb93-16"><a href="#cb93-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> left:</span>
+<span id="cb93-17"><a href="#cb93-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">False</span>  <span class="co"># short-circuit</span></span>
+<span id="cb93-18"><a href="#cb93-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
+<span id="cb93-19"><a href="#cb93-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;or&#39;</span>:</span>
+<span id="cb93-20"><a href="#cb93-20" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
+<span id="cb93-21"><a href="#cb93-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> left:</span>
+<span id="cb93-22"><a href="#cb93-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">True</span>  <span class="co"># short-circuit</span></span>
+<span id="cb93-23"><a href="#cb93-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
+<span id="cb93-24"><a href="#cb93-24" aria-hidden="true" tabindex="-1"></a>        left <span class="op">=</span> eval_expr(expr.left, env)</span>
+<span id="cb93-25"><a href="#cb93-25" aria-hidden="true" tabindex="-1"></a>        right <span class="op">=</span> eval_expr(expr.right, env)</span>
+<span id="cb93-26"><a href="#cb93-26" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ... handle other operators ...</span></span>
+<span id="cb93-27"><a href="#cb93-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, If):</span>
+<span id="cb93-28"><a href="#cb93-28" aria-hidden="true" tabindex="-1"></a>        cond <span class="op">=</span> eval_expr(expr.cond, env)</span>
+<span id="cb93-29"><a href="#cb93-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cond:</span>
+<span id="cb93-30"><a href="#cb93-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.then_branch, env)</span>
+<span id="cb93-31"><a href="#cb93-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb93-32"><a href="#cb93-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.else_branch, env)</span>
+<span id="cb93-33"><a href="#cb93-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown expression: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<h2 id="section-5-short-circuit-evaluation">Section 5: Short-Circuit
+Evaluation</h2>
+<p>Short-circuit evaluation means that in logical expressions like
+<code>and</code> and <code>or</code>, the second operand is only
+evaluated if necessary:</p>
+<ul>
+<li>For <code>and</code>, if the first operand is <code>False</code>,
+the result is <code>False</code> (second operand not evaluated).</li>
+<li>For <code>or</code>, if the first operand is <code>True</code>, the
+result is <code>True</code> (second operand not evaluated).</li>
+</ul>
+<p>This is important for avoiding errors and improving efficiency.</p>
+<h3 id="example-avoiding-division-by-zero">Example: Avoiding Division by
+Zero</h3>
+<div class="sourceCode" id="cb94"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>ast <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast, empty_env))  <span class="co"># Output: 2 (no error)</span></span></code></pre></div>
+<h2 id="section-6-non-trivial-examples">Section 6: Non-trivial
+Examples</h2>
+<h3 id="example-1-simple-conditional-with-binding">Example 1: Simple
+Conditional with Binding</h3>
+<div class="sourceCode" id="cb95"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 10 in if x &gt; 5 then x else 0</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>ast1 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">10</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">5</span>), <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>)))</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast1, empty_env))  <span class="co"># Output: 10</span></span></code></pre></div>
+<h3 id="example-2-nested-binding-and-conditionals">Example 2: Nested
+Binding and Conditionals</h3>
+<div class="sourceCode" id="cb96"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 3 in let y = 4 in if (x &lt; y) and (y &lt; 10) then x + y else 0</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>ast2 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">3</span>, (<span class="st">&#39;let&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">4</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">10</span>)), (<span class="st">&#39;+&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), <span class="dv">0</span>))))</span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast2, empty_env))  <span class="co"># Output: 7</span></span></code></pre></div>
+<h3 id="example-3-short-circuiting-to-avoid-errors">Example 3:
+Short-circuiting to Avoid Errors</h3>
+<div class="sourceCode" id="cb97"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>ast3 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast3, empty_env))  <span class="co"># Output: 2</span></span></code></pre></div>
+<h2 id="section-7-conclusion-and-next-steps">Section 7: Conclusion and
+Next Steps</h2>
+<p>Adding booleans and conditionals makes our mini-language much more
+expressive, enabling it to represent logic and control flow. In future
+chapters, we will build on this by adding:</p>
+<ul>
+<li>Iteration (while and for loops)</li>
+<li>Functions and application</li>
+<li>Recursion</li>
+</ul>
+<p>These features will allow us to write even more powerful and
+interesting programs in our mini-language.</p>
 </body>
 </html>
