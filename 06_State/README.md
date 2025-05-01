@@ -1,8 +1,6 @@
----
-title: "Lecture 06: State"
-author: "Vincenzo Ciancia"
-date: "May 01, 2025"
----
+# Chapter 6: State
+
+<!-- slide -->
 
 ## Section 1: Introduction to State
 
@@ -12,7 +10,7 @@ In this chapter, we extend our mini-language with the concept of **state**. Unti
 2. Observe changes to data over time
 3. Model real-world systems that have changing state
 
----
+<!-- slide -->
 
 ### Expressions vs. Commands
 
@@ -31,7 +29,7 @@ x + 1
 x <- x + 1
 ```
 
----
+<!-- slide -->
 
 ## Section 2: Commands and Command Sequences
 
@@ -40,7 +38,7 @@ To implement state, we introduce two new syntactic categories:
 1. **Commands**: Individual actions that can modify state
 2. **Command Sequences**: Ordered lists of commands to be executed in sequence
 
----
+<!-- slide -->
 
 ### Commands in Our Language
 
@@ -57,7 +55,7 @@ We implement two basic command types:
    print x + 1
    ```
 
----
+<!-- slide -->
 
 ### Command Sequences
 
@@ -71,7 +69,7 @@ print y
 
 This sequence assigns 10 to x, then assigns x + 5 (which is 15) to y, and finally prints the value of y.
 
----
+<!-- slide -->
 
 ### Grammar Extensions
 
@@ -90,7 +88,7 @@ assign: IDENTIFIER "<-" expr
 print: "print" expr
 ```
 
----
+<!-- slide -->
 
 ### AST Representation
 
@@ -114,7 +112,7 @@ class CommandSequence:
 type Command = Assign | Print
 ```
 
----
+<!-- slide -->
 
 ## Section 3: The Store Model of State
 
@@ -125,11 +123,15 @@ To represent state, we use the "store model":
 
 This two-level indirection allows multiple variables to refer to the same location or for a variable's value to change without changing its location.
 
----
+<!-- slide -->
 
 ### The State Class
 
 Our implementation uses a `State` class to manage the store:
+
+TODO: we do not use object-oriented features here. Use a dataclass for state (store and next_loc), and implement primitive operations and empty store as functions, just like the environment
+
+TODO: just like for the environment, use a function to represent the store, and update it in a functional way.
 
 ```python
 class State:
@@ -157,7 +159,7 @@ class State:
         return self.store[loc]
 ```
 
----
+<!-- slide -->
 
 ### Environment and Binding
 
@@ -184,7 +186,7 @@ def bind(env: Environment, name: str, loc: int) -> Environment:
 
 This approach maintains the functional style of our previous chapters while allowing for mutable state.
 
----
+<!-- slide -->
 
 ## Section 4: Evaluating Expressions with State
 
@@ -194,6 +196,8 @@ When evaluating expressions in a stateful language, we need to pass both the env
 def evaluate_expr(expr: Expression, env: Environment, state: State) -> int:
     # ...
 ```
+
+TODO: clarify that one needs to check that the location is a variable indeed (could be as well just a name binding). Make examples of the two.
 
 Variable lookup now has two steps:
 
@@ -210,11 +214,23 @@ case Var(name):
         raise ValueError(f"Variable error: {e}")
 ```
 
----
+<!-- slide -->
 
 ## Section 5: Executing Commands
 
 Commands modify the state or produce output. The `execute_command` function returns both the updated environment and state:
+
+TODO: clarify the tuple output (explain how it works in python, how to read first and second component etc.)
+
+TODO: clarify that print is not part of the mathematical semantics here, just an aid for using the interpreter.
+
+TODO: remember to remove object-oriented state and replace with functional state everywhere
+
+TODO: check the type of loc before assuming it's a location, could be a binding of a constant as well.
+
+TODO: check carefully that dval (denotable values) are indeed either constants or locations, and if not do it like that.
+
+TODO: don't auto-create variables, instead use a variable declaration command, to be added to the commands (so the whole thing must be read and rewritten from scratch since the commands are three). So if a variable has never been declared (using var x = expr) then it's just an error.
 
 ```python
 def execute_command(cmd: Command, env: Environment, state: State) -> tuple[Environment, State]:
@@ -243,7 +259,9 @@ def execute_command(cmd: Command, env: Environment, state: State) -> tuple[Envir
             return env, state
 ```
 
----
+<!-- slide -->
+
+TODO: by the previous todo, the assignement command has just one behaviour.
 
 ### The Assignment Command
 
@@ -254,7 +272,9 @@ The assignment command (`<-`) has two behaviors:
 
 This is similar to how variable assignment works in most programming languages.
 
----
+<!-- slide -->
+
+TODO: also command sequences should be declared in a functional way, not with object orientation.
 
 ### Command Sequences
 
@@ -276,13 +296,13 @@ def execute_command_seq(seq: CommandSequence, env: Environment, state: State) ->
     return env, state
 ```
 
----
+<!-- slide -->
 
 ## Section 6: Examples of State in Action
 
 Let's look at some examples that demonstrate the power of state:
 
----
+<!-- slide -->
 
 ### Example 1: Basic Assignment and Printing
 
@@ -293,7 +313,7 @@ print x
 
 This simple example shows creating a variable and reading its value. The output is `42`.
 
----
+<!-- slide -->
 
 ### Example 2: Updating Variables
 
@@ -316,7 +336,7 @@ This example demonstrates that changing `x` doesn't automatically change `y`, ev
 
 The value of `y` remains 15 because the expression `x + 5` was evaluated at the time of assignment.
 
----
+<!-- slide -->
 
 ### Example 3: Let Expressions in Commands
 
@@ -327,7 +347,7 @@ print x
 
 This example shows how we can use let expressions within commands. The output is `10`.
 
----
+<!-- slide -->
 
 ## Section 7: Differences from Previous Chapters
 
@@ -341,7 +361,7 @@ Adding state represents a significant shift in our language:
 | Environment maps names to values | Environment maps names to locations       |
 | Easier to reason about           | More expressive, closer to real languages |
 
----
+<!-- slide -->
 
 ## Section 8: Conclusion and Next Steps
 

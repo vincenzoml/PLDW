@@ -1,6 +1,8 @@
-# Chapter 6: Conditionals and Booleans
+# Chapter 7: Control Flow
 
 <!-- slide -->
+
+WORK IN PROGRESS.
 
 ## Section 1: Introduction to Booleans and Conditionals
 
