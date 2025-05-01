@@ -6,7 +6,7 @@ Introduces a new syntax level beyond expressions: commands and command sequences
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Dict, List, Optional, Union, Any, Tuple, cast
 from lark import Lark, Token, Tree
 
@@ -20,29 +20,50 @@ type Environment = Callable[[str], int]
 
 
 # State (store) maps locations to values
+@dataclass(frozen=True)
 class State:
-    def __init__(self):
-        self.store: Dict[int, Any] = {}
-        self.next_loc: int = 0
+    store: Callable[[int], Any]
+    next_loc: int
 
-    def alloc(self, value: Any) -> int:
-        """Allocate a new location in the store for the value."""
-        loc = self.next_loc
-        self.store[loc] = value
-        self.next_loc += 1
-        return loc
 
-    def update(self, loc: int, value: Any) -> None:
-        """Update the value at a location."""
-        if loc not in self.store:
-            raise ValueError(f"Location {loc} not allocated")
-        self.store[loc] = value
+def empty_store() -> Callable[[int], Any]:
+    def store_fn(loc: int) -> Any:
+        raise ValueError(f"Location {loc} not allocated")
 
-    def lookup(self, loc: int) -> Any:
-        """Look up the value at a location."""
-        if loc not in self.store:
-            raise ValueError(f"Location {loc} not allocated")
-        return self.store[loc]
+    return store_fn
+
+
+def empty_state() -> State:
+    return State(store=empty_store(), next_loc=0)
+
+
+def alloc(state: State, value: Any) -> tuple[int, State]:
+    loc = state.next_loc
+    prev_store = state.store
+
+    def new_store(l: int) -> Any:
+        if l == loc:
+            return value
+        return prev_store(l)
+
+    return loc, State(store=new_store, next_loc=loc + 1)
+
+
+def update(state: State, loc: int, value: Any) -> State:
+    # Check if location exists
+    state.store(loc)  # will raise if not found
+    prev_store = state.store
+
+    def new_store(l: int) -> Any:
+        if l == loc:
+            return value
+        return prev_store(l)
+
+    return State(store=new_store, next_loc=state.next_loc)
+
+
+def lookup(state: State, loc: int) -> Any:
+    return state.store(loc)
 
 
 # Environment primitives
@@ -59,14 +80,14 @@ def empty_environment() -> Environment:
 def create_initial_env() -> tuple[Environment, State]:
     """Create an environment populated with standard operators and an empty state"""
     env = empty_environment()
-    state = State()
+    state = empty_state()
 
     # Allocate operators in the state
-    plus_loc = state.alloc(add)
-    minus_loc = state.alloc(subtract)
-    mult_loc = state.alloc(multiply)
-    div_loc = state.alloc(divide)
-    mod_loc = state.alloc(modulo)
+    plus_loc, state = alloc(state, add)
+    minus_loc, state = alloc(state, subtract)
+    mult_loc, state = alloc(state, multiply)
+    div_loc, state = alloc(state, divide)
+    mod_loc, state = alloc(state, modulo)
 
     # Bind operator names to their locations
     env = bind(env, "+", plus_loc)
@@ -103,9 +124,11 @@ grammar = r"""
                
     ?command: assign
             | print
+            | vardecl
             
     assign: IDENTIFIER "<-" expr
     print: "print" expr
+    vardecl: "var" IDENTIFIER "=" expr
             
     ?expr: bin | mono | let 
     mono: ground | paren | var
@@ -196,13 +219,19 @@ class Print:
 
 
 @dataclass
+class VarDecl:
+    name: str
+    expr: Expression
+
+
+@dataclass
 class CommandSequence:
     first: Command
     rest: Optional[CommandSequence] = None
 
 
 # Define Command as a union type
-type Command = Assign | Print
+type Command = Assign | Print | VarDecl
 
 
 # Parse tree transformation for expressions
@@ -278,6 +307,15 @@ def transform_command_tree(tree: Tree) -> Command:
                 expr=transform_expr_tree(cast(Tree, expr_tree)),
             )
 
+        case Tree(
+            data="vardecl",
+            children=[Token(type="IDENTIFIER", value=name), expr_tree],
+        ):
+            return VarDecl(
+                name=name,
+                expr=transform_expr_tree(cast(Tree, expr_tree)),
+            )
+
         case x:
             print("******")
             print(x.pretty())
@@ -305,6 +343,12 @@ def transform_command_seq_tree(tree: Tree) -> CommandSequence:
                 first=transform_command_tree(cast(Tree, single_command)),
             )
 
+        # Handle the case where the root is a single command node
+        case _ if tree.data in {"vardecl", "assign", "print"}:
+            return CommandSequence(
+                first=transform_command_tree(tree),
+            )
+
         case x:
             print("******")
             print(x.pretty())
@@ -329,7 +373,7 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> int:
             try:
                 # Get operator from environment and state
                 op_loc = lookup_env(env, op)
-                operator = state.lookup(op_loc)
+                operator = lookup(state, op_loc)
 
                 # Ensure it's a function (DenOperator)
                 if not isinstance(operator, Callable):
@@ -347,7 +391,7 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> int:
         case Let(name, expr, body):
             # Evaluate the expression and bind it in a new location
             value = evaluate_expr(expr, env, state)
-            loc = state.alloc(value)
+            loc, state = alloc(state, value)
             extended_env = bind(env, name, loc)
             return evaluate_expr(body, extended_env, state)
 
@@ -355,7 +399,7 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> int:
             # Look up variable's location and then its value in the state
             try:
                 loc = lookup_env(env, name)
-                return state.lookup(loc)
+                return lookup(state, loc)
             except ValueError as e:
                 raise ValueError(f"Variable error: {e}")
 
@@ -366,24 +410,24 @@ def execute_command(
 ) -> tuple[Environment, State]:
     """Execute a command, returning the updated environment and state"""
     match cmd:
-        case Assign(name, expr):
-            # Evaluate the expression
+        case VarDecl(name, expr):
+            # Evaluate the expression and allocate a new location
             value = evaluate_expr(expr, env, state)
-
+            if _var_exists(env, name):
+                raise ValueError(f"Variable '{name}' already declared")
+            loc, state = alloc(state, value)
+            new_env = bind(env, name, loc)
+            return new_env, state
+        case Assign(name, expr):
+            # Assignment only allowed for declared variables
             try:
-                # If variable exists, update its value in the state
                 loc = lookup_env(env, name)
-                state.update(loc, value)
-                return env, state
             except ValueError:
-                # If variable doesn't exist, allocate a new location
-                loc = state.alloc(value)
-                # Create an extended environment with the new binding
-                new_env = bind(env, name, loc)
-                return new_env, state
-
+                raise ValueError(f"Assignment to undeclared variable '{name}'")
+            value = evaluate_expr(expr, env, state)
+            state = update(state, loc, value)
+            return env, state
         case Print(expr):
-            # Evaluate the expression and print the result
             value = evaluate_expr(expr, env, state)
             print(value)
             return env, state
@@ -418,7 +462,7 @@ def REPL():
     exit = False
 
     print("Mini-language with state (type 'exit' to quit)")
-    print("Commands: assign (x <- expr), print (print expr)")
+    print("Commands: declare (var x = expr), assign (x <- expr), print (print expr)")
     print("Available operators: +, -, *, /, %")
 
     while not exit:
@@ -436,16 +480,16 @@ def REPL():
 def run_tests():
     """Run some test expressions to verify the parser and evaluator"""
     test_programs = [
-        # Simple assignment and printing
-        "x <- 42; print x",
-        # Multiple assignments
-        "x <- 10; y <- x + 5; print y",
+        # Simple declaration, assignment, and printing
+        "var x = 42; print x",
+        # Multiple declarations and assignments
+        "var x = 10; var y = x + 5; print y",
         # Updating variables
-        "x <- 10; print x; x <- 20; print x",
+        "var x = 10; print x; x <- 20; print x",
         # Using let expressions in commands
-        "x <- let y = 5 in y * 2; print x",
+        "var x = let y = 5 in y * 2; print x",
         # Longer program with multiple operations
-        "x <- 10; y <- 20; z <- x + y; print z; x <- 30; print x + y",
+        "var x = 10; var y = 20; var z = x + y; print z; x <- 30; print x + y",
     ]
 
     print("Running tests:")
@@ -457,6 +501,15 @@ def run_tests():
             print("Execution successful")
         except Exception as e:
             print(f"Error: {e}")
+
+
+# Helper to check if variable exists
+def _var_exists(env: Environment, name: str) -> bool:
+    try:
+        lookup_env(env, name)
+        return True
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":
