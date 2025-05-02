@@ -127,7 +127,12 @@ class Assign:
 @dataclass
 class Print:
     expr: Expression
+```
 
+
+---
+
+```python
 @dataclass
 class CommandSequence:
     first: Command
@@ -157,6 +162,9 @@ Our implementation uses a `State` dataclass to manage the store in a functional 
 
 - The store is **not** a dictionary, but a function from locations to values (or raises an error if not found), just like the environment is a function from names to locations. This ensures a fully functional approach.
 
+
+---
+
 ```python
 @dataclass(frozen=True)
 class State:
@@ -170,7 +178,12 @@ def empty_store() -> Callable[[int], Any]:
 
 def empty_state() -> State:
     return State(store=empty_store(), next_loc=0)
+```
 
+
+---
+
+```python
 def alloc(state: State, value: Any) -> tuple[int, State]:
     loc = state.next_loc
     prev_store = state.store
@@ -179,7 +192,12 @@ def alloc(state: State, value: Any) -> tuple[int, State]:
             return value
         return prev_store(l)
     return loc, State(store=new_store, next_loc=loc + 1)
+```
 
+
+---
+
+```python
 def update(state: State, loc: int, value: Any) -> State:
     state.store(loc)  # will raise if not found
     prev_store = state.store
@@ -193,14 +211,10 @@ def lookup(state: State, loc: int) -> Any:
     return state.store(loc)
 ```
 
-All state operations return a new state, preserving functional purity. The store is a function, not a dict.
-
 
 ---
 
-### Environment and Binding
-
-Our environment maps names to locations:
+### Recall environment and binding
 
 ```python
 # Environment now maps to locations (store addresses)
@@ -219,8 +233,6 @@ def bind(env: Environment, name: str, loc: int) -> Environment:
     return new_env
 ```
 
-This approach maintains the functional style of our previous chapters while allowing for mutable state.
-
 
 ---
 
@@ -237,6 +249,9 @@ Variable lookup now has two steps:
 
 1. Use the environment to find the location
 2. Use the state to look up the value at that location
+
+
+---
 
 ```python
 case Var(name):
@@ -266,6 +281,9 @@ You can access the first and second components of the tuple as `env` and `state`
 
 > **Note:** The `print` command is not part of the mathematical semantics; it is just an aid for using the interpreter.
 
+
+---
+
 ### The Variable Declaration Command
 
 The variable declaration command (`var x = expr`) creates a new variable and initializes it. If the variable already exists, it is an error.
@@ -274,9 +292,15 @@ The variable declaration command (`var x = expr`) creates a new variable and ini
 
 The assignment command (`<-`) only updates an existing variable. If the variable does not exist, it is an error.
 
+
+---
+
 ### The Print Command
 
 The print command evaluates the expression and prints its value. It does not affect the environment or state.
+
+
+---
 
 ### Command Sequences
 
@@ -355,20 +379,20 @@ This example shows how we can use let expressions within commands. The output is
 
 Adding state represents a significant shift in our language:
 
-| Purely Functional (Ch. 5)        | Stateful (Ch. 6)                          |
-| -------------------------------- | ----------------------------------------- |
-| Values are immutable             | Values can change over time               |
-| No side effects                  | Commands have side effects                |
-| Referential transparency         | Expressions may evaluate differently      |
-| Environment maps names to values | Environment maps names to locations       |
-| Easier to reason about           | More expressive, closer to real languages |
+| Purely Functional (Ch. 5)        | Stateful (Ch. 6)                     |
+| -------------------------------- | ------------------------------------ |
+| Values are immutable             | Values can change over time          |
+| No side effects                  | Commands have side effects           |
+| Referential transparency         | Expressions may evaluate differently |
+| Environment maps names to values | Environment maps names to locations  |
+| Easier to reason about           | More expressive                      |
 
 
 ---
 
 ## Section 8: Conclusion and Next Steps
 
-Adding state to our mini-language significantly increases its expressiveness, making it capable of modeling real-world problems that involve change over time. In the next chapter, we'll build upon this foundation by adding control flow structures like loops and more complex conditionals.
+Adding state to our mini-language significantly increases its expressiveness, making it capable of modeling real-world problems that involve change over time. In the next chapter, we'll build upon this foundation by adding control flow structures like loops and conditionals.
 
 With state, environment, and control flow, our language will have all the essential ingredients of a complete programming language.
 

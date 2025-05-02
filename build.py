@@ -57,45 +57,80 @@ def combine_markdown_files(output_file: str = "course_book.md"):
         f.write("\n".join(content))
 
 
-def build_book():
+def get_all_lecture_readmes():
+    """Return a list of all lecture README.md file paths."""
+    return [
+        os.path.join(dir_name, "README.md")
+        for dir_name in find_lecture_dirs()
+        if os.path.exists(os.path.join(dir_name, "README.md"))
+    ]
+
+
+def build_book(force=False):
     """Build both PDF and HTML versions of the book."""
     # First combine all markdown files
     combine_markdown_files()
 
-    # Convert to PDF using Pandoc
-    print("Generating PDF...")
-    try:
-        subprocess.run(
-            [
-                "pandoc",
-                "course_book.md",
-                "-o",
-                "course_book.pdf",
-                "--from=markdown+yaml_metadata_block+raw_html",
-                "--pdf-engine=xelatex",
-                "--toc",
-                "--toc-depth=3",
-                "--highlight-style=tango",
-                "-V",
-                "geometry:margin=1in",
-                # Font specifications for lambda support
-                "-V",
-                "mainfont=Times New Roman",
-                "-V",
-                "monofont=Courier New",
-                # Make code font significantly smaller
-                "-V",
-                "monofontoptions:Scale=0.7",
-                # Add syntax highlighting styling
-                "-V",
-                "colorlinks=true",
-            ],
-            check=True,
+    pdf_file = "course_book.pdf"
+    # Compute latest mtime among all lecture README.md files
+    lecture_readmes = get_all_lecture_readmes()
+    if not lecture_readmes:
+        print("[BOOK] No lecture README.md files found, cannot generate PDF.")
+        return
+    latest_md_mtime = max(os.path.getmtime(f) for f in lecture_readmes)
+    latest_md_file = max(lecture_readmes, key=lambda f: os.path.getmtime(f))
+    regenerate_pdf = True
+    if os.path.exists(pdf_file):
+        pdf_mtime = os.path.getmtime(pdf_file)
+        print(
+            f"[BOOK] PDF: {pdf_file} mtime: {pdf_mtime} ({date.fromtimestamp(pdf_mtime)})"
         )
-        print("PDF generation successful!")
-    except subprocess.CalledProcessError as e:
-        print(f"Error generating PDF: {e}", file=sys.stderr)
-        print("Continuing with HTML generation...", file=sys.stderr)
+        print(
+            f"[BOOK] Latest lecture README: {latest_md_file} mtime: {latest_md_mtime} ({date.fromtimestamp(latest_md_mtime)})"
+        )
+        if pdf_mtime > latest_md_mtime and not force:
+            print(f"[BOOK] Decision: keep existing PDF (not regenerating)")
+            regenerate_pdf = False
+        else:
+            print(f"[BOOK] Decision: regenerate PDF")
+    else:
+        print(f"[BOOK] PDF does not exist, will generate.")
+        print(f"[BOOK] Decision: regenerate PDF")
+
+    if regenerate_pdf:
+        print("Generating PDF...")
+        try:
+            subprocess.run(
+                [
+                    "pandoc",
+                    "course_book.md",
+                    "-o",
+                    pdf_file,
+                    "--from=markdown+yaml_metadata_block+raw_html",
+                    "--pdf-engine=xelatex",
+                    "--toc",
+                    "--toc-depth=3",
+                    "--highlight-style=tango",
+                    "-V",
+                    "geometry:margin=1in",
+                    # Font specifications for lambda support
+                    "-V",
+                    "mainfont=Times New Roman",
+                    "-V",
+                    "monofont=Courier New",
+                    # Make code font significantly smaller
+                    "-V",
+                    "monofontoptions:Scale=0.7",
+                    # Add syntax highlighting styling
+                    "-V",
+                    "colorlinks=true",
+                ],
+                check=True,
+            )
+            print("PDF generation successful!")
+        except subprocess.CalledProcessError as e:
+            print(f"Error generating PDF: {e}", file=sys.stderr)
+            print("Continuing with HTML generation...", file=sys.stderr)
 
     # Convert to HTML using Pandoc
     print("Generating HTML...")
@@ -148,7 +183,7 @@ def build_book():
         print("- course_book.html")
 
 
-def generate_slides_for_chapter(chapter_dir):
+def generate_slides_for_chapter(chapter_dir, force=False):
     """Generate slides for a single chapter."""
     # Extract chapter number and name
     chapter_num = chapter_dir.split("_", 1)[0] if "_" in chapter_dir else ""
@@ -177,13 +212,7 @@ def generate_slides_for_chapter(chapter_dir):
 
         # Write YAML header with quoted title
         f.write(
-            f"""---
-title: "Lecture {chapter_num}: {chapter_name}"
-author: "Vincenzo Ciancia"
-date: "{current_date}"
----
-
-"""
+            f"""---\ntitle: \"Lecture {chapter_num}: {chapter_name}\"\nauthor: \"Vincenzo Ciancia\"\ndate: \"{current_date}\"\n---\n\n"""
         )
 
         # Add each slide
@@ -199,45 +228,66 @@ date: "{current_date}"
 
         print(f"  Created {slide_count} slides for chapter {chapter_num}")
 
-    # Generate PDF with pandoc
-    print(f"  Generating PDF: {slides_pdf}")
-    try:
-        subprocess.run(
-            [
-                "pandoc",
-                slides_markdown,
-                "-o",
-                slides_pdf,
-                "--from=markdown",
-                "--to=beamer",
-                "--pdf-engine=xelatex",
-                "--variable=fontsize:10pt",
-                "--variable=theme:metropolis",
-                "--variable=colortheme:default",
-                "--variable=aspectratio:169",
-                "--highlight-style=tango",
-                "-V",
-                "monofont=Courier New",
-                "-V",
-                "monofontoptions:Scale=0.6",
-            ],
-            check=True,
+    regenerate_pdf = True
+    if os.path.exists(slides_pdf):
+        pdf_mtime = os.path.getmtime(slides_pdf)
+        md_mtime = os.path.getmtime(readme_path)
+        print(
+            f"[SLIDES {chapter_num}] PDF: {slides_pdf} mtime: {pdf_mtime} ({date.fromtimestamp(pdf_mtime)})"
         )
-        print(f"  Successfully created PDF: {slides_pdf}")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"  Error generating PDF for {chapter_dir}: {e}")
-        return False
+        print(
+            f"[SLIDES {chapter_num}] README: {readme_path} mtime: {md_mtime} ({date.fromtimestamp(md_mtime)})"
+        )
+        if pdf_mtime > md_mtime and not force:
+            print(
+                f"[SLIDES {chapter_num}] Decision: keep existing PDF (not regenerating)"
+            )
+            regenerate_pdf = False
+        else:
+            print(f"[SLIDES {chapter_num}] Decision: regenerate PDF")
+    else:
+        print(f"[SLIDES {chapter_num}] PDF does not exist, will generate.")
+        print(f"[SLIDES {chapter_num}] Decision: regenerate PDF")
+
+    if regenerate_pdf:
+        print(f"  Generating PDF: {slides_pdf}")
+        try:
+            subprocess.run(
+                [
+                    "pandoc",
+                    slides_markdown,
+                    "-o",
+                    slides_pdf,
+                    "--from=markdown",
+                    "--to=beamer",
+                    "--pdf-engine=xelatex",
+                    "--variable=fontsize:10pt",
+                    "--variable=theme:metropolis",
+                    "--variable=colortheme:default",
+                    "--variable=aspectratio:169",
+                    "--highlight-style=tango",
+                    "-V",
+                    "monofont=Courier New",
+                    "-V",
+                    "monofontoptions:Scale=0.6",
+                ],
+                check=True,
+            )
+            print(f"  Successfully created PDF: {slides_pdf}")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"  Error generating PDF for {chapter_dir}: {e}")
+            return False
 
 
-def build_slides_for_all_chapters():
+def build_slides_for_all_chapters(force=False):
     """Build slides for all chapters."""
     print("Generating slides for all chapters...")
     success_count = 0
 
     for dir_name in find_lecture_dirs():
         print(f"Processing {dir_name}...")
-        if generate_slides_for_chapter(dir_name):
+        if generate_slides_for_chapter(dir_name, force=force):
             success_count += 1
 
     print(f"Slides generation complete. Generated slides for {success_count} chapters.")
@@ -245,7 +295,7 @@ def build_slides_for_all_chapters():
 
 def main():
     """Parse command-line arguments and run the requested actions."""
-    parser = argparse.ArgumentParser(description="Build course book and/or slides")
+    parser = argparse.ArgumentParser(description="Build course book and slides")
     parser.add_argument(
         "--slides", action="store_true", help="Generate slides for all chapters"
     )
@@ -255,20 +305,26 @@ def main():
         help="Generate slides for a specific chapter (e.g., '04')",
     )
     parser.add_argument("--book", action="store_true", help="Generate the course book")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force regeneration even if output is newer than source",
+    )
 
     args = parser.parse_args()
 
-    # Default to building the book if no args provided
+    # By default, build both book and all slides if no specific options are given
     if not (args.slides or args.chapter or args.book):
-        build_book()
+        build_book(force=args.force)
+        build_slides_for_all_chapters(force=args.force)
         return
 
     # Process requested actions
     if args.book:
-        build_book()
+        build_book(force=args.force)
 
     if args.slides:
-        build_slides_for_all_chapters()
+        build_slides_for_all_chapters(force=args.force)
 
     if args.chapter:
         chapter_dir = None
@@ -278,7 +334,7 @@ def main():
                 break
 
         if chapter_dir:
-            generate_slides_for_chapter(chapter_dir)
+            generate_slides_for_chapter(chapter_dir, force=args.force)
         else:
             print(f"Chapter {args.chapter} not found.")
 

@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Vincenzo Ciancia" />
-  <meta name="dcterms.date" content="2025-05-01" />
+  <meta name="dcterms.date" content="2025-05-02" />
   <title>Programming Languages Design Workshop</title>
   <style>
 html {
@@ -237,7 +237,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; }
 <header id="title-block-header">
 <h1 class="title">Programming Languages Design Workshop</h1>
 <p class="author">Vincenzo Ciancia</p>
-<p class="date">May 01, 2025</p>
+<p class="date">May 02, 2025</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -564,23 +564,28 @@ Representation</a></li>
 <li><a href="#section-3-the-store-model-of-state" id="toc-section-3-the-store-model-of-state">Section 3: The Store Model
 of State</a>
 <ul>
-<li><a href="#the-state-class" id="toc-the-state-class">The State
-Class</a></li>
-<li><a href="#environment-and-binding" id="toc-environment-and-binding">Environment and Binding</a></li>
+<li><a href="#the-state-as-a-functional-dataclass" id="toc-the-state-as-a-functional-dataclass">The State as a Functional
+Dataclass</a></li>
+<li><a href="#recall-environment-and-binding" id="toc-recall-environment-and-binding">Recall environment and
+binding</a></li>
 </ul></li>
 <li><a href="#section-4-evaluating-expressions-with-state" id="toc-section-4-evaluating-expressions-with-state">Section 4:
 Evaluating Expressions with State</a></li>
 <li><a href="#section-5-executing-commands" id="toc-section-5-executing-commands">Section 5: Executing Commands</a>
 <ul>
+<li><a href="#the-variable-declaration-command" id="toc-the-variable-declaration-command">The Variable Declaration
+Command</a></li>
 <li><a href="#the-assignment-command" id="toc-the-assignment-command">The Assignment Command</a></li>
+<li><a href="#the-print-command" id="toc-the-print-command">The Print
+Command</a></li>
 <li><a href="#command-sequences-1" id="toc-command-sequences-1">Command
 Sequences</a></li>
 </ul></li>
 <li><a href="#section-6-examples-of-state-in-action" id="toc-section-6-examples-of-state-in-action">Section 6: Examples of
 State in Action</a>
 <ul>
-<li><a href="#example-1-basic-assignment-and-printing" id="toc-example-1-basic-assignment-and-printing">Example 1: Basic
-Assignment and Printing</a></li>
+<li><a href="#example-1-basic-declaration-assignment-and-printing" id="toc-example-1-basic-declaration-assignment-and-printing">Example 1:
+Basic Declaration, Assignment, and Printing</a></li>
 <li><a href="#example-2-updating-variables" id="toc-example-2-updating-variables">Example 2: Updating
 Variables</a></li>
 <li><a href="#example-3-let-expressions-in-commands" id="toc-example-3-let-expressions-in-commands">Example 3: Let
@@ -2617,14 +2622,16 @@ side effects. By adding state, we can:</p>
 <li><strong>Expressions</strong>: Compute values (e.g.,
 <code>x + 1</code>, <code>let x = 42 in x * 2</code>)</li>
 <li><strong>Commands</strong>: Perform actions with side effects (e.g.,
-<code>x &lt;- 42</code>, <code>print x</code>)</li>
+<code>var x = 42</code>, <code>x &lt;- 42</code>,
+<code>print x</code>)</li>
 </ul>
 <p>This distinction is common in many programming languages:</p>
 <pre><code># Expression (computes a value)
 x + 1
 
 # Command (performs an action)
-x &lt;- x + 1</code></pre>
+var x = 42
+x &lt;- 42</code></pre>
 <h2 id="section-2-commands-and-command-sequences">Section 2: Commands
 and Command Sequences</h2>
 <p>To implement state, we introduce two new syntactic categories:</p>
@@ -2635,22 +2642,27 @@ state</li>
 executed in sequence</li>
 </ol>
 <h3 id="commands-in-our-language">Commands in Our Language</h3>
-<p>We implement two basic command types:</p>
+<p>We implement three basic command types:</p>
 <ol type="1">
-<li><p><strong>Assignment</strong>: Binds or updates a variable with a
-new value</p>
-<pre><code>x &lt;- 42</code></pre></li>
+<li><p><strong>Variable Declaration</strong>: Declares a new variable
+and initializes it</p>
+<pre><code>var x = 42</code></pre></li>
+<li><p><strong>Assignment</strong>: Updates a variable with a new value
+(only if already declared)</p>
+<pre><code>x &lt;- 10</code></pre></li>
 <li><p><strong>Print</strong>: Outputs the value of an expression</p>
 <pre><code>print x + 1</code></pre></li>
 </ol>
 <h3 id="command-sequences">Command Sequences</h3>
 <p>Command sequences represent multiple commands separated by
 semicolons:</p>
-<pre><code>x &lt;- 10;
-y &lt;- x + 5;
+<p>TODO: also use an assignemnt in the example</p>
+<pre><code>var x = 10;
+var y = x + 5;
 print y</code></pre>
-<p>This sequence assigns 10 to x, then assigns x + 5 (which is 15) to y,
-and finally prints the value of y.</p>
+<p>This sequence declares <code>x</code>, then declares <code>y</code>
+as <code>x + 5</code> (which is 15), and finally prints the value of
+<code>y</code>.</p>
 <h3 id="grammar-extensions">Grammar Extensions</h3>
 <p>We extend our language grammar to support commands and sequences:</p>
 <pre><code>?program: command_seq
@@ -2658,29 +2670,35 @@ and finally prints the value of y.</p>
 ?command_seq: command
            | command &quot;;&quot; command_seq
 
-?command: assign
+?command: vardecl
+        | assign
         | print
 
+vardecl: &quot;var&quot; IDENTIFIER &quot;=&quot; expr
 assign: IDENTIFIER &quot;&lt;-&quot; expr
 print: &quot;print&quot; expr</code></pre>
 <h3 id="ast-representation-1">AST Representation</h3>
 <p>We represent commands and command sequences with these AST node
 types:</p>
-<div class="sourceCode" id="cb93"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Assign:</span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
-<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a>    expr: Expression</span>
-<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Print:</span>
-<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a>    expr: Expression</span>
-<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb93-10"><a href="#cb93-10" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb93-11"><a href="#cb93-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CommandSequence:</span>
-<span id="cb93-12"><a href="#cb93-12" aria-hidden="true" tabindex="-1"></a>    first: Command</span>
-<span id="cb93-13"><a href="#cb93-13" aria-hidden="true" tabindex="-1"></a>    rest: Optional[CommandSequence] <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb93-14"><a href="#cb93-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb93-15"><a href="#cb93-15" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Command <span class="op">=</span> Assign <span class="op">|</span> Print</span></code></pre></div>
+<div class="sourceCode" id="cb94"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> VarDecl:</span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>    expr: Expression</span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-6"><a href="#cb94-6" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb94-7"><a href="#cb94-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Assign:</span>
+<span id="cb94-8"><a href="#cb94-8" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
+<span id="cb94-9"><a href="#cb94-9" aria-hidden="true" tabindex="-1"></a>    expr: Expression</span>
+<span id="cb94-10"><a href="#cb94-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-11"><a href="#cb94-11" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb94-12"><a href="#cb94-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Print:</span>
+<span id="cb94-13"><a href="#cb94-13" aria-hidden="true" tabindex="-1"></a>    expr: Expression</span></code></pre></div>
+<div class="sourceCode" id="cb95"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CommandSequence:</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>    first: Command</span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>    rest: Optional[CommandSequence] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Command <span class="op">=</span> VarDecl <span class="op">|</span> Assign <span class="op">|</span> Print</span></code></pre></div>
 <h2 id="section-3-the-store-model-of-state">Section 3: The Store Model
 of State</h2>
 <p>To represent state, we use the “store model”:</p>
@@ -2692,107 +2710,110 @@ of State</h2>
 <p>This two-level indirection allows multiple variables to refer to the
 same location or for a variable’s value to change without changing its
 location.</p>
-<h3 id="the-state-class">The State Class</h3>
-<p>Our implementation uses a <code>State</code> class to manage the
-store:</p>
-<div class="sourceCode" id="cb94"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> State:</span>
-<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
-<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.store: Dict[<span class="bu">int</span>, Any] <span class="op">=</span> {}</span>
-<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_loc: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb94-6"><a href="#cb94-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> alloc(<span class="va">self</span>, value: Any) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
-<span id="cb94-7"><a href="#cb94-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;Allocate a new location in the store for the value.&quot;&quot;&quot;</span></span>
-<span id="cb94-8"><a href="#cb94-8" aria-hidden="true" tabindex="-1"></a>        loc <span class="op">=</span> <span class="va">self</span>.next_loc</span>
-<span id="cb94-9"><a href="#cb94-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.store[loc] <span class="op">=</span> value</span>
-<span id="cb94-10"><a href="#cb94-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.next_loc <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb94-11"><a href="#cb94-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> loc</span>
-<span id="cb94-12"><a href="#cb94-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb94-13"><a href="#cb94-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> update(<span class="va">self</span>, loc: <span class="bu">int</span>, value: Any) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb94-14"><a href="#cb94-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;Update the value at a location.&quot;&quot;&quot;</span></span>
-<span id="cb94-15"><a href="#cb94-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loc <span class="kw">not</span> <span class="kw">in</span> <span class="va">self</span>.store:</span>
-<span id="cb94-16"><a href="#cb94-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Location </span><span class="sc">{</span>loc<span class="sc">}</span><span class="ss"> not allocated&quot;</span>)</span>
-<span id="cb94-17"><a href="#cb94-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.store[loc] <span class="op">=</span> value</span>
-<span id="cb94-18"><a href="#cb94-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb94-19"><a href="#cb94-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> lookup(<span class="va">self</span>, loc: <span class="bu">int</span>) <span class="op">-&gt;</span> Any:</span>
-<span id="cb94-20"><a href="#cb94-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;Look up the value at a location.&quot;&quot;&quot;</span></span>
-<span id="cb94-21"><a href="#cb94-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> loc <span class="kw">not</span> <span class="kw">in</span> <span class="va">self</span>.store:</span>
-<span id="cb94-22"><a href="#cb94-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Location </span><span class="sc">{</span>loc<span class="sc">}</span><span class="ss"> not allocated&quot;</span>)</span>
-<span id="cb94-23"><a href="#cb94-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.store[loc]</span></code></pre></div>
-<h3 id="environment-and-binding">Environment and Binding</h3>
-<p>Our environment maps names to locations:</p>
-<div class="sourceCode" id="cb95"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Environment now maps to locations (store addresses)</span></span>
-<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Environment <span class="op">=</span> Callable[[<span class="bu">str</span>], <span class="bu">int</span>]</span>
-<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_environment() <span class="op">-&gt;</span> Environment:</span>
-<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create an empty environment function&quot;&quot;&quot;</span></span>
-<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> env(name: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
-<span id="cb95-7"><a href="#cb95-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span>
-<span id="cb95-8"><a href="#cb95-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env</span>
-<span id="cb95-9"><a href="#cb95-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb95-10"><a href="#cb95-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bind(env: Environment, name: <span class="bu">str</span>, loc: <span class="bu">int</span>) <span class="op">-&gt;</span> Environment:</span>
-<span id="cb95-11"><a href="#cb95-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Create new environment with an added binding to a location&quot;&quot;&quot;</span></span>
-<span id="cb95-12"><a href="#cb95-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_env(n: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
-<span id="cb95-13"><a href="#cb95-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> n <span class="op">==</span> name:</span>
-<span id="cb95-14"><a href="#cb95-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> loc</span>
-<span id="cb95-15"><a href="#cb95-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(n)</span>
-<span id="cb95-16"><a href="#cb95-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_env</span></code></pre></div>
-<p>This approach maintains the functional style of our previous chapters
-while allowing for mutable state.</p>
+<h3 id="the-state-as-a-functional-dataclass">The State as a Functional
+Dataclass</h3>
+<p>Our implementation uses a <code>State</code> dataclass to manage the
+store in a functional style:</p>
+<ul>
+<li>The store is <strong>not</strong> a dictionary, but a function from
+locations to values (or raises an error if not found), just like the
+environment is a function from names to locations. This ensures a fully
+functional approach.</li>
+</ul>
+<div class="sourceCode" id="cb96"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span>(frozen<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> State:</span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>    store: Callable[[<span class="bu">int</span>], Any]</span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>    next_loc: <span class="bu">int</span></span>
+<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_store() <span class="op">-&gt;</span> Callable[[<span class="bu">int</span>], Any]:</span>
+<span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> store_fn(loc: <span class="bu">int</span>) <span class="op">-&gt;</span> Any:</span>
+<span id="cb96-8"><a href="#cb96-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Location </span><span class="sc">{</span>loc<span class="sc">}</span><span class="ss"> not allocated&quot;</span>)</span>
+<span id="cb96-9"><a href="#cb96-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> store_fn</span>
+<span id="cb96-10"><a href="#cb96-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb96-11"><a href="#cb96-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_state() <span class="op">-&gt;</span> State:</span>
+<span id="cb96-12"><a href="#cb96-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>empty_store(), next_loc<span class="op">=</span><span class="dv">0</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb97"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> alloc(state: State, value: Any) <span class="op">-&gt;</span> <span class="bu">tuple</span>[<span class="bu">int</span>, State]:</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>    loc <span class="op">=</span> state.next_loc</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>    prev_store <span class="op">=</span> state.store</span>
+<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_store(l: <span class="bu">int</span>) <span class="op">-&gt;</span> Any:</span>
+<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> l <span class="op">==</span> loc:</span>
+<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb97-7"><a href="#cb97-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> prev_store(l)</span>
+<span id="cb97-8"><a href="#cb97-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loc, State(store<span class="op">=</span>new_store, next_loc<span class="op">=</span>loc <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb98"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> update(state: State, loc: <span class="bu">int</span>, value: Any) <span class="op">-&gt;</span> State:</span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>    state.store(loc)  <span class="co"># will raise if not found</span></span>
+<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>    prev_store <span class="op">=</span> state.store</span>
+<span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_store(l: <span class="bu">int</span>) <span class="op">-&gt;</span> Any:</span>
+<span id="cb98-5"><a href="#cb98-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> l <span class="op">==</span> loc:</span>
+<span id="cb98-6"><a href="#cb98-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb98-7"><a href="#cb98-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> prev_store(l)</span>
+<span id="cb98-8"><a href="#cb98-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> State(store<span class="op">=</span>new_store, next_loc<span class="op">=</span>state.next_loc)</span>
+<span id="cb98-9"><a href="#cb98-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb98-10"><a href="#cb98-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lookup(state: State, loc: <span class="bu">int</span>) <span class="op">-&gt;</span> Any:</span>
+<span id="cb98-11"><a href="#cb98-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> state.store(loc)</span></code></pre></div>
+<h3 id="recall-environment-and-binding">Recall environment and
+binding</h3>
+<div class="sourceCode" id="cb99"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Environment now maps to locations (store addresses)</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> Environment <span class="op">=</span> Callable[[<span class="bu">str</span>], <span class="bu">int</span>]</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empty_environment() <span class="op">-&gt;</span> Environment:</span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> env(name: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Undefined identifier: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env</span>
+<span id="cb99-8"><a href="#cb99-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-9"><a href="#cb99-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bind(env: Environment, name: <span class="bu">str</span>, loc: <span class="bu">int</span>) <span class="op">-&gt;</span> Environment:</span>
+<span id="cb99-10"><a href="#cb99-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_env(n: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb99-11"><a href="#cb99-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> n <span class="op">==</span> name:</span>
+<span id="cb99-12"><a href="#cb99-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> loc</span>
+<span id="cb99-13"><a href="#cb99-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(n)</span>
+<span id="cb99-14"><a href="#cb99-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_env</span></code></pre></div>
 <h2 id="section-4-evaluating-expressions-with-state">Section 4:
 Evaluating Expressions with State</h2>
 <p>When evaluating expressions in a stateful language, we need to pass
 both the environment and the state:</p>
-<div class="sourceCode" id="cb96"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate_expr(expr: Expression, env: Environment, state: State) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
-<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ...</span></span></code></pre></div>
+<div class="sourceCode" id="cb100"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate_expr(expr: Expression, env: Environment, state: State) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ...</span></span></code></pre></div>
 <p>Variable lookup now has two steps:</p>
 <ol type="1">
 <li>Use the environment to find the location</li>
 <li>Use the state to look up the value at that location</li>
 </ol>
-<div class="sourceCode" id="cb97"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> Var(name):</span>
-<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Look up variable&#39;s location and then its value in the state</span></span>
-<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
-<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>        loc <span class="op">=</span> lookup_env(env, name)</span>
-<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state.lookup(loc)</span>
-<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span> <span class="im">as</span> e:</span>
-<span id="cb97-7"><a href="#cb97-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Variable error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb101"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> Var(name):</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Look up variable&#39;s location and then its value in the state</span></span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a>        loc <span class="op">=</span> lookup_env(env, name)</span>
+<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> lookup(state, loc)</span>
+<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">ValueError</span> <span class="im">as</span> e:</span>
+<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Variable error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
 <h2 id="section-5-executing-commands">Section 5: Executing Commands</h2>
 <p>Commands modify the state or produce output. The
 <code>execute_command</code> function returns both the updated
-environment and state:</p>
-<div class="sourceCode" id="cb98"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> execute_command(cmd: Command, env: Environment, state: State) <span class="op">-&gt;</span> <span class="bu">tuple</span>[Environment, State]:</span>
-<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Execute a command, returning the updated environment and state&quot;&quot;&quot;</span></span>
-<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> cmd:</span>
-<span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Assign(name, expr):</span>
-<span id="cb98-5"><a href="#cb98-5" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Evaluate the expression</span></span>
-<span id="cb98-6"><a href="#cb98-6" aria-hidden="true" tabindex="-1"></a>            value <span class="op">=</span> evaluate_expr(expr, env, state)</span>
-<span id="cb98-7"><a href="#cb98-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb98-8"><a href="#cb98-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">try</span>:</span>
-<span id="cb98-9"><a href="#cb98-9" aria-hidden="true" tabindex="-1"></a>                <span class="co"># If variable exists, update its value in the state</span></span>
-<span id="cb98-10"><a href="#cb98-10" aria-hidden="true" tabindex="-1"></a>                loc <span class="op">=</span> lookup_env(env, name)</span>
-<span id="cb98-11"><a href="#cb98-11" aria-hidden="true" tabindex="-1"></a>                state.update(loc, value)</span>
-<span id="cb98-12"><a href="#cb98-12" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> env, state</span>
-<span id="cb98-13"><a href="#cb98-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
-<span id="cb98-14"><a href="#cb98-14" aria-hidden="true" tabindex="-1"></a>                <span class="co"># If variable doesn&#39;t exist, allocate a new location</span></span>
-<span id="cb98-15"><a href="#cb98-15" aria-hidden="true" tabindex="-1"></a>                loc <span class="op">=</span> state.alloc(value)</span>
-<span id="cb98-16"><a href="#cb98-16" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Create an extended environment with the new binding</span></span>
-<span id="cb98-17"><a href="#cb98-17" aria-hidden="true" tabindex="-1"></a>                new_env <span class="op">=</span> bind(env, name, loc)</span>
-<span id="cb98-18"><a href="#cb98-18" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> new_env, state</span>
-<span id="cb98-19"><a href="#cb98-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb98-20"><a href="#cb98-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Print(expr):</span>
-<span id="cb98-21"><a href="#cb98-21" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Evaluate the expression and print the result</span></span>
-<span id="cb98-22"><a href="#cb98-22" aria-hidden="true" tabindex="-1"></a>            value <span class="op">=</span> evaluate_expr(expr, env, state)</span>
-<span id="cb98-23"><a href="#cb98-23" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(value)</span>
-<span id="cb98-24"><a href="#cb98-24" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> env, state</span></code></pre></div>
+environment and state as a tuple:</p>
+<div class="sourceCode" id="cb102"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>env, state <span class="op">=</span> execute_command(cmd, env, state)</span></code></pre></div>
+<ul>
+<li><code>env</code> is the updated environment (with new variable
+bindings, if any)</li>
+<li><code>state</code> is the updated state (with new or updated
+values)</li>
+</ul>
+<p>You can access the first and second components of the tuple as
+<code>env</code> and <code>state</code> respectively.</p>
+<blockquote>
+<p><strong>Note:</strong> The <code>print</code> command is not part of
+the mathematical semantics; it is just an aid for using the
+interpreter.</p>
+</blockquote>
+<h3 id="the-variable-declaration-command">The Variable Declaration
+Command</h3>
+<p>The variable declaration command (<code>var x = expr</code>) creates
+a new variable and initializes it. If the variable already exists, it is
+an error.</p>
 <h3 id="the-assignment-command">The Assignment Command</h3>
-<p>The assignment command (<code>&lt;-</code>) has two behaviors:</p>
-<ol type="1">
-<li>If the variable exists, update its value in the store</li>
-<li>If the variable is new, allocate a new location and create a
-binding</li>
-</ol>
-<p>This is similar to how variable assignment works in most programming
-languages.</p>
+<p>The assignment command (<code>&lt;-</code>) only updates an existing
+variable. If the variable does not exist, it is an error.</p>
+<h3 id="the-print-command">The Print Command</h3>
+<p>The print command evaluates the expression and prints its value. It
+does not affect the environment or state.</p>
 <h3 id="command-sequences-1">Command Sequences</h3>
 <p>Executing a command sequence involves:</p>
 <ol type="1">
@@ -2800,28 +2821,23 @@ languages.</p>
 <li>Executing the rest of the sequence with the updated environment and
 state</li>
 </ol>
-<div class="sourceCode" id="cb99"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> execute_command_seq(seq: CommandSequence, env: Environment, state: State) <span class="op">-&gt;</span> <span class="bu">tuple</span>[Environment, State]:</span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Execute a command sequence, returning the final environment and state&quot;&quot;&quot;</span></span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Execute the first command</span></span>
-<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>    env, state <span class="op">=</span> execute_command(seq.first, env, state)</span>
-<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># If there are more commands, execute them with the updated environment and state</span></span>
-<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> seq.rest:</span>
-<span id="cb99-8"><a href="#cb99-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> execute_command_seq(seq.rest, env, state)</span>
-<span id="cb99-9"><a href="#cb99-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb99-10"><a href="#cb99-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env, state</span></code></pre></div>
+<div class="sourceCode" id="cb103"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> execute_command_seq(seq: CommandSequence, env: Environment, state: State) <span class="op">-&gt;</span> <span class="bu">tuple</span>[Environment, State]:</span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>    env, state <span class="op">=</span> execute_command(seq.first, env, state)</span>
+<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> seq.rest:</span>
+<span id="cb103-4"><a href="#cb103-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> execute_command_seq(seq.rest, env, state)</span>
+<span id="cb103-5"><a href="#cb103-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> env, state</span></code></pre></div>
 <h2 id="section-6-examples-of-state-in-action">Section 6: Examples of
 State in Action</h2>
 <p>Let’s look at some examples that demonstrate the power of state:</p>
-<h3 id="example-1-basic-assignment-and-printing">Example 1: Basic
-Assignment and Printing</h3>
-<pre><code>x &lt;- 42;
+<h3 id="example-1-basic-declaration-assignment-and-printing">Example 1:
+Basic Declaration, Assignment, and Printing</h3>
+<pre><code>var x = 42;
 print x</code></pre>
 <p>This simple example shows creating a variable and reading its value.
 The output is <code>42</code>.</p>
 <h3 id="example-2-updating-variables">Example 2: Updating Variables</h3>
-<pre><code>x &lt;- 10;
-y &lt;- x + 5;
+<pre><code>var x = 10;
+var y = x + 5;
 print y;
 x &lt;- 20;
 print x;
@@ -2833,10 +2849,10 @@ defined in terms of <code>x</code>. The output is:</p>
 20
 15</code></pre>
 <p>The value of <code>y</code> remains 15 because the expression
-<code>x + 5</code> was evaluated at the time of assignment.</p>
+<code>x + 5</code> was evaluated at the time of declaration.</p>
 <h3 id="example-3-let-expressions-in-commands">Example 3: Let
 Expressions in Commands</h3>
-<pre><code>x &lt;- let y = 5 in y * 2;
+<pre><code>var x = let y = 5 in y * 2;
 print x</code></pre>
 <p>This example shows how we can use let expressions within commands.
 The output is <code>10</code>.</p>
@@ -2845,8 +2861,8 @@ Differences from Previous Chapters</h2>
 <p>Adding state represents a significant shift in our language:</p>
 <table>
 <colgroup>
-<col style="width: 43%" />
-<col style="width: 56%" />
+<col style="width: 47%" />
+<col style="width: 52%" />
 </colgroup>
 <thead>
 <tr>
@@ -2873,7 +2889,7 @@ Differences from Previous Chapters</h2>
 </tr>
 <tr>
 <td>Easier to reason about</td>
-<td>More expressive, closer to real languages</td>
+<td>More expressive</td>
 </tr>
 </tbody>
 </table>
@@ -2882,7 +2898,7 @@ Next Steps</h2>
 <p>Adding state to our mini-language significantly increases its
 expressiveness, making it capable of modeling real-world problems that
 involve change over time. In the next chapter, we’ll build upon this
-foundation by adding control flow structures like loops and more complex
+foundation by adding control flow structures like loops and
 conditionals.</p>
 <p>With state, environment, and control flow, our language will have all
 the essential ingredients of a complete programming language.</p>
@@ -2919,15 +2935,15 @@ operations:</p>
 </ul>
 <h3 id="ast-representation-2">AST Representation</h3>
 <p>We add new AST node types for booleans and binary operations:</p>
-<div class="sourceCode" id="cb104"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Boolean:</span>
-<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">bool</span></span>
-<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb104-6"><a href="#cb104-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BinOp:</span>
-<span id="cb104-7"><a href="#cb104-7" aria-hidden="true" tabindex="-1"></a>    op: <span class="bu">str</span>  <span class="co"># &#39;+&#39;, &#39;-&#39;, &#39;*&#39;, &#39;/&#39;, &#39;==&#39;, &#39;!=&#39;, &#39;&lt;&#39;, &#39;&gt;&#39;, &#39;&lt;=&#39;, &#39;&gt;=&#39;, &#39;and&#39;, &#39;or&#39;</span></span>
-<span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>    left: Expression</span>
-<span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>    right: Expression</span></code></pre></div>
+<div class="sourceCode" id="cb108"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Boolean:</span>
+<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">bool</span></span>
+<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BinOp:</span>
+<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>    op: <span class="bu">str</span>  <span class="co"># &#39;+&#39;, &#39;-&#39;, &#39;*&#39;, &#39;/&#39;, &#39;==&#39;, &#39;!=&#39;, &#39;&lt;&#39;, &#39;&gt;&#39;, &#39;&lt;=&#39;, &#39;&gt;=&#39;, &#39;and&#39;, &#39;or&#39;</span></span>
+<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a>    left: Expression</span>
+<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a>    right: Expression</span></code></pre></div>
 <h2 id="section-3-conditional-expressions">Section 3: Conditional
 Expressions</h2>
 <h3 id="syntax-and-semantics-1">Syntax and Semantics</h3>
@@ -2936,72 +2952,72 @@ Expressions</h2>
 <p>This allows us to write expressions like:</p>
 <pre><code>if x &gt; 0 then x else -x</code></pre>
 <h3 id="ast-representation-3">AST Representation</h3>
-<div class="sourceCode" id="cb107"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> If:</span>
-<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
-<span id="cb107-4"><a href="#cb107-4" aria-hidden="true" tabindex="-1"></a>    then_branch: Expression</span>
-<span id="cb107-5"><a href="#cb107-5" aria-hidden="true" tabindex="-1"></a>    else_branch: Expression</span></code></pre></div>
+<div class="sourceCode" id="cb111"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> If:</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a>    then_branch: Expression</span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a>    else_branch: Expression</span></code></pre></div>
 <h2 id="section-4-parser-and-evaluation-changes">Section 4: Parser and
 Evaluation Changes</h2>
 <h3 id="parser-extensions">Parser Extensions</h3>
 <p>The parser is extended to recognize boolean literals, comparison and
 logical operators, and conditional expressions. For demonstration, we
 use a simple tuple-based parser:</p>
-<div class="sourceCode" id="cb108"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse(expr):</span>
-<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">int</span>):</span>
-<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Number(expr)</span>
-<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">bool</span>):</span>
-<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Boolean(expr)</span>
-<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">str</span>):</span>
-<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Var(expr)</span>
-<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">tuple</span>):</span>
-<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a>        tag <span class="op">=</span> expr[<span class="dv">0</span>]</span>
-<span id="cb108-10"><a href="#cb108-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;let&#39;</span>:</span>
-<span id="cb108-11"><a href="#cb108-11" aria-hidden="true" tabindex="-1"></a>            _, name, value_expr, body_expr <span class="op">=</span> expr</span>
-<span id="cb108-12"><a href="#cb108-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> Let(name, parse(value_expr), parse(body_expr))</span>
-<span id="cb108-13"><a href="#cb108-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;if&#39;</span>:</span>
-<span id="cb108-14"><a href="#cb108-14" aria-hidden="true" tabindex="-1"></a>            _, cond, then_branch, else_branch <span class="op">=</span> expr</span>
-<span id="cb108-15"><a href="#cb108-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> If(parse(cond), parse(then_branch), parse(else_branch))</span>
-<span id="cb108-16"><a href="#cb108-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="kw">in</span> {<span class="st">&#39;+&#39;</span>, <span class="st">&#39;-&#39;</span>, <span class="st">&#39;*&#39;</span>, <span class="st">&#39;/&#39;</span>, <span class="st">&#39;==&#39;</span>, <span class="st">&#39;!=&#39;</span>, <span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;&lt;=&#39;</span>, <span class="st">&#39;&gt;=&#39;</span>, <span class="st">&#39;and&#39;</span>, <span class="st">&#39;or&#39;</span>}:</span>
-<span id="cb108-17"><a href="#cb108-17" aria-hidden="true" tabindex="-1"></a>            _, left, right <span class="op">=</span> expr</span>
-<span id="cb108-18"><a href="#cb108-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> BinOp(tag, parse(left), parse(right))</span>
-<span id="cb108-19"><a href="#cb108-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Cannot parse: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb112"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse(expr):</span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">int</span>):</span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Number(expr)</span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">bool</span>):</span>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Boolean(expr)</span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">str</span>):</span>
+<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Var(expr)</span>
+<span id="cb112-8"><a href="#cb112-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">tuple</span>):</span>
+<span id="cb112-9"><a href="#cb112-9" aria-hidden="true" tabindex="-1"></a>        tag <span class="op">=</span> expr[<span class="dv">0</span>]</span>
+<span id="cb112-10"><a href="#cb112-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;let&#39;</span>:</span>
+<span id="cb112-11"><a href="#cb112-11" aria-hidden="true" tabindex="-1"></a>            _, name, value_expr, body_expr <span class="op">=</span> expr</span>
+<span id="cb112-12"><a href="#cb112-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> Let(name, parse(value_expr), parse(body_expr))</span>
+<span id="cb112-13"><a href="#cb112-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;if&#39;</span>:</span>
+<span id="cb112-14"><a href="#cb112-14" aria-hidden="true" tabindex="-1"></a>            _, cond, then_branch, else_branch <span class="op">=</span> expr</span>
+<span id="cb112-15"><a href="#cb112-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> If(parse(cond), parse(then_branch), parse(else_branch))</span>
+<span id="cb112-16"><a href="#cb112-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="kw">in</span> {<span class="st">&#39;+&#39;</span>, <span class="st">&#39;-&#39;</span>, <span class="st">&#39;*&#39;</span>, <span class="st">&#39;/&#39;</span>, <span class="st">&#39;==&#39;</span>, <span class="st">&#39;!=&#39;</span>, <span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;&lt;=&#39;</span>, <span class="st">&#39;&gt;=&#39;</span>, <span class="st">&#39;and&#39;</span>, <span class="st">&#39;or&#39;</span>}:</span>
+<span id="cb112-17"><a href="#cb112-17" aria-hidden="true" tabindex="-1"></a>            _, left, right <span class="op">=</span> expr</span>
+<span id="cb112-18"><a href="#cb112-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> BinOp(tag, parse(left), parse(right))</span>
+<span id="cb112-19"><a href="#cb112-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Cannot parse: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
 <h3 id="evaluation-extensions">Evaluation Extensions</h3>
 <p>The evaluation function is extended to handle booleans, binary
 operations, and conditionals:</p>
-<div class="sourceCode" id="cb109"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> eval_expr(expr: Expression, env: Environment) <span class="op">-&gt;</span> DVal:</span>
-<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Number):</span>
-<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
-<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Boolean):</span>
-<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
-<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Var):</span>
-<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(expr.name)</span>
-<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Let):</span>
-<span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> eval_expr(expr.expr, env)</span>
-<span id="cb109-10"><a href="#cb109-10" aria-hidden="true" tabindex="-1"></a>        extended_env <span class="op">=</span> bind(env, expr.name, value)</span>
-<span id="cb109-11"><a href="#cb109-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> eval_expr(expr.body, extended_env)</span>
-<span id="cb109-12"><a href="#cb109-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, BinOp):</span>
-<span id="cb109-13"><a href="#cb109-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Short-circuit for &#39;and&#39; and &#39;or&#39;</span></span>
-<span id="cb109-14"><a href="#cb109-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;and&#39;</span>:</span>
-<span id="cb109-15"><a href="#cb109-15" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
-<span id="cb109-16"><a href="#cb109-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> left:</span>
-<span id="cb109-17"><a href="#cb109-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">False</span>  <span class="co"># short-circuit</span></span>
-<span id="cb109-18"><a href="#cb109-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
-<span id="cb109-19"><a href="#cb109-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;or&#39;</span>:</span>
-<span id="cb109-20"><a href="#cb109-20" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
-<span id="cb109-21"><a href="#cb109-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> left:</span>
-<span id="cb109-22"><a href="#cb109-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">True</span>  <span class="co"># short-circuit</span></span>
-<span id="cb109-23"><a href="#cb109-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
-<span id="cb109-24"><a href="#cb109-24" aria-hidden="true" tabindex="-1"></a>        left <span class="op">=</span> eval_expr(expr.left, env)</span>
-<span id="cb109-25"><a href="#cb109-25" aria-hidden="true" tabindex="-1"></a>        right <span class="op">=</span> eval_expr(expr.right, env)</span>
-<span id="cb109-26"><a href="#cb109-26" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ... handle other operators ...</span></span>
-<span id="cb109-27"><a href="#cb109-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, If):</span>
-<span id="cb109-28"><a href="#cb109-28" aria-hidden="true" tabindex="-1"></a>        cond <span class="op">=</span> eval_expr(expr.cond, env)</span>
-<span id="cb109-29"><a href="#cb109-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cond:</span>
-<span id="cb109-30"><a href="#cb109-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.then_branch, env)</span>
-<span id="cb109-31"><a href="#cb109-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
-<span id="cb109-32"><a href="#cb109-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.else_branch, env)</span>
-<span id="cb109-33"><a href="#cb109-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown expression: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb113"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> eval_expr(expr: Expression, env: Environment) <span class="op">-&gt;</span> DVal:</span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Number):</span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Boolean):</span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
+<span id="cb113-6"><a href="#cb113-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Var):</span>
+<span id="cb113-7"><a href="#cb113-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(expr.name)</span>
+<span id="cb113-8"><a href="#cb113-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Let):</span>
+<span id="cb113-9"><a href="#cb113-9" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> eval_expr(expr.expr, env)</span>
+<span id="cb113-10"><a href="#cb113-10" aria-hidden="true" tabindex="-1"></a>        extended_env <span class="op">=</span> bind(env, expr.name, value)</span>
+<span id="cb113-11"><a href="#cb113-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> eval_expr(expr.body, extended_env)</span>
+<span id="cb113-12"><a href="#cb113-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, BinOp):</span>
+<span id="cb113-13"><a href="#cb113-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Short-circuit for &#39;and&#39; and &#39;or&#39;</span></span>
+<span id="cb113-14"><a href="#cb113-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;and&#39;</span>:</span>
+<span id="cb113-15"><a href="#cb113-15" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
+<span id="cb113-16"><a href="#cb113-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> left:</span>
+<span id="cb113-17"><a href="#cb113-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">False</span>  <span class="co"># short-circuit</span></span>
+<span id="cb113-18"><a href="#cb113-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
+<span id="cb113-19"><a href="#cb113-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;or&#39;</span>:</span>
+<span id="cb113-20"><a href="#cb113-20" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
+<span id="cb113-21"><a href="#cb113-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> left:</span>
+<span id="cb113-22"><a href="#cb113-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">True</span>  <span class="co"># short-circuit</span></span>
+<span id="cb113-23"><a href="#cb113-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
+<span id="cb113-24"><a href="#cb113-24" aria-hidden="true" tabindex="-1"></a>        left <span class="op">=</span> eval_expr(expr.left, env)</span>
+<span id="cb113-25"><a href="#cb113-25" aria-hidden="true" tabindex="-1"></a>        right <span class="op">=</span> eval_expr(expr.right, env)</span>
+<span id="cb113-26"><a href="#cb113-26" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ... handle other operators ...</span></span>
+<span id="cb113-27"><a href="#cb113-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, If):</span>
+<span id="cb113-28"><a href="#cb113-28" aria-hidden="true" tabindex="-1"></a>        cond <span class="op">=</span> eval_expr(expr.cond, env)</span>
+<span id="cb113-29"><a href="#cb113-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cond:</span>
+<span id="cb113-30"><a href="#cb113-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.then_branch, env)</span>
+<span id="cb113-31"><a href="#cb113-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb113-32"><a href="#cb113-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.else_branch, env)</span>
+<span id="cb113-33"><a href="#cb113-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown expression: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
 <h2 id="section-5-short-circuit-evaluation">Section 5: Short-Circuit
 Evaluation</h2>
 <p>Short-circuit evaluation means that in logical expressions like
@@ -3016,26 +3032,26 @@ result is <code>True</code> (second operand not evaluated).</li>
 <p>This is important for avoiding errors and improving efficiency.</p>
 <h3 id="example-avoiding-division-by-zero">Example: Avoiding Division by
 Zero</h3>
-<div class="sourceCode" id="cb110"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
-<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>ast <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
-<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast, empty_env))  <span class="co"># Output: 2 (no error)</span></span></code></pre></div>
+<div class="sourceCode" id="cb114"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>ast <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast, empty_env))  <span class="co"># Output: 2 (no error)</span></span></code></pre></div>
 <h2 id="section-6-non-trivial-examples">Section 6: Non-trivial
 Examples</h2>
 <h3 id="example-1-simple-conditional-with-binding">Example 1: Simple
 Conditional with Binding</h3>
-<div class="sourceCode" id="cb111"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 10 in if x &gt; 5 then x else 0</span></span>
-<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>ast1 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">10</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">5</span>), <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>)))</span>
-<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast1, empty_env))  <span class="co"># Output: 10</span></span></code></pre></div>
+<div class="sourceCode" id="cb115"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 10 in if x &gt; 5 then x else 0</span></span>
+<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>ast1 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">10</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">5</span>), <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>)))</span>
+<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast1, empty_env))  <span class="co"># Output: 10</span></span></code></pre></div>
 <h3 id="example-2-nested-binding-and-conditionals">Example 2: Nested
 Binding and Conditionals</h3>
-<div class="sourceCode" id="cb112"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 3 in let y = 4 in if (x &lt; y) and (y &lt; 10) then x + y else 0</span></span>
-<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>ast2 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">3</span>, (<span class="st">&#39;let&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">4</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">10</span>)), (<span class="st">&#39;+&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), <span class="dv">0</span>))))</span>
-<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast2, empty_env))  <span class="co"># Output: 7</span></span></code></pre></div>
+<div class="sourceCode" id="cb116"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 3 in let y = 4 in if (x &lt; y) and (y &lt; 10) then x + y else 0</span></span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a>ast2 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">3</span>, (<span class="st">&#39;let&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">4</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">10</span>)), (<span class="st">&#39;+&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), <span class="dv">0</span>))))</span>
+<span id="cb116-3"><a href="#cb116-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast2, empty_env))  <span class="co"># Output: 7</span></span></code></pre></div>
 <h3 id="example-3-short-circuiting-to-avoid-errors">Example 3:
 Short-circuiting to Avoid Errors</h3>
-<div class="sourceCode" id="cb113"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
-<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>ast3 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
-<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast3, empty_env))  <span class="co"># Output: 2</span></span></code></pre></div>
+<div class="sourceCode" id="cb117"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>ast3 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast3, empty_env))  <span class="co"># Output: 2</span></span></code></pre></div>
 <h2 id="section-7-conclusion-and-next-steps">Section 7: Conclusion and
 Next Steps</h2>
 <p>Adding booleans and conditionals makes our mini-language much more
