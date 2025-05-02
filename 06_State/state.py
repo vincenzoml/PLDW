@@ -13,7 +13,8 @@ from lark import Lark, Token, Tree
 
 # Define the semantic domains
 type DenOperator = Callable[[int, int], int]
-type DVal = DenOperator | int  # Denotable values: can be stored in environment
+type Location = int
+type DVal = DenOperator | int | bool | Location  # Denotable values: can be stored in environment, now includes locations and booleans
 
 # Environment now maps to locations (store addresses)
 type Environment = Callable[[str], int]

@@ -2622,24 +2622,30 @@ def lookup(state: State, loc: int) -> Any:
 
 
 
-### Recall environment and binding
+### Denotable Values (DVal)
+
+Denotable values are those that can be bound to identifiers in an environment. In our implementation, they include:
+
+DVal includes:
+
+- **Numbers**: Simple integer values
+- **Operators**: Functions that take two integers and return an integer
+- **Locations**: Memory addresses (as int, but semantically distinct)
+- **Booleans**: For forward compatibility with later chapters
+
+
 
 ```python
-# Environment now maps to locations (store addresses)
-type Environment = Callable[[str], int]
+# Python 3.13 union syntax
 
-def empty_environment() -> Environment:
-    def env(name: str) -> int:
-        raise ValueError(f"Undefined identifier: {name}")
-    return env
+type Num = int  # A type alias for integers
+type DenOperator = Callable[[int, int], int]
+type Location = int
 
-def bind(env: Environment, name: str, loc: int) -> Environment:
-    def new_env(n: str) -> int:
-        if n == name:
-            return loc
-        return env(n)
-    return new_env
+type DVal = int | DenOperator | bool | Location  # Denotable values: everything that could be bound in Lecture 5, plus locations (and booleans for forward compatibility)
 ```
+
+> **Note:** DVal is broader than what can be stored in memory (MVal). Not everything that can be bound to a name can be stored in memory.
 
 
 
@@ -2791,6 +2797,56 @@ Adding state represents a significant shift in our language:
 Adding state to our mini-language significantly increases its expressiveness, making it capable of modeling real-world problems that involve change over time. In the next chapter, we'll build upon this foundation by adding control flow structures like loops and conditionals.
 
 With state, environment, and control flow, our language will have all the essential ingredients of a complete programming language.
+
+
+
+## Exercises: Extending State
+
+### 1. Alias Command
+
+**Exercise:** Implement an `alias x = y` command that makes `x` and `y` point to the same location in the environment (i.e., after `alias x = y`, both names refer to the same memory cell).
+
+**Example 1:**
+
+```
+var a = 10;
+alias b = a;
+b <- 20;
+print a  # Output: 20
+```
+
+**Example 2:**
+
+```
+var x = 5;
+alias y = x;
+print y  # Output: 5
+x <- 42;
+print y  # Output: 42
+```
+
+**Example 3:**
+
+```
+var m = 1;
+alias n = m;
+m <- 7;
+print n  # Output: 7
+```
+
+---
+
+### 2. Conditional Command
+
+**Exercise:** Implement an `if condition then command1 else command2` construct, where `condition` is an expression and `command1`/`command2` are single commands (not sequences).
+
+**Prompt:**
+
+- What if either `command1` or `command2` is a `var` declaration? Can this be used to conditionally declare variables?
+- What should happen if the same variable is declared in both branches? Should the environment be merged, or should this be an error?
+- How would you design the semantics to handle these cases?
+
+Reflect on these questions and try to implement a solution that is both safe and intuitive.
 
 
 \newpage
