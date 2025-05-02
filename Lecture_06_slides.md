@@ -1,7 +1,7 @@
 ---
 title: "Lecture 06: State"
 author: "Vincenzo Ciancia"
-date: "May 01, 2025"
+date: "May 02, 2025"
 ---
 
 ## Section 1: Introduction to State
@@ -12,6 +12,7 @@ In this chapter, we extend our mini-language with the concept of **state**. Unti
 2. Observe changes to data over time
 3. Model real-world systems that have changing state
 
+
 ---
 
 ### Expressions vs. Commands
@@ -19,7 +20,7 @@ In this chapter, we extend our mini-language with the concept of **state**. Unti
 Our language extension introduces a new distinction:
 
 - **Expressions**: Compute values (e.g., `x + 1`, `let x = 42 in x * 2`)
-- **Commands**: Perform actions with side effects (e.g., `x <- 42`, `print x`)
+- **Commands**: Perform actions with side effects (e.g., `var x = 42`, `x <- 42`, `print x`)
 
 This distinction is common in many programming languages:
 
@@ -28,8 +29,10 @@ This distinction is common in many programming languages:
 x + 1
 
 # Command (performs an action)
-x <- x + 1
+var x = 42
+x <- 42
 ```
+
 
 ---
 
@@ -40,22 +43,30 @@ To implement state, we introduce two new syntactic categories:
 1. **Commands**: Individual actions that can modify state
 2. **Command Sequences**: Ordered lists of commands to be executed in sequence
 
+
 ---
 
 ### Commands in Our Language
 
-We implement two basic command types:
+We implement three basic command types:
 
-1. **Assignment**: Binds or updates a variable with a new value
+1. **Variable Declaration**: Declares a new variable and initializes it
 
    ```
-   x <- 42
+   var x = 42
    ```
 
-2. **Print**: Outputs the value of an expression
+2. **Assignment**: Updates a variable with a new value (only if already declared)
+
+   ```
+   x <- 10
+   ```
+
+3. **Print**: Outputs the value of an expression
    ```
    print x + 1
    ```
+
 
 ---
 
@@ -63,13 +74,16 @@ We implement two basic command types:
 
 Command sequences represent multiple commands separated by semicolons:
 
+TODO: also use an assignemnt in the example
+
 ```
-x <- 10;
-y <- x + 5;
+var x = 10;
+var y = x + 5;
 print y
 ```
 
-This sequence assigns 10 to x, then assigns x + 5 (which is 15) to y, and finally prints the value of y.
+This sequence declares `x`, then declares `y` as `x + 5` (which is 15), and finally prints the value of `y`.
+
 
 ---
 
@@ -83,12 +97,15 @@ We extend our language grammar to support commands and sequences:
 ?command_seq: command
            | command ";" command_seq
 
-?command: assign
+?command: vardecl
+        | assign
         | print
 
+vardecl: "var" IDENTIFIER "=" expr
 assign: IDENTIFIER "<-" expr
 print: "print" expr
 ```
+
 
 ---
 
@@ -97,6 +114,11 @@ print: "print" expr
 We represent commands and command sequences with these AST node types:
 
 ```python
+@dataclass
+class VarDecl:
+    name: str
+    expr: Expression
+
 @dataclass
 class Assign:
     name: str
@@ -111,8 +133,9 @@ class CommandSequence:
     first: Command
     rest: Optional[CommandSequence] = None
 
-type Command = Assign | Print
+type Command = VarDecl | Assign | Print
 ```
+
 
 ---
 
@@ -125,37 +148,53 @@ To represent state, we use the "store model":
 
 This two-level indirection allows multiple variables to refer to the same location or for a variable's value to change without changing its location.
 
+
 ---
 
-### The State Class
+### The State as a Functional Dataclass
 
-Our implementation uses a `State` class to manage the store:
+Our implementation uses a `State` dataclass to manage the store in a functional style:
+
+- The store is **not** a dictionary, but a function from locations to values (or raises an error if not found), just like the environment is a function from names to locations. This ensures a fully functional approach.
 
 ```python
+@dataclass(frozen=True)
 class State:
-    def __init__(self):
-        self.store: Dict[int, Any] = {}
-        self.next_loc: int = 0
+    store: Callable[[int], Any]
+    next_loc: int
 
-    def alloc(self, value: Any) -> int:
-        """Allocate a new location in the store for the value."""
-        loc = self.next_loc
-        self.store[loc] = value
-        self.next_loc += 1
-        return loc
+def empty_store() -> Callable[[int], Any]:
+    def store_fn(loc: int) -> Any:
+        raise ValueError(f"Location {loc} not allocated")
+    return store_fn
 
-    def update(self, loc: int, value: Any) -> None:
-        """Update the value at a location."""
-        if loc not in self.store:
-            raise ValueError(f"Location {loc} not allocated")
-        self.store[loc] = value
+def empty_state() -> State:
+    return State(store=empty_store(), next_loc=0)
 
-    def lookup(self, loc: int) -> Any:
-        """Look up the value at a location."""
-        if loc not in self.store:
-            raise ValueError(f"Location {loc} not allocated")
-        return self.store[loc]
+def alloc(state: State, value: Any) -> tuple[int, State]:
+    loc = state.next_loc
+    prev_store = state.store
+    def new_store(l: int) -> Any:
+        if l == loc:
+            return value
+        return prev_store(l)
+    return loc, State(store=new_store, next_loc=loc + 1)
+
+def update(state: State, loc: int, value: Any) -> State:
+    state.store(loc)  # will raise if not found
+    prev_store = state.store
+    def new_store(l: int) -> Any:
+        if l == loc:
+            return value
+        return prev_store(l)
+    return State(store=new_store, next_loc=state.next_loc)
+
+def lookup(state: State, loc: int) -> Any:
+    return state.store(loc)
 ```
+
+All state operations return a new state, preserving functional purity. The store is a function, not a dict.
+
 
 ---
 
@@ -168,13 +207,11 @@ Our environment maps names to locations:
 type Environment = Callable[[str], int]
 
 def empty_environment() -> Environment:
-    """Create an empty environment function"""
     def env(name: str) -> int:
         raise ValueError(f"Undefined identifier: {name}")
     return env
 
 def bind(env: Environment, name: str, loc: int) -> Environment:
-    """Create new environment with an added binding to a location"""
     def new_env(n: str) -> int:
         if n == name:
             return loc
@@ -183,6 +220,7 @@ def bind(env: Environment, name: str, loc: int) -> Environment:
 ```
 
 This approach maintains the functional style of our previous chapters while allowing for mutable state.
+
 
 ---
 
@@ -205,56 +243,40 @@ case Var(name):
     # Look up variable's location and then its value in the state
     try:
         loc = lookup_env(env, name)
-        return state.lookup(loc)
+        return lookup(state, loc)
     except ValueError as e:
         raise ValueError(f"Variable error: {e}")
 ```
+
 
 ---
 
 ## Section 5: Executing Commands
 
-Commands modify the state or produce output. The `execute_command` function returns both the updated environment and state:
+Commands modify the state or produce output. The `execute_command` function returns both the updated environment and state as a tuple:
 
 ```python
-def execute_command(cmd: Command, env: Environment, state: State) -> tuple[Environment, State]:
-    """Execute a command, returning the updated environment and state"""
-    match cmd:
-        case Assign(name, expr):
-            # Evaluate the expression
-            value = evaluate_expr(expr, env, state)
-
-            try:
-                # If variable exists, update its value in the state
-                loc = lookup_env(env, name)
-                state.update(loc, value)
-                return env, state
-            except ValueError:
-                # If variable doesn't exist, allocate a new location
-                loc = state.alloc(value)
-                # Create an extended environment with the new binding
-                new_env = bind(env, name, loc)
-                return new_env, state
-
-        case Print(expr):
-            # Evaluate the expression and print the result
-            value = evaluate_expr(expr, env, state)
-            print(value)
-            return env, state
+env, state = execute_command(cmd, env, state)
 ```
 
----
+- `env` is the updated environment (with new variable bindings, if any)
+- `state` is the updated state (with new or updated values)
+
+You can access the first and second components of the tuple as `env` and `state` respectively.
+
+> **Note:** The `print` command is not part of the mathematical semantics; it is just an aid for using the interpreter.
+
+### The Variable Declaration Command
+
+The variable declaration command (`var x = expr`) creates a new variable and initializes it. If the variable already exists, it is an error.
 
 ### The Assignment Command
 
-The assignment command (`<-`) has two behaviors:
+The assignment command (`<-`) only updates an existing variable. If the variable does not exist, it is an error.
 
-1. If the variable exists, update its value in the store
-2. If the variable is new, allocate a new location and create a binding
+### The Print Command
 
-This is similar to how variable assignment works in most programming languages.
-
----
+The print command evaluates the expression and prints its value. It does not affect the environment or state.
 
 ### Command Sequences
 
@@ -265,16 +287,12 @@ Executing a command sequence involves:
 
 ```python
 def execute_command_seq(seq: CommandSequence, env: Environment, state: State) -> tuple[Environment, State]:
-    """Execute a command sequence, returning the final environment and state"""
-    # Execute the first command
     env, state = execute_command(seq.first, env, state)
-
-    # If there are more commands, execute them with the updated environment and state
     if seq.rest:
         return execute_command_seq(seq.rest, env, state)
-
     return env, state
 ```
+
 
 ---
 
@@ -282,24 +300,26 @@ def execute_command_seq(seq: CommandSequence, env: Environment, state: State) ->
 
 Let's look at some examples that demonstrate the power of state:
 
+
 ---
 
-### Example 1: Basic Assignment and Printing
+### Example 1: Basic Declaration, Assignment, and Printing
 
 ```
-x <- 42;
+var x = 42;
 print x
 ```
 
 This simple example shows creating a variable and reading its value. The output is `42`.
+
 
 ---
 
 ### Example 2: Updating Variables
 
 ```
-x <- 10;
-y <- x + 5;
+var x = 10;
+var y = x + 5;
 print y;
 x <- 20;
 print x;
@@ -314,18 +334,20 @@ This example demonstrates that changing `x` doesn't automatically change `y`, ev
 15
 ```
 
-The value of `y` remains 15 because the expression `x + 5` was evaluated at the time of assignment.
+The value of `y` remains 15 because the expression `x + 5` was evaluated at the time of declaration.
+
 
 ---
 
 ### Example 3: Let Expressions in Commands
 
 ```
-x <- let y = 5 in y * 2;
+var x = let y = 5 in y * 2;
 print x
 ```
 
 This example shows how we can use let expressions within commands. The output is `10`.
+
 
 ---
 
@@ -341,6 +363,7 @@ Adding state represents a significant shift in our language:
 | Environment maps names to values | Environment maps names to locations       |
 | Easier to reason about           | More expressive, closer to real languages |
 
+
 ---
 
 ## Section 8: Conclusion and Next Steps
@@ -348,3 +371,4 @@ Adding state represents a significant shift in our language:
 Adding state to our mini-language significantly increases its expressiveness, making it capable of modeling real-world problems that involve change over time. In the next chapter, we'll build upon this foundation by adding control flow structures like loops and more complex conditionals.
 
 With state, environment, and control flow, our language will have all the essential ingredients of a complete programming language.
+
