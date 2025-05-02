@@ -21,9 +21,9 @@ type Environment = Callable[[str], int]
 
 
 # State (store) maps locations to values
-@dataclass(frozen=True)
+@dataclass()
 class State:
-    store: Callable[[int], Any]
+    store: Callable[[int], Any]  # TODO: ANY -> MVAL which is the same as EVAL!!
     next_loc: int
 
 
@@ -426,8 +426,8 @@ def execute_command(
             except ValueError:
                 raise ValueError(f"Assignment to undeclared variable '{name}'")
             value = evaluate_expr(expr, env, state)
-            state = update(state, loc, value)
-            return env, state
+            state1 = update(state, loc, value)
+            return env, state1
         case Print(expr):
             value = evaluate_expr(expr, env, state)
             print(value)
@@ -440,13 +440,13 @@ def execute_command_seq(
 ) -> tuple[Environment, State]:
     """Execute a command sequence, returning the final environment and state"""
     # Execute the first command
-    env, state = execute_command(seq.first, env, state)
+    env1, state1 = execute_command(seq.first, env, state)
 
     # If there are more commands, execute them with the updated environment and state
     if seq.rest:
-        return execute_command_seq(seq.rest, env, state)
+        return execute_command_seq(seq.rest, env1, state1)
 
-    return env, state
+    return env1, state1
 
 
 def execute_program(program_text: str) -> tuple[Environment, State]:
