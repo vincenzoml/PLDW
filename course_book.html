@@ -2994,6 +2994,7 @@ one.</p>
 <pre><code>var x = 0;
 alias y = x;
 x &lt;- x+1;
+y &lt;- y+1;
 var y = x;
 x &lt;- x+1;
 print y</code></pre>
@@ -3004,7 +3005,8 @@ assigned at once:</p>
 <pre><code>x, y &lt;- z + 1, x + 1</code></pre>
 <h3 id="parallel-assignment">4) Parallel Assignment</h3>
 <p>Make the assignment “parallel” so that all right-hand sides are
-evaluated before any assignments happen:</p>
+evaluated before any assignments happen; note that the variables x and y
+must be different in that case:</p>
 <pre><code>x, y &lt;- y + 1, x + 1</code></pre>
 <p>This should swap the values of x and y.</p>
 <h3 id="if-then-else-statements">5) If-Then-Else Statements</h3>

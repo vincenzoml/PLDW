@@ -490,6 +490,9 @@ With state, environment, and control flow, our language will have all the essent
 
 Modify the REPL implementation to operate one command at a time instead of parsing and executing entire programs.
 
+
+---
+
 ### 2) Aliasing
 
 Add the command
@@ -502,18 +505,25 @@ where `x` and `y` are variables. The semantics is that after executing the comma
 
 Make an example where this becomes apparent
 
+
+---
+
 Now consider the program
 
 ```
 var x = 0;
 alias y = x;
 x <- x+1;
+y <- y+1;
 var y = x;
 x <- x+1;
 print y
 ```
 
 QUESTION: which value is printed?
+
+
+---
 
 ### 3) Multiple Assignment
 
@@ -523,9 +533,12 @@ Implement multiple assignment where multiple variables can be assigned at once:
 x, y <- z + 1, x + 1
 ```
 
+
+---
+
 ### 4) Parallel Assignment
 
-Make the assignment "parallel" so that all right-hand sides are evaluated before any assignments happen:
+Make the assignment "parallel" so that all right-hand sides are evaluated before any assignments happen; note that the variables x and y must be different in that case:
 
 ```
 x, y <- y + 1, x + 1
