@@ -406,9 +406,9 @@ def execute_command(
     match cmd:
         case VarDecl(name, expr):
             value = evaluate_expr(expr, env, state)
-            loc, state = allocate(state, value)
+            loc, state1 = allocate(state, value)
             new_env = bind(env, name, loc)
-            return new_env, state
+            return new_env, state1
         case Assign(name, expr):
             try:
                 dval = lookup(env, name)
@@ -507,12 +507,3 @@ if __name__ == "__main__":
 
     # Run the tests
     run_tests()
-
-## Exercises
-
-# 1) Turn the REPL into a proper REPL that operates one command at a time
-# 2) Add assignment to multiple variables: x, y <- z + 1, x + 1
-
-# 3) Make it a "parallel" assignment: x, y <- y + 1, x + 1
-# 4) Add if-then-else statements
-# 5) With command sequenes in branches! Q: What happens to variables in branches?
