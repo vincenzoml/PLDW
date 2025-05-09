@@ -214,6 +214,8 @@ DVal is broader than MVal because not everything that can be bound to a name can
 - **Operators**: Functions that take two integers and return an integer
 - **Locations**: Memory addresses (wrapped in a Loc class)
 
+<!-- slide -->
+
 The distinction between these domains is crucial for implementing state correctly:
 
 - Expressions evaluate to EVal (integers)
@@ -306,6 +308,8 @@ case VarDecl(name, expr):
     new_env = bind(env, name, loc)
     return new_env, state
 ```
+
+<!-- slide -->
 
 ### The Assignment Command
 
@@ -470,6 +474,8 @@ x, y <- y + 1, x + 1
 ```
 
 This should swap the values of x and y.
+
+<!-- slide -->
 
 ### 4) If-Then-Else Statements
 

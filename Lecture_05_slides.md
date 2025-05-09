@@ -1,7 +1,7 @@
 ---
 title: "Lecture 05: Binding"
 author: "Vincenzo Ciancia"
-date: "May 02, 2025"
+date: "May 09, 2025"
 ---
 
 ## Section 1: Introduction to Variable Binding

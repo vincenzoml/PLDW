@@ -1,7 +1,7 @@
 ---
 title: Programming Languages Design Workshop
 author: Vincenzo Ciancia
-date: May 02, 2025
+date: May 09, 2025
 ---
 
 \newpage
@@ -2491,8 +2491,6 @@ We implement three basic command types:
 
 Command sequences represent multiple commands separated by semicolons:
 
-TODO: also use an assignemnt in the example
-
 ```
 var x = 10;
 var y = x + 5;
@@ -2513,13 +2511,13 @@ We extend our language grammar to support commands and sequences:
 ?command_seq: command
            | command ";" command_seq
 
-?command: vardecl
-        | assign
+?command: assign
         | print
+        | vardecl
 
-vardecl: "var" IDENTIFIER "=" expr
 assign: IDENTIFIER "<-" expr
 print: "print" expr
+vardecl: "var" IDENTIFIER "=" expr
 ```
 
 
@@ -2530,17 +2528,17 @@ We represent commands and command sequences with these AST node types:
 
 ```python
 @dataclass
-class VarDecl:
-    name: str
-    expr: Expression
-
-@dataclass
 class Assign:
     name: str
     expr: Expression
 
 @dataclass
 class Print:
+    expr: Expression
+
+@dataclass
+class VarDecl:
+    name: str
     expr: Expression
 ```
 
@@ -2552,7 +2550,7 @@ class CommandSequence:
     first: Command
     rest: Optional[CommandSequence] = None
 
-type Command = VarDecl | Assign | Print
+type Command = Assign | Print | VarDecl
 ```
 
 
@@ -2577,13 +2575,13 @@ Our implementation uses a `State` dataclass to manage the store in a functional 
 
 
 ```python
-@dataclass(frozen=True)
+@dataclass
 class State:
-    store: Callable[[int], Any]
+    store: Callable[[int], MVal]
     next_loc: int
 
-def empty_store() -> Callable[[int], Any]:
-    def store_fn(loc: int) -> Any:
+def empty_store() -> Callable[[int], MVal]:
+    def store_fn(loc: int) -> MVal:
         raise ValueError(f"Location {loc} not allocated")
     return store_fn
 
@@ -2594,58 +2592,85 @@ def empty_state() -> State:
 
 
 ```python
-def alloc(state: State, value: Any) -> tuple[int, State]:
-    loc = state.next_loc
+def allocate(state: State, value: MVal) -> tuple[Loc, State]:
+    loc = Loc(state.next_loc)
     prev_store = state.store
-    def new_store(l: int) -> Any:
-        if l == loc:
+
+    def new_store(l: int) -> MVal:
+        if l == loc.address:
             return value
         return prev_store(l)
-    return loc, State(store=new_store, next_loc=loc + 1)
+
+    return loc, State(store=new_store, next_loc=loc.address + 1)
 ```
 
 
 
 ```python
-def update(state: State, loc: int, value: Any) -> State:
-    state.store(loc)  # will raise if not found
+def update(state: State, addr: int, value: MVal) -> State:
     prev_store = state.store
-    def new_store(l: int) -> Any:
-        if l == loc:
+
+    def new_store(l: int) -> MVal:
+        if l == addr:
             return value
         return prev_store(l)
+
     return State(store=new_store, next_loc=state.next_loc)
 
-def lookup(state: State, loc: int) -> Any:
-    return state.store(loc)
+def access(state: State, addr: int) -> MVal:
+    return state.store(addr)
 ```
 
 
 
 ### Denotable Values (DVal)
 
-Denotable values are those that can be bound to identifiers in an environment. In our implementation, they include:
+Denotable values are those that can be bound to identifiers in an environment. Our language now has three distinct semantic domains:
 
-DVal includes:
+- **EVal (Expressible Values)**: Values that expressions can evaluate to (integers in our language)
+- **MVal (Memorizable Values)**: Values that can be stored in memory (equal to EVal in our implementation)
+- **DVal (Denotable Values)**: Values that can be bound to identifiers in the environment
 
-- **Numbers**: Simple integer values
+DVal is broader than MVal because not everything that can be bound to a name can be stored in memory. Specifically, DVal includes:
+
+- **Numbers**: Simple integer values (EVal)
 - **Operators**: Functions that take two integers and return an integer
-- **Locations**: Memory addresses (as int, but semantically distinct)
-- **Booleans**: For forward compatibility with later chapters
+- **Locations**: Memory addresses (wrapped in a Loc class)
+
+
+
+The distinction between these domains is crucial for implementing state correctly:
+
+- Expressions evaluate to EVal (integers)
+- Memory cells store MVal (integers)
+- Variable names can refer to DVal (integers, operators, or locations)
 
 
 
 ```python
-# Python 3.13 union syntax
+@dataclass
+class Loc:
+    address: int
 
-type Num = int  # A type alias for integers
 type DenOperator = Callable[[int, int], int]
-type Location = int
-
-type DVal = int | DenOperator | bool | Location  # Denotable values: everything that could be bound in Lecture 5, plus locations (and booleans for forward compatibility)
+type EVal = int  # Expressible value type (for expressions)
+type MVal = EVal  # Main value type for store and evaluation (expressible)
+type DVal = EVal | DenOperator | Loc  # Denotable values: can be associated with names
 ```
 
-> **Note:** DVal is broader than what can be stored in memory (MVal). Not everything that can be bound to a name can be stored in memory.
+Rather than representing memory locations as plain integers, we wrap them in the `Loc` class for two important reasons:
+
+1. **Pattern Matching**: It allows the pattern matcher to distinguish locations from integer values
+2. **Type Safety**: It prevents accidentally using a location as an integer or vice versa
+
+
+
+This distinction becomes essential in variable lookup. When we look up a variable, we need to determine if the value bound to it is:
+
+- A direct integer value (for operators like +, -, etc.)
+- A location that requires a further lookup in the store
+
+Without the `Loc` wrapper class, the pattern matcher wouldn't be able to distinguish between an integer value and an integer location in memory.
 
 
 
@@ -2654,23 +2679,28 @@ type DVal = int | DenOperator | bool | Location  # Denotable values: everything 
 When evaluating expressions in a stateful language, we need to pass both the environment and the state:
 
 ```python
-def evaluate_expr(expr: Expression, env: Environment, state: State) -> int:
+def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
     # ...
 ```
 
 Variable lookup now has two steps:
 
-1. Use the environment to find the location
-2. Use the state to look up the value at that location
+1. Use the environment to find the location or directly bound value
+2. If it's a location, use the state to look up the value at that location
 
 
 
 ```python
 case Var(name):
-    # Look up variable's location and then its value in the state
     try:
-        loc = lookup_env(env, name)
-        return lookup(state, loc)
+        dval = lookup(env, name)
+        match dval:
+            case int():
+                return dval
+            case Loc(address=addr):
+                return access(state, addr)
+            case _:
+                raise ValueError(f"Variable '{name}' does not refer to a value")
     except ValueError as e:
         raise ValueError(f"Variable error: {e}")
 ```
@@ -2682,31 +2712,62 @@ case Var(name):
 Commands modify the state or produce output. The `execute_command` function returns both the updated environment and state as a tuple:
 
 ```python
-env, state = execute_command(cmd, env, state)
+def execute_command(
+    cmd: Command, env: Environment, state: State
+) -> tuple[Environment, State]:
+    # ...
 ```
-
-- `env` is the updated environment (with new variable bindings, if any)
-- `state` is the updated state (with new or updated values)
-
-You can access the first and second components of the tuple as `env` and `state` respectively.
-
-> **Note:** The `print` command is not part of the mathematical semantics; it is just an aid for using the interpreter.
 
 
 
 ### The Variable Declaration Command
 
-The variable declaration command (`var x = expr`) creates a new variable and initializes it. If the variable already exists, it is an error.
+The variable declaration command (`var x = expr`) creates a new variable and initializes it:
+
+```python
+case VarDecl(name, expr):
+    value = evaluate_expr(expr, env, state)
+    loc, state = allocate(state, value)
+    new_env = bind(env, name, loc)
+    return new_env, state
+```
+
+
 
 ### The Assignment Command
 
-The assignment command (`<-`) only updates an existing variable. If the variable does not exist, it is an error.
+The assignment command (`<-`) only updates an existing variable:
+
+```python
+case Assign(name, expr):
+    try:
+        dval = lookup(env, name)
+        match dval:
+            case Loc(address=addr) as loc:
+                value = evaluate_expr(expr, env, state)
+                state1 = update(state, addr, value)
+                return env, state1
+            case _:
+                raise ValueError(
+                    f"Assignment target '{name}' is not a variable"
+                )
+    except ValueError:
+        raise ValueError(f"Assignment to undeclared variable '{name}'")
+```
 
 
 
 ### The Print Command
 
-The print command evaluates the expression and prints its value. It does not affect the environment or state.
+The print command evaluates the expression and prints its value:
+
+```python
+case Print(expr):
+    # MORALLY THIS IS THE IDENTITY FUNCTION
+    value = evaluate_expr(expr, env, state)
+    print(value)
+    return env, state
+```
 
 
 
@@ -2718,11 +2779,17 @@ Executing a command sequence involves:
 2. Executing the rest of the sequence with the updated environment and state
 
 ```python
-def execute_command_seq(seq: CommandSequence, env: Environment, state: State) -> tuple[Environment, State]:
-    env, state = execute_command(seq.first, env, state)
+def execute_command_seq(
+    seq: CommandSequence, env: Environment, state: State
+) -> tuple[Environment, State]:
+    # Execute the first command
+    env1, state1 = execute_command(seq.first, env, state)
+
+    # If there are more commands, execute them with the updated environment and state
     if seq.rest:
-        return execute_command_seq(seq.rest, env, state)
-    return env, state
+        return execute_command_seq(seq.rest, env1, state1)
+
+    return env1, state1
 ```
 
 
@@ -2736,8 +2803,7 @@ Let's look at some examples that demonstrate the power of state:
 ### Example 1: Basic Declaration, Assignment, and Printing
 
 ```
-var x = 42;
-print x
+var x = 42; print x
 ```
 
 This simple example shows creating a variable and reading its value. The output is `42`.
@@ -2747,31 +2813,39 @@ This simple example shows creating a variable and reading its value. The output 
 ### Example 2: Updating Variables
 
 ```
-var x = 10;
-var y = x + 5;
-print y;
-x <- 20;
-print x;
-print y
+var x = 10; print x; x <- 20; print x
 ```
 
-This example demonstrates that changing `x` doesn't automatically change `y`, even though `y` was defined in terms of `x`. The output is:
+This example demonstrates updating a variable's value. The output is:
 
 ```
-15
+10
 20
-15
 ```
 
-The value of `y` remains 15 because the expression `x + 5` was evaluated at the time of declaration.
 
 
-
-### Example 3: Let Expressions in Commands
+### Example 3: Multiple Declarations and Operations
 
 ```
-var x = let y = 5 in y * 2;
-print x
+var x = 10; var y = 20; var z = x + y; print z; x <- 30; print x + y
+```
+
+The output of this program is:
+
+```
+30
+50
+```
+
+Notice that changing `x` doesn't automatically update `z`, even though `z` was defined in terms of `x` and `y`.
+
+
+
+### Example 4: Let Expressions in Commands
+
+```
+var x = let y = 5 in y * 2; print x
 ```
 
 This example shows how we can use let expressions within commands. The output is `10`.
@@ -2800,53 +2874,46 @@ With state, environment, and control flow, our language will have all the essent
 
 
 
-## Exercises: Extending State
+## Exercises
 
-### 1. Alias Command
+### 1) Interactive REPL
 
-**Exercise:** Implement an `alias x = y` command that makes `x` and `y` point to the same location in the environment (i.e., after `alias x = y`, both names refer to the same memory cell).
+Modify the REPL implementation to operate one command at a time instead of parsing and executing entire programs.
 
-**Example 1:**
+### 2) Multiple Assignment
 
-```
-var a = 10;
-alias b = a;
-b <- 20;
-print a  # Output: 20
-```
-
-**Example 2:**
+Implement multiple assignment where multiple variables can be assigned at once:
 
 ```
-var x = 5;
-alias y = x;
-print y  # Output: 5
-x <- 42;
-print y  # Output: 42
+x, y <- z + 1, x + 1
 ```
 
-**Example 3:**
+### 3) Parallel Assignment
+
+Make the assignment "parallel" so that all right-hand sides are evaluated before any assignments happen:
 
 ```
-var m = 1;
-alias n = m;
-m <- 7;
-print n  # Output: 7
+x, y <- y + 1, x + 1
 ```
 
----
+This should swap the values of x and y.
 
-### 2. Conditional Command
 
-**Exercise:** Implement an `if condition then command1 else command2` construct, where `condition` is an expression and `command1`/`command2` are single commands (not sequences).
 
-**Prompt:**
+### 4) If-Then-Else Statements
 
-- What if either `command1` or `command2` is a `var` declaration? Can this be used to conditionally declare variables?
-- What should happen if the same variable is declared in both branches? Should the environment be merged, or should this be an error?
-- How would you design the semantics to handle these cases?
+Add if-then-else statements to the language:
 
-Reflect on these questions and try to implement a solution that is both safe and intuitive.
+```
+if x > 0 then
+    y <- 1
+else
+    y <- -1
+```
+
+### 5) Command Sequences in Branches
+
+Extend if-then-else to support command sequences in the branches and consider the implications for variable scoping.
 
 
 \newpage
