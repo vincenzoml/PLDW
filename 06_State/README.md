@@ -202,13 +202,23 @@ def access(state: State, addr: int) -> MVal:
 
 ### Denotable Values (DVal)
 
-Denotable values are those that can be bound to identifiers in an environment. In our implementation, they include:
+Denotable values are those that can be bound to identifiers in an environment. Our language now has three distinct semantic domains:
 
-DVal includes:
+- **EVal (Expressible Values)**: Values that expressions can evaluate to (integers in our language)
+- **MVal (Memorizable Values)**: Values that can be stored in memory (equal to EVal in our implementation)
+- **DVal (Denotable Values)**: Values that can be bound to identifiers in the environment
+
+DVal is broader than MVal because not everything that can be bound to a name can be stored in memory. Specifically, DVal includes:
 
 - **Numbers**: Simple integer values (EVal)
 - **Operators**: Functions that take two integers and return an integer
 - **Locations**: Memory addresses (wrapped in a Loc class)
+
+The distinction between these domains is crucial for implementing state correctly:
+
+- Expressions evaluate to EVal (integers)
+- Memory cells store MVal (integers)
+- Variable names can refer to DVal (integers, operators, or locations)
 
 <!-- slide -->
 
@@ -223,7 +233,19 @@ type MVal = EVal  # Main value type for store and evaluation (expressible)
 type DVal = EVal | DenOperator | Loc  # Denotable values: can be associated with names
 ```
 
-> **Note:** DVal is broader than what can be stored in memory (MVal). Not everything that can be bound to a name can be stored in memory.
+Rather than representing memory locations as plain integers, we wrap them in the `Loc` class for two important reasons:
+
+1. **Pattern Matching**: It allows the pattern matcher to distinguish locations from integer values
+2. **Type Safety**: It prevents accidentally using a location as an integer or vice versa
+
+<!-- slide -->
+
+This distinction becomes essential in variable lookup. When we look up a variable, we need to determine if the value bound to it is:
+
+- A direct integer value (for operators like +, -, etc.)
+- A location that requires a further lookup in the store
+
+Without the `Loc` wrapper class, the pattern matcher wouldn't be able to distinguish between an integer value and an integer location in memory.
 
 <!-- slide -->
 
