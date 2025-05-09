@@ -6,29 +6,34 @@ Introduces a new syntax level beyond expressions: commands and command sequences
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from typing import Callable, Dict, List, Optional, Union, Any, Tuple, cast
+from dataclasses import dataclass
+from typing import Callable, Optional, cast
 from lark import Lark, Token, Tree
 
 
 # Define the semantic domains
+@dataclass
+class Loc:
+    address: int
+
+
 type DenOperator = Callable[[int, int], int]
-type Location = int
-type DVal = DenOperator | int | bool | Location  # Denotable values: can be stored in environment, now includes locations and booleans
+type EVal = int  # Expressible value type (for expressions)
+type MVal = EVal  # Main value type for store and evaluation (expressible)
+type DVal = EVal | DenOperator | Loc  # Denotable values: can be associated with names
 
-# Environment now maps to locations (store addresses)
-type Environment = Callable[[str], int]
+type Environment = Callable[[str], DVal]
 
 
-# State (store) maps locations to values
-@dataclass()
+# State (store) maps locations to memorizable values (MVal)
+@dataclass
 class State:
-    store: Callable[[int], Any]  # TODO: ANY -> MVAL which is the same as EVAL!!
+    store: Callable[[int], MVal]
     next_loc: int
 
 
-def empty_store() -> Callable[[int], Any]:
-    def store_fn(loc: int) -> Any:
+def empty_store() -> Callable[[int], MVal]:
+    def store_fn(loc: int) -> MVal:
         raise ValueError(f"Location {loc} not allocated")
 
     return store_fn
@@ -38,33 +43,31 @@ def empty_state() -> State:
     return State(store=empty_store(), next_loc=0)
 
 
-def alloc(state: State, value: Any) -> tuple[int, State]:
-    loc = state.next_loc
+def allocate(state: State, value: MVal) -> tuple[Loc, State]:
+    loc = Loc(state.next_loc)
     prev_store = state.store
 
-    def new_store(l: int) -> Any:
-        if l == loc:
+    def new_store(l: int) -> MVal:
+        if l == loc.address:
             return value
         return prev_store(l)
 
-    return loc, State(store=new_store, next_loc=loc + 1)
+    return loc, State(store=new_store, next_loc=loc.address + 1)
 
 
-def update(state: State, loc: int, value: Any) -> State:
-    # Check if location exists
-    state.store(loc)  # will raise if not found
+def update(state: State, addr: int, value: MVal) -> State:
     prev_store = state.store
 
-    def new_store(l: int) -> Any:
-        if l == loc:
+    def new_store(l: int) -> MVal:
+        if l == addr:
             return value
         return prev_store(l)
 
     return State(store=new_store, next_loc=state.next_loc)
 
 
-def lookup(state: State, loc: int) -> Any:
-    return state.store(loc)
+def access(state: State, addr: int) -> MVal:
+    return state.store(addr)
 
 
 # Environment primitives
@@ -78,39 +81,32 @@ def empty_environment() -> Environment:
 
 
 # Create initial environment with operators and initial state
-def create_initial_env() -> tuple[Environment, State]:
+def create_initial_env_state() -> tuple[Environment, State]:
     """Create an environment populated with standard operators and an empty state"""
     env = empty_environment()
     state = empty_state()
 
-    # Allocate operators in the state
-    plus_loc, state = alloc(state, add)
-    minus_loc, state = alloc(state, subtract)
-    mult_loc, state = alloc(state, multiply)
-    div_loc, state = alloc(state, divide)
-    mod_loc, state = alloc(state, modulo)
-
-    # Bind operator names to their locations
-    env = bind(env, "+", plus_loc)
-    env = bind(env, "-", minus_loc)
-    env = bind(env, "*", mult_loc)
-    env = bind(env, "/", div_loc)
-    env = bind(env, "%", mod_loc)
+    # Bind operator names directly to their functions (DenOperator)
+    env = bind(env, "+", add)
+    env = bind(env, "-", subtract)
+    env = bind(env, "*", multiply)
+    env = bind(env, "/", divide)
+    env = bind(env, "%", modulo)
 
     return env, state
 
 
-def lookup_env(env: Environment, name: str) -> int:
-    """Look up an identifier's location in the environment"""
+def lookup(env: Environment, name: str) -> DVal:
+    """Look up an identifier's denotable value in the environment"""
     return env(name)
 
 
-def bind(env: Environment, name: str, loc: int) -> Environment:
-    """Create new environment with an added binding to a location"""
+def bind(env: Environment, name: str, value: DVal) -> Environment:
+    """Create new environment with an added binding to a denotable value (location or operator)"""
 
-    def new_env(n: str) -> int:
+    def new_env(n: str) -> DVal:
         if n == name:
-            return loc
+            return value
         return env(n)
 
     return new_env
@@ -364,7 +360,7 @@ def parse_program(program_text: str) -> CommandSequence:
 
 
 # Evaluate expressions with environment and state
-def evaluate_expr(expr: Expression, env: Environment, state: State) -> int:
+def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
     """Evaluate an expression with given environment and state"""
     match expr:
         case Number(value):
@@ -372,35 +368,32 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> int:
 
         case BinaryExpression(op, left, right):
             try:
-                # Get operator from environment and state
-                op_loc = lookup_env(env, op)
-                operator = lookup(state, op_loc)
-
-                # Ensure it's a function (DenOperator)
-                if not isinstance(operator, Callable):
-                    raise ValueError(f"{op} is not a function")
-
-                # Evaluate operands and apply operator
-                left_value = evaluate_expr(left, env, state)
-                right_value = evaluate_expr(right, env, state)
-
-                # Apply the operator to the evaluated operands
-                return operator(left_value, right_value)
+                op_val = lookup(env, op)
+                match op_val:
+                    case fn if callable(fn):
+                        left_value = evaluate_expr(left, env, state)
+                        right_value = evaluate_expr(right, env, state)
+                        return fn(left_value, right_value)
+                    case _:
+                        raise ValueError(f"{op} is not a function")
             except ValueError as e:
                 raise ValueError(f"Evaluation error: {e}")
 
         case Let(name, expr, body):
-            # Evaluate the expression and bind it in a new location
             value = evaluate_expr(expr, env, state)
-            loc, state = alloc(state, value)
-            extended_env = bind(env, name, loc)
+            extended_env = bind(env, name, value)
             return evaluate_expr(body, extended_env, state)
 
         case Var(name):
-            # Look up variable's location and then its value in the state
             try:
-                loc = lookup_env(env, name)
-                return lookup(state, loc)
+                dval = lookup(env, name)
+                match dval:
+                    case int():
+                        return dval
+                    case Loc(address=addr):
+                        return access(state, addr)
+                    case _:
+                        raise ValueError(f"Variable '{name}' does not refer to a value")
             except ValueError as e:
                 raise ValueError(f"Variable error: {e}")
 
@@ -412,23 +405,27 @@ def execute_command(
     """Execute a command, returning the updated environment and state"""
     match cmd:
         case VarDecl(name, expr):
-            # Evaluate the expression and allocate a new location
             value = evaluate_expr(expr, env, state)
-            if _var_exists(env, name):
-                raise ValueError(f"Variable '{name}' already declared")
-            loc, state = alloc(state, value)
+            loc, state = allocate(state, value)
             new_env = bind(env, name, loc)
             return new_env, state
         case Assign(name, expr):
-            # Assignment only allowed for declared variables
             try:
-                loc = lookup_env(env, name)
+                dval = lookup(env, name)
+                match dval:
+                    case Loc(address=addr) as loc:
+                        value = evaluate_expr(expr, env, state)
+                        state1 = update(state, addr, value)
+                        return env, state1
+                    case _:
+                        raise ValueError(
+                            f"Assignment target '{name}' is not a variable"
+                        )
             except ValueError:
                 raise ValueError(f"Assignment to undeclared variable '{name}'")
-            value = evaluate_expr(expr, env, state)
-            state1 = update(state, loc, value)
-            return env, state1
+
         case Print(expr):
+            # MORALLY THIS IS THE IDENTITY FUNCTION
             value = evaluate_expr(expr, env, state)
             print(value)
             return env, state
@@ -452,14 +449,14 @@ def execute_command_seq(
 def execute_program(program_text: str) -> tuple[Environment, State]:
     """Parse and execute a program, returning the final environment and state"""
     command_seq = parse_program(program_text)
-    env, state = create_initial_env()
+    env, state = create_initial_env_state()
     return execute_command_seq(command_seq, env, state)
 
 
 # Example usage
 def REPL():
     """Read-Evaluate-Print Loop with stateful commands"""
-    env, state = create_initial_env()
+    env, state = create_initial_env_state()
     exit = False
 
     print("Mini-language with state (type 'exit' to quit)")
@@ -504,18 +501,18 @@ def run_tests():
             print(f"Error: {e}")
 
 
-# Helper to check if variable exists
-def _var_exists(env: Environment, name: str) -> bool:
-    try:
-        lookup_env(env, name)
-        return True
-    except Exception:
-        return False
-
-
 if __name__ == "__main__":
     # Uncomment to run the interactive REPL
     # REPL()
 
     # Run the tests
     run_tests()
+
+## Exercises
+
+# 1) Turn the REPL into a proper REPL that operates one command at a time
+# 2) Add assignment to multiple variables: x, y <- z + 1, x + 1
+
+# 3) Make it a "parallel" assignment: x, y <- y + 1, x + 1
+# 4) Add if-then-else statements
+# 5) With command sequenes in branches! Q: What happens to variables in branches?
