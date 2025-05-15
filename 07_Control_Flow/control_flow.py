@@ -1,6 +1,12 @@
 """
 Lecture 7: Control flow
-Extends the mini-language with control flow constructs.
+
+Minimal changes from Lecture 6:
+1. Added if/while commands (conditions must be boolean)
+2. Expressions support booleans and unified ops (arithmetic, relational, boolean)
+3. All operators stored as Operator(arity, fn) in environment
+4. Unified Apply node for all operator applications in AST
+5. Runtime type and arity checks for operators
 """
 
 from __future__ import annotations
@@ -245,6 +251,11 @@ class Number:
 
 
 @dataclass
+class Bool:
+    value: bool
+
+
+@dataclass
 class Var:
     name: str
 
@@ -263,7 +274,7 @@ class Let:
 
 
 # Define Expression as a union type
-type Expression = Number | Var | Let | Apply
+type Expression = Number | Bool | Var | Let | Apply
 
 
 # AST Definitions for Commands
@@ -318,7 +329,7 @@ def transform_expr_tree(tree: Tree) -> Expression:
         case Tree(data="ground", children=[Token(type="NUMBER", value=actual_value)]):
             return Number(value=int(actual_value))
         case Tree(data="ground", children=[Token(type="BOOL", value=actual_value)]):
-            return Number(value=True if actual_value == "true" else False)
+            return Bool(value=True if actual_value == "true" else False)
         case Tree(data="paren", children=[subtree]):
             return transform_expr_tree(cast(Tree, subtree))
         case Tree(data="bin", children=[left, Token(type="OP", value=op), right]):
@@ -450,6 +461,8 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
     """Evaluate an expression with given environment and state"""
     match expr:
         case Number(value):
+            return value
+        case Bool(value):
             return value
         case Apply(op, args):
             arg_vals = [
