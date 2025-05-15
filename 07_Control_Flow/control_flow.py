@@ -1,7 +1,6 @@
 """
 Lecture 7: Control flow
 
-
 Minimal changes from Lecture 6:
 1. Added if/while commands (conditions must be boolean)
 2. Expressions support booleans and unified ops (arithmetic, relational, boolean)
@@ -10,12 +9,15 @@ Minimal changes from Lecture 6:
 5. Runtime type and arity checks for operators
 
 Scoping rules: This language uses static (lexical) scoping with block-local variables. Variables declared inside a block (such as if, else, or while) are only visible within that block and are not accessible outside of it.
+
+Block-local variables are allocated using a stack discipline: their memory locations are reused after the block ends by resetting the next available location counter. This prevents unbounded growth of the store for temporary variables. The values remain assigned (cf: real memory implementation, and security issues therein, buffer over-read attacks, the famous Heartbleed bug (see https://heartbleed.com/) which however was against the heap, not the stack).
+
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Optional, cast
+from typing import Callable, cast
 from lark import Lark, Token, Tree
 
 
@@ -301,7 +303,7 @@ class VarDecl:
 @dataclass
 class CommandSequence:
     first: Command
-    rest: Optional[CommandSequence] = None
+    rest: CommandSequence | None = None
 
 
 @dataclass
@@ -398,19 +400,42 @@ def transform_command_tree(tree: Tree) -> Command:
             data="ifelse",
             children=[cond_tree, then_tree, else_tree],
         ):
+            # Always transform then/else as command sequences
+            then_seq = (
+                transform_command_seq_tree(cast(Tree, then_tree))
+                if isinstance(then_tree, Tree) and then_tree.data == "command_seq"
+                else CommandSequence(
+                    first=transform_command_tree(cast(Tree, then_tree))
+                )
+            )
+            else_seq = (
+                transform_command_seq_tree(cast(Tree, else_tree))
+                if isinstance(else_tree, Tree) and else_tree.data == "command_seq"
+                else CommandSequence(
+                    first=transform_command_tree(cast(Tree, else_tree))
+                )
+            )
             return IfElse(
                 cond=transform_expr_tree(cast(Tree, cond_tree)),
-                then_branch=transform_command_seq_tree(cast(Tree, then_tree)),
-                else_branch=transform_command_seq_tree(cast(Tree, else_tree)),
+                then_branch=then_seq,
+                else_branch=else_seq,
             )
 
         case Tree(
             data="while",
             children=[cond_tree, body_tree],
         ):
+            # Always transform body as command sequence
+            body_seq = (
+                transform_command_seq_tree(cast(Tree, body_tree))
+                if isinstance(body_tree, Tree) and body_tree.data == "command_seq"
+                else CommandSequence(
+                    first=transform_command_tree(cast(Tree, body_tree))
+                )
+            )
             return While(
                 cond=transform_expr_tree(cast(Tree, cond_tree)),
-                body=transform_command_seq_tree(cast(Tree, body_tree)),
+                body=body_seq,
             )
 
         case x:
@@ -441,7 +466,7 @@ def transform_command_seq_tree(tree: Tree) -> CommandSequence:
             )
 
         # Handle the case where the root is a single command node
-        case _ if tree.data in {"vardecl", "assign", "print"}:
+        case _ if tree.data in {"vardecl", "assign", "print", "ifelse", "while"}:
             return CommandSequence(
                 first=transform_command_tree(tree),
             )
@@ -533,17 +558,26 @@ def execute_command(
             cond_val = evaluate_expr(cond, env, state)
             if not isinstance(cond_val, bool):
                 raise ValueError("If condition must be boolean")
+            saved_next_loc = state.next_loc
             if cond_val:
-                return execute_command_seq(then_branch, env, state)
+                _, state1 = execute_command_seq(then_branch, env, state)
+                # Restore next_loc after block
+                state2 = State(store=state1.store, next_loc=saved_next_loc)
+                return env, state2
             else:
-                return execute_command_seq(else_branch, env, state)
+                _, state1 = execute_command_seq(else_branch, env, state)
+                state2 = State(store=state1.store, next_loc=saved_next_loc)
+                return env, state2
         case While(cond, body):
             cond_val = evaluate_expr(cond, env, state)
             if not isinstance(cond_val, bool):
                 raise ValueError("While condition must be boolean")
+            saved_next_loc = state.next_loc
             if cond_val:
-                env1, state1 = execute_command_seq(body, env, state)
-                return execute_command(While(cond, body), env1, state1)
+                _, state1 = execute_command_seq(body, env, state)
+                # Restore next_loc after block
+                state2 = State(store=state1.store, next_loc=saved_next_loc)  #
+                return execute_command(While(cond, body), env, state2)
             else:
                 return env, state
         case _:
@@ -612,9 +646,9 @@ def run_tests():
         # 1b. If-then-else on a boolean
         "if true then print 1 else print 0",
         # 2. Print N times by decrementing a variable
-        "var n = 3; while n > 0 do (print n; n <- n - 1)",
+        "var n = 3; while n > 0 do print n; n <- n - 1",
         # 3. Euclid's algorithm using subtraction
-        "var a = 48; var b = 18; while b != 0 do (if a > b then a <- a - b else b <- b - a); print a",
+        "var a = 48; var b = 18; while b != 0 do if a > b then a <- a - b else b <- b - a; print a",
     ]
 
     print("Running tests:")
