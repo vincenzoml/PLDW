@@ -666,6 +666,8 @@ Closures</a></li>
 <li><a href="#in-our-mini-language" id="toc-in-our-mini-language">In Our
 Mini-Language</a></li>
 </ul></li>
+<li><a href="#example-the-danger-of-memorizing-closures" id="toc-example-the-danger-of-memorizing-closures">Example: The Danger
+of Memorizing Closures</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -3442,5 +3444,30 @@ booleans) are allowed to be stored in state. Closures are not yet
 supported as storable values, which keeps the semantics simple and
 reasoning about programs tractable. Supporting closures as storable
 values requires the special provisions described above.</p>
+<h2 id="example-the-danger-of-memorizing-closures">Example: The Danger
+of Memorizing Closures</h2>
+<p>Suppose our mini-language supported lambda-abstractions (anonymous
+functions) and allowed them to capture local variables. Consider the
+following (hypothetical) example:</p>
+<pre class="minilang"><code>var x = 0;
+if cond then
+    var y = 42;
+    x &lt;- lambda() { return y }  // y is a local variable, now accessible outside of its scope!
+else
+    // do something else
+
+print x() // call the closure to read y outside of its scope</code></pre>
+<p>Here, the lambda-abstraction <code>lambda() { return y }</code>
+captures the local variable <code>y</code> declared inside the
+<code>then</code> branch. We then assign this closure to the global
+variable <code>x</code>.</p>
+<p>If the language allows closures to be stored in state (e.g., as
+variable values), the closure may outlive the scope of <code>y</code>.
+Later, calling <code>x()</code> would attempt to access <code>y</code>,
+which no longer exists—leading to undefined behavior or runtime
+errors.</p>
+<p>This illustrates why special care is needed when allowing closures to
+be stored in state: the captured environment must persist as long as the
+closure does, or else memory safety and correctness are compromised.</p>
 </body>
 </html>

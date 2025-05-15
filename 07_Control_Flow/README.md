@@ -181,8 +181,12 @@ def allocate(state: State, value: MVal) -> tuple[Loc, State]:
     return loc, State(store=new_store, next_loc=loc.address + 1)
 ```
 
+<!-- slide -->
+
 - **Allocation**: Each new variable gets a fresh location (`next_loc`), which is incremented.
 - **Deallocation**: After a block, `next_loc` is reset, so locations for block-local variables can be reused.
+
+<!-- slide -->
 
 **Example:**
 
@@ -500,3 +504,32 @@ Here, `x` lives as long as the closure does, even after `makeCounter` has return
 ### In Our Mini-Language
 
 In the current chapter, only simple values (like numbers and booleans) are allowed to be stored in state. Closures are not yet supported as storable values, which keeps the semantics simple and reasoning about programs tractable. Supporting closures as storable values requires the special provisions described above.
+
+<!-- slide -->
+
+## Example: The Danger of Memorizing Closures
+
+Suppose our mini-language supported lambda-abstractions (anonymous functions) and allowed them to capture local variables. Consider the following (hypothetical) example:
+
+```minilang
+var x = 0;
+if cond then
+    var y = 42;
+    x <- lambda() { return y }  // y is a local variable, now accessible outside of its scope!
+else
+    // do something else
+
+print x() // call the closure to read y outside of its scope
+```
+
+<!-- slide -->
+
+Here, the lambda-abstraction `lambda() { return y }` captures the local variable `y` declared inside the `then` branch. We then assign this closure to the global variable `x`.
+
+<!-- slide -->
+
+If the language allows closures to be stored in state (e.g., as variable values), the closure may outlive the scope of `y`. Later, calling `x()` would attempt to access `y`, which no longer exists—leading to undefined behavior or runtime errors.
+
+<!-- slide -->
+
+This illustrates why special care is needed when allowing closures to be stored in state: the captured environment must persist as long as the closure does, or else memory safety and correctness are compromised.
