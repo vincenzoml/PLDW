@@ -1,0 +1,419 @@
+# %% [slide]
+
+# Chapter 7: Control Flow
+
+# %% [slide]
+
+## 1. Introduction to Control Flow
+
+In the previous chapters, we introduced **state** to our mini-language, allowing variables to be declared, updated, and printed. However, all programs executed commands in a fixed, linear order. In this chapter, we enrich our language with **control flow constructs**—specifically, conditionals (`if`/`else`) and loops (`while`). These features allow programs to make decisions and repeat actions, greatly increasing their expressive power.
+
+We also introduce **block-local variables** and extend the language to support boolean values and unified operators (arithmetic, relational, and boolean). This chapter marks a significant step toward a full-featured imperative language.
+
+**Summary of new features:**
+
+- `if`/`else` and `while` commands
+- Boolean values and expressions
+- Unified operator handling
+- Block-local variable scoping (static/lexical scope)
+
+# %% [slide]
+
+## 2. Control Flow Constructs
+
+### 2.1 If-Then-Else
+
+The `if` command allows a program to choose between two branches based on a boolean condition. The syntax is:
+
+```
+if <condition> then <commands> else <commands>
+```
+
+- The `<condition>` must be a boolean expression.
+- Both the `then` and `else` branches can contain sequences of commands.
+
+**Example:**
+
+```
+var x = 1;
+if x == 1 then print 42 else print 0
+```
+
+This program prints `42` because the condition `x == 1` is true.
+
+# %% [slide]
+
+### 2.2 While Loops
+
+The `while` command allows repeated execution of a block of commands as long as a condition holds:
+
+```
+while <condition> do <commands>
+```
+
+- The `<condition>` must be a boolean expression.
+- The body can be a sequence of commands.
+
+**Example:**
+
+```
+var n = 3;
+while n > 0 do
+    print n;
+    n <- n - 1
+```
+
+This program prints `3`, `2`, and `1` on separate lines.
+
+# %% [slide]
+
+## 3. Block-Local Variables and Scoping
+
+A major semantic change in this chapter is the introduction of **block-local variables**. Variables declared inside a block (such as the body of an `if`, `else`, or `while`) are only visible within that block. This is known as **static (lexical) scoping**.
+
+- When a block ends, its local variables are no longer accessible.
+- The implementation reuses memory locations for block-local variables by resetting the next available location counter after a block ends. This models stack allocation and prevents unbounded memory growth.
+
+# %% [slide]
+
+### Motivation: Memory Safety and Buffer Over-Read
+
+- Prevents memory leaks from temporary variables.
+- Models real-world stack discipline -- including the security issues (e.g., buffer over-read).
+
+A **buffer over-read** occurs when a program reads data past the end of a buffer (an array or memory region), often due to incorrect pointer arithmetic or missing bounds checks. In C, this is a common source of security vulnerabilities, especially when working with stack-allocated arrays.
+
+**Example: Buffer Over-Read in C**
+
+```c
+#include <stdio.h>
+
+void print_secret() {
+    char buffer[8] = "hello";
+    char secret[8] = "SECRET!";
+    for (int i = 0; i < 16; i++) {
+        printf("%c", buffer[i]); // Over-reads into secret
+    }
+    printf("\n");
+}
+
+int main() {
+    print_secret();
+    return 0;
+}
+```
+
+**Output:**
+
+```
+helloSECRET!
+```
+
+Here, the loop prints not only the contents of `buffer`, but also the contents of the adjacent `secret` array, which is stored on the stack. This is a classic buffer over-read: the program leaks data from memory that should have been inaccessible, illustrating why careful memory management and scoping are crucial.
+
+# %% [slide]
+
+## 4. Unified Operators and Boolean Expressions
+
+Our language now supports a unified set of operators:
+
+- **Arithmetic:** `+`, `-`, `*`, `/`, `%`
+- **Relational:** `==`, `!=`, `<`, `>`, `<=`, `>=`
+- **Boolean:** `and`, `or`, `not`
+
+All operators are stored in the environment as `Operator(arity, fn)` objects. The AST uses a single `Apply` node for all operator applications, and operator application is checked at runtime for correct arity and types.
+
+**Example:**
+
+```
+var x = 10;
+var y = 5;
+if x > y and not (y == 0) then print x / y else print 0
+```
+
+# %% [slide]
+
+## 5. Grammar Extensions
+
+The grammar is extended to support control flow and booleans:
+
+```
+?command: assign
+        | print
+        | vardecl
+        | ifelse
+        | while
+
+assign: IDENTIFIER "<-" expr
+print: "print" expr
+vardecl: "var" IDENTIFIER "=" expr
+ifelse: "if" expr "then" command_seq "else" command_seq
+while: "while" expr "do" command_seq
+
+?expr: ...
+```
+
+# %% [slide]
+
+## 6. Abstract Syntax Tree (AST) Extensions
+
+The AST is extended to represent the new constructs:
+
+```python
+@dataclass
+class IfElse:
+    cond: Expression
+    then_branch: CommandSequence
+    else_branch: CommandSequence
+
+@dataclass
+class While:
+    cond: Expression
+    body: CommandSequence
+```
+
+Command sequences allow multiple commands in each branch or loop body.
+
+# %% [slide]
+
+## 7. Examples of Control Flow in Action
+
+### Example 1: If-Then-Else
+
+```
+var x = 1;
+if x == 1 then print 42 else print 0
+```
+
+**Output:**
+
+```
+42
+```
+
+# %% [slide]
+
+### Example 2: While Loop
+
+```
+var n = 3;
+while n > 0 do print n; n <- n - 1
+```
+
+**Output:**
+
+```
+3
+2
+1
+```
+
+# %% [slide]
+
+### Example 3: Euclid's Algorithm (GCD) Using Subtraction
+
+```
+var a = 48; var b = 18;
+while b != 0 do
+    if a > b then a <- a - b else b <- b - a;
+print a
+```
+
+**Output:**
+
+```
+6
+```
+
+# %% [slide]
+
+## 8. Comparison with Previous Chapters
+
+| Chapter 6: State              | Chapter 7: Control Flow            |
+| ----------------------------- | ---------------------------------- |
+| State and variable assignment | Adds conditionals and loops        |
+| No control flow               | Programs can branch and repeat     |
+| Variables global to block     | Block-local variable scoping       |
+| Only arithmetic expressions   | Boolean and relational expressions |
+
+# %% [slide]
+
+## 9. Implementation Details
+
+### 9.1 If-Then-Else (Implementation)
+
+```python
+@dataclass
+class IfElse:
+    cond: Expression
+    then_branch: CommandSequence
+    else_branch: CommandSequence
+
+# ...
+
+def execute_command(cmd: Command, env: Environment, state: State) -> tuple[Environment, State]:
+    match cmd:
+        # ...
+        case IfElse(cond, then_branch, else_branch):
+            cond_val = evaluate_expr(cond, env, state)
+            if not isinstance(cond_val, bool):
+                raise ValueError("If condition must be boolean")
+            saved_next_loc = state.next_loc
+            if cond_val:
+                _, state1 = execute_command_seq(then_branch, env, state)
+                # Restore next_loc after block
+                state2 = State(store=state1.store, next_loc=saved_next_loc)
+                return env, state2
+            else:
+                _, state1 = execute_command_seq(else_branch, env, state)
+                state2 = State(store=state1.store, next_loc=saved_next_loc)
+                return env, state2
+```
+
+This ensures that variables declared inside a branch are only visible within that branch, and their memory is reclaimed after the branch ends.
+
+# %% [slide]
+
+### 9.2 While Loops (Implementation)
+
+```python
+@dataclass
+class While:
+    cond: Expression
+    body: CommandSequence
+
+# ...
+
+def execute_command(cmd: Command, env: Environment, state: State) -> tuple[Environment, State]:
+    match cmd:
+        # ...
+        case While(cond, body):
+            cond_val = evaluate_expr(cond, env, state)
+            if not isinstance(cond_val, bool):
+                raise ValueError("While condition must be boolean")
+            saved_next_loc = state.next_loc
+            if cond_val:
+                _, state1 = execute_command_seq(body, env, state)
+                # Restore next_loc after block
+                state2 = State(store=state1.store, next_loc=saved_next_loc)
+                return execute_command(While(cond, body), env, state2)
+            else:
+                return env, state
+```
+
+# %% [slide]
+
+### 9.3 Block-Local Variables and Lexical Scoping (Implementation)
+
+Block-local variables are managed using a stack-like memory model. Here's how allocation and deallocation work:
+
+```python
+@dataclass
+class State:
+    store: Callable[[int], MVal]
+    next_loc: int
+
+def allocate(state: State, value: MVal) -> tuple[Loc, State]:
+    loc = Loc(state.next_loc)
+    prev_store = state.store
+    def new_store(l: int) -> MVal:
+        if l == loc.address:
+            return value
+        return prev_store(l)
+    return loc, State(store=new_store, next_loc=loc.address + 1)
+```
+
+- **Allocation**: Each new variable gets a fresh location (`next_loc`), which is incremented.
+- **Deallocation**: After a block, `next_loc` is reset, so locations for block-local variables can be reused.
+
+**Example:**
+
+```python
+if cond then
+    var x = 42; print x
+else
+    print 0
+```
+
+Here, `x` is only accessible inside the `then` branch. After the branch, its memory location can be reused for other variables.
+
+# %% [slide]
+
+### 9.4 Unified Operators and Boolean Expressions (Implementation)
+
+All operators (arithmetic, relational, boolean) are stored in the environment as `Operator(arity, fn)` objects. The AST uses a single `Apply` node for all operator applications:
+
+```python
+@dataclass
+class Operator:
+    arity: int
+    fn: Callable[[list[EVal]], EVal]
+
+@dataclass
+class Apply:
+    op: str
+    args: list[Expression]
+```
+
+Operator application is checked at runtime for correct arity and types:
+
+```python
+def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
+    match expr:
+        # ...
+        case Apply(op, args):
+            arg_vals = [evaluate_expr(a, env, state) for a in args]
+            op_val = lookup(env, op)
+            if isinstance(op_val, Operator):
+                if op_val.arity != len(arg_vals):
+                    raise ValueError(
+                        f"Operator '{op}' expects {op_val.arity} arguments, got {len(arg_vals)}"
+                    )
+                return op_val.fn(arg_vals)
+            raise ValueError(f"{op} is not an operator")
+```
+
+# %% [slide]
+
+### 9.5 Let-Expressions (Implementation)
+
+Let-expressions allow you to introduce local variables in expressions:
+
+```python
+@dataclass
+class Let:
+    name: str
+    expr: Expression
+    body: Expression
+
+def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
+    match expr:
+        # ...
+        case Let(name, expr, body):
+            value = evaluate_expr(expr, env, state)
+            extended_env = bind(env, name, value)
+            return evaluate_expr(body, extended_env, state)
+```
+
+# %% [slide]
+
+### 9.6 Runtime Type and Arity Checks
+
+Operator application is checked at runtime for correct arity and types, ensuring safe execution and clear error messages. For example, applying `and` to non-booleans or dividing by zero will raise an error.
+
+# %% [slide]
+
+## 10. Conclusion and Next Steps
+
+With the addition of control flow, our mini-language can now express a wide range of algorithms and computations. Block-local variables and unified operators bring us closer to the features of real-world programming languages.
+
+In the next chapter, we will explore more advanced features, such as functions and closures, and discuss the semantic challenges they introduce.
+
+# %% [slide]
+
+## 11. Exercises
+
+1. **Write a program that prints the first 5 even numbers using a while loop.**
+2. **Modify the language to support nested if-then-else statements.**
+3. **Experiment with block-local variables: what happens if you declare a variable inside an if or while block?**
+4. **Implement a program that computes the factorial of a number using a while loop.**
