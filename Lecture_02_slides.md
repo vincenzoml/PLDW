@@ -1,7 +1,7 @@
 ---
 title: "Lecture 02: Types_And_Pattern_Matching"
 author: "Vincenzo Ciancia"
-date: "May 09, 2025"
+date: "May 15, 2025"
 ---
 
 ## Section 1: Python's Type System

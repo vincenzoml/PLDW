@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Vincenzo Ciancia" />
-  <meta name="dcterms.date" content="2025-05-09" />
+  <meta name="dcterms.date" content="2025-05-15" />
   <title>Programming Languages Design Workshop</title>
   <style>
 html {
@@ -237,7 +237,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; }
 <header id="title-block-header">
 <h1 class="title">Programming Languages Design Workshop</h1>
 <p class="author">Vincenzo Ciancia</p>
-<p class="date">May 09, 2025</p>
+<p class="date">May 15, 2025</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -612,52 +612,60 @@ Branches</a></li>
 </ul></li>
 <li><a href="#chapter-7-control-flow" id="toc-chapter-7-control-flow">Chapter 7: Control Flow</a>
 <ul>
-<li><a href="#section-1-introduction-to-booleans-and-conditionals" id="toc-section-1-introduction-to-booleans-and-conditionals">Section 1:
-Introduction to Booleans and Conditionals</a>
+<li><a href="#introduction-to-control-flow" id="toc-introduction-to-control-flow">1. Introduction to Control
+Flow</a></li>
+<li><a href="#control-flow-constructs" id="toc-control-flow-constructs">2. Control Flow Constructs</a>
 <ul>
-<li><a href="#why-booleans-and-conditionals" id="toc-why-booleans-and-conditionals">Why Booleans and
-Conditionals?</a></li>
+<li><a href="#if-then-else" id="toc-if-then-else">2.1
+If-Then-Else</a></li>
+<li><a href="#while-loops" id="toc-while-loops">2.2 While Loops</a></li>
 </ul></li>
-<li><a href="#section-2-boolean-expressions" id="toc-section-2-boolean-expressions">Section 2: Boolean
-Expressions</a>
+<li><a href="#block-local-variables-and-scoping" id="toc-block-local-variables-and-scoping">3. Block-Local Variables and
+Scoping</a>
 <ul>
-<li><a href="#syntax-and-semantics" id="toc-syntax-and-semantics">Syntax
-and Semantics</a></li>
-<li><a href="#ast-representation-2" id="toc-ast-representation-2">AST
-Representation</a></li>
+<li><a href="#digression-memory-safety-and-buffer-over-read" id="toc-digression-memory-safety-and-buffer-over-read">Digression:
+Memory Safety and Buffer Over-Read</a></li>
 </ul></li>
-<li><a href="#section-3-conditional-expressions" id="toc-section-3-conditional-expressions">Section 3: Conditional
-Expressions</a>
+<li><a href="#unified-operators-and-boolean-expressions" id="toc-unified-operators-and-boolean-expressions">4. Unified Operators
+and Boolean Expressions</a></li>
+<li><a href="#grammar-extensions-1" id="toc-grammar-extensions-1">5.
+Grammar Extensions</a></li>
+<li><a href="#abstract-syntax-tree-ast-extensions" id="toc-abstract-syntax-tree-ast-extensions">6. Abstract Syntax Tree
+(AST) Extensions</a></li>
+<li><a href="#ast-and-semantics-of-operators" id="toc-ast-and-semantics-of-operators">6.1 AST and Semantics of
+Operators</a>
 <ul>
-<li><a href="#syntax-and-semantics-1" id="toc-syntax-and-semantics-1">Syntax and Semantics</a></li>
-<li><a href="#ast-representation-3" id="toc-ast-representation-3">AST
-Representation</a></li>
+<li><a href="#ast-node-for-operators" id="toc-ast-node-for-operators">AST Node for Operators</a></li>
+<li><a href="#operator-class" id="toc-operator-class">Operator
+Class</a></li>
+<li><a href="#semantics-of-operator-application" id="toc-semantics-of-operator-application">Semantics of Operator
+Application</a></li>
+<li><a href="#example-operator-application" id="toc-example-operator-application">Example: Operator
+Application</a></li>
+<li><a href="#runtime-type-and-arity-checks" id="toc-runtime-type-and-arity-checks">Runtime Type and Arity
+Checks</a></li>
 </ul></li>
-<li><a href="#section-4-parser-and-evaluation-changes" id="toc-section-4-parser-and-evaluation-changes">Section 4: Parser and
-Evaluation Changes</a>
+<li><a href="#examples-of-control-flow-in-action" id="toc-examples-of-control-flow-in-action">7. Examples of Control Flow
+in Action</a>
 <ul>
-<li><a href="#parser-extensions" id="toc-parser-extensions">Parser
-Extensions</a></li>
-<li><a href="#evaluation-extensions" id="toc-evaluation-extensions">Evaluation Extensions</a></li>
+<li><a href="#example-1-if-then-else" id="toc-example-1-if-then-else">Example 1: If-Then-Else</a></li>
+<li><a href="#example-2-while-loop" id="toc-example-2-while-loop">Example 2: While Loop</a></li>
+<li><a href="#example-3-euclids-algorithm-gcd-using-subtraction" id="toc-example-3-euclids-algorithm-gcd-using-subtraction">Example 3:
+Euclid’s Algorithm (GCD) Using Subtraction</a></li>
 </ul></li>
-<li><a href="#section-5-short-circuit-evaluation" id="toc-section-5-short-circuit-evaluation">Section 5: Short-Circuit
-Evaluation</a>
+<li><a href="#comparison-with-previous-chapters" id="toc-comparison-with-previous-chapters">8. Comparison with Previous
+Chapters</a></li>
+<li><a href="#conclusion-and-next-steps" id="toc-conclusion-and-next-steps">9. Conclusion and Next Steps</a></li>
+<li><a href="#exercises-2" id="toc-exercises-2">10. Exercises</a></li>
+<li><a href="#appendix-closures-denotable-values-and-state" id="toc-appendix-closures-denotable-values-and-state">Appendix:
+Closures, Denotable Values, and State</a>
 <ul>
-<li><a href="#example-avoiding-division-by-zero" id="toc-example-avoiding-division-by-zero">Example: Avoiding Division by
-Zero</a></li>
+<li><a href="#why-closures-are-special" id="toc-why-closures-are-special">Why Closures Are Special</a></li>
+<li><a href="#special-provisions-for-closures" id="toc-special-provisions-for-closures">Special Provisions for
+Closures</a></li>
+<li><a href="#in-our-mini-language" id="toc-in-our-mini-language">In Our
+Mini-Language</a></li>
 </ul></li>
-<li><a href="#section-6-non-trivial-examples" id="toc-section-6-non-trivial-examples">Section 6: Non-trivial
-Examples</a>
-<ul>
-<li><a href="#example-1-simple-conditional-with-binding" id="toc-example-1-simple-conditional-with-binding">Example 1: Simple
-Conditional with Binding</a></li>
-<li><a href="#example-2-nested-binding-and-conditionals" id="toc-example-2-nested-binding-and-conditionals">Example 2: Nested
-Binding and Conditionals</a></li>
-<li><a href="#example-3-short-circuiting-to-avoid-errors" id="toc-example-3-short-circuiting-to-avoid-errors">Example 3:
-Short-circuiting to Avoid Errors</a></li>
-</ul></li>
-<li><a href="#section-7-conclusion-and-next-steps" id="toc-section-7-conclusion-and-next-steps">Section 7: Conclusion and
-Next Steps</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -3020,166 +3028,419 @@ Branches</h3>
 <p>Extend if-then-else to support command sequences in the branches and
 consider the implications for variable scoping.</p>
 <h1 id="chapter-7-control-flow">Chapter 7: Control Flow</h1>
-<p>WORK IN PROGRESS.</p>
-<h2 id="section-1-introduction-to-booleans-and-conditionals">Section 1:
-Introduction to Booleans and Conditionals</h2>
-<p>In this chapter, we extend our mini-interpreter to support
-<strong>boolean expressions</strong> and <strong>conditional
-(if-then-else) expressions</strong>. These features are essential for
-making decisions in programs and are foundational to all programming
-languages.</p>
-<h3 id="why-booleans-and-conditionals">Why Booleans and
-Conditionals?</h3>
+<h2 id="introduction-to-control-flow">1. Introduction to Control
+Flow</h2>
+<p>In the previous chapters, we introduced <strong>state</strong> to our
+mini-language, allowing variables to be declared, updated, and printed.
+However, all programs executed commands in a fixed, linear order.</p>
+<p>In this chapter, we enrich our language with <strong>control flow
+constructs</strong>—specifically, conditionals
+(<code>if</code>/<code>else</code>) and loops (<code>while</code>).
+These features allow programs to make decisions and repeat actions,
+greatly increasing their expressive power.</p>
+<p>We also introduce <strong>block-local variables</strong> and extend
+the language to support boolean values and unified operators
+(arithmetic, relational, and boolean). This chapter marks a significant
+step toward a full-featured imperative language.</p>
+<p><strong>Summary of new features:</strong></p>
 <ul>
-<li><strong>Booleans</strong> allow us to represent truth values
-(<code>True</code> and <code>False</code>).</li>
-<li><strong>Conditionals</strong> enable programs to choose between
-different actions based on boolean conditions.</li>
-<li>Together, they make our language expressive enough to encode logic
-and control flow.</li>
+<li><code>if</code>/<code>else</code> and <code>while</code>
+commands</li>
+<li>Boolean values and expressions</li>
+<li>Unified operator handling</li>
+<li>Block-local variable scoping (static/lexical scope)</li>
 </ul>
-<h2 id="section-2-boolean-expressions">Section 2: Boolean
-Expressions</h2>
-<h3 id="syntax-and-semantics">Syntax and Semantics</h3>
-<p>We extend our language with boolean literals and boolean
-operations:</p>
+<h2 id="control-flow-constructs">2. Control Flow Constructs</h2>
+<h3 id="if-then-else">2.1 If-Then-Else</h3>
+<p>The <code>if</code> command allows a program to choose between two
+branches based on a boolean condition. The syntax is:</p>
+<pre><code>if &lt;condition&gt; then &lt;commands&gt; else &lt;commands&gt;</code></pre>
 <ul>
-<li>Boolean literals: <code>True</code>, <code>False</code></li>
-<li>Comparison operators: <code>==</code>, <code>!=</code>,
+<li>The <code>&lt;condition&gt;</code> must be a boolean
+expression.</li>
+<li>Both the <code>then</code> and <code>else</code> branches can
+contain sequences of commands.</li>
+</ul>
+<h4 id="implementation-if-then-else">Implementation: If-Then-Else</h4>
+<div class="sourceCode" id="cb119"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> IfElse:</span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
+<span id="cb119-4"><a href="#cb119-4" aria-hidden="true" tabindex="-1"></a>    then_branch: CommandSequence</span>
+<span id="cb119-5"><a href="#cb119-5" aria-hidden="true" tabindex="-1"></a>    else_branch: CommandSequence</span>
+<span id="cb119-6"><a href="#cb119-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-7"><a href="#cb119-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ...</span></span></code></pre></div>
+<div class="sourceCode" id="cb120"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> execute_command(cmd: Command, env: Environment, state: State) <span class="op">-&gt;</span> <span class="bu">tuple</span>[Environment, State]:</span>
+<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> cmd:</span>
+<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> IfElse(cond, then_branch, else_branch):</span>
+<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>            cond_val <span class="op">=</span> evaluate_expr(cond, env, state)</span>
+<span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(cond_val, <span class="bu">bool</span>):</span>
+<span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;If condition must be boolean&quot;</span>)</span>
+<span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a>            saved_next_loc <span class="op">=</span> state.next_loc</span>
+<span id="cb120-8"><a href="#cb120-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cond_val:</span>
+<span id="cb120-9"><a href="#cb120-9" aria-hidden="true" tabindex="-1"></a>                _, state1 <span class="op">=</span> execute_command_seq(then_branch, env, state)</span>
+<span id="cb120-10"><a href="#cb120-10" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Restore next_loc after block</span></span>
+<span id="cb120-11"><a href="#cb120-11" aria-hidden="true" tabindex="-1"></a>                state2 <span class="op">=</span> State(store<span class="op">=</span>state1.store, next_loc<span class="op">=</span>saved_next_loc)</span>
+<span id="cb120-12"><a href="#cb120-12" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> env, state2</span>
+<span id="cb120-13"><a href="#cb120-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb120-14"><a href="#cb120-14" aria-hidden="true" tabindex="-1"></a>                _, state1 <span class="op">=</span> execute_command_seq(else_branch, env, state)</span>
+<span id="cb120-15"><a href="#cb120-15" aria-hidden="true" tabindex="-1"></a>                state2 <span class="op">=</span> State(store<span class="op">=</span>state1.store, next_loc<span class="op">=</span>saved_next_loc)</span>
+<span id="cb120-16"><a href="#cb120-16" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> env, state2</span></code></pre></div>
+<p>This ensures that variables declared inside a branch are only visible
+within that branch, and their memory is reclaimed after the branch
+ends.</p>
+<p><strong>Example:</strong></p>
+<pre><code>var x = 1;
+if x == 1 then print 42 else print 0</code></pre>
+<p>This program prints <code>42</code> because the condition
+<code>x == 1</code> is true.</p>
+<h3 id="while-loops">2.2 While Loops</h3>
+<p>The <code>while</code> command allows repeated execution of a block
+of commands as long as a condition holds:</p>
+<pre><code>while &lt;condition&gt; do &lt;commands&gt;</code></pre>
+<ul>
+<li>The <code>&lt;condition&gt;</code> must be a boolean
+expression.</li>
+<li>The body can be a sequence of commands.</li>
+</ul>
+<h4 id="implementation-while-loops">Implementation: While Loops</h4>
+<div class="sourceCode" id="cb123"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> While:</span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>    body: CommandSequence</span>
+<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-6"><a href="#cb123-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ...</span></span></code></pre></div>
+<div class="sourceCode" id="cb124"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> execute_command(cmd: Command, env: Environment, state: State) <span class="op">-&gt;</span> <span class="bu">tuple</span>[Environment, State]:</span>
+<span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> cmd:</span>
+<span id="cb124-3"><a href="#cb124-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> While(cond, body):</span>
+<span id="cb124-4"><a href="#cb124-4" aria-hidden="true" tabindex="-1"></a>            cond_val <span class="op">=</span> evaluate_expr(cond, env, state)</span>
+<span id="cb124-5"><a href="#cb124-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(cond_val, <span class="bu">bool</span>):</span>
+<span id="cb124-6"><a href="#cb124-6" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">&quot;While condition must be boolean&quot;</span>)</span>
+<span id="cb124-7"><a href="#cb124-7" aria-hidden="true" tabindex="-1"></a>            saved_next_loc <span class="op">=</span> state.next_loc</span>
+<span id="cb124-8"><a href="#cb124-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cond_val:</span>
+<span id="cb124-9"><a href="#cb124-9" aria-hidden="true" tabindex="-1"></a>                _, state1 <span class="op">=</span> execute_command_seq(body, env, state)</span>
+<span id="cb124-10"><a href="#cb124-10" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Restore next_loc after block</span></span>
+<span id="cb124-11"><a href="#cb124-11" aria-hidden="true" tabindex="-1"></a>                state2 <span class="op">=</span> State(store<span class="op">=</span>state1.store, next_loc<span class="op">=</span>saved_next_loc)</span>
+<span id="cb124-12"><a href="#cb124-12" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> execute_command(While(cond, body), env, state2)</span>
+<span id="cb124-13"><a href="#cb124-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb124-14"><a href="#cb124-14" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> env, state</span></code></pre></div>
+<p><strong>Example:</strong></p>
+<pre><code>var n = 3;
+while n &gt; 0 do
+    print n;
+    n &lt;- n - 1</code></pre>
+<p>This program prints <code>3</code>, <code>2</code>, and
+<code>1</code> on separate lines.</p>
+<h2 id="block-local-variables-and-scoping">3. Block-Local Variables and
+Scoping</h2>
+<p>A major semantic change in this chapter is the introduction of
+<strong>block-local variables</strong>. Variables declared inside a
+block (such as the body of an <code>if</code>, <code>else</code>, or
+<code>while</code>) are only visible within that block. This is known as
+<strong>static (lexical) scoping</strong>.</p>
+<ul>
+<li>When a block ends, its local variables are no longer
+accessible.</li>
+<li>The implementation reuses memory locations for block-local variables
+by resetting the next available location counter after a block ends.
+This models stack allocation and prevents unbounded memory growth.</li>
+</ul>
+<h4 id="implementation-block-local-variables-and-lexical-scoping">Implementation:
+Block-Local Variables and Lexical Scoping</h4>
+<p>Block-local variables are managed using a stack-like memory model.
+Recall how allocation and deallocation work:</p>
+<div class="sourceCode" id="cb126"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> State:</span>
+<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a>    store: Callable[[<span class="bu">int</span>], MVal]</span>
+<span id="cb126-4"><a href="#cb126-4" aria-hidden="true" tabindex="-1"></a>    next_loc: <span class="bu">int</span></span></code></pre></div>
+<div class="sourceCode" id="cb127"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> allocate(state: State, value: MVal) <span class="op">-&gt;</span> <span class="bu">tuple</span>[Loc, State]:</span>
+<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a>    loc <span class="op">=</span> Loc(state.next_loc)</span>
+<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a>    prev_store <span class="op">=</span> state.store</span>
+<span id="cb127-4"><a href="#cb127-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> new_store(l: <span class="bu">int</span>) <span class="op">-&gt;</span> MVal:</span>
+<span id="cb127-5"><a href="#cb127-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> l <span class="op">==</span> loc.address:</span>
+<span id="cb127-6"><a href="#cb127-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> value</span>
+<span id="cb127-7"><a href="#cb127-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> prev_store(l)</span>
+<span id="cb127-8"><a href="#cb127-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loc, State(store<span class="op">=</span>new_store, next_loc<span class="op">=</span>loc.address <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<ul>
+<li><strong>Allocation</strong>: Each new variable gets a fresh location
+(<code>next_loc</code>), which is incremented.</li>
+<li><strong>Deallocation</strong>: After a block, <code>next_loc</code>
+is reset, so locations for block-local variables can be reused.</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb128"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> cond then</span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>    var x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span> <span class="bu">print</span> x</span>
+<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb128-4"><a href="#cb128-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> <span class="dv">0</span></span></code></pre></div>
+<p>Here, <code>x</code> is only accessible inside the <code>then</code>
+branch. After the branch, its memory location can be reused for other
+variables.</p>
+<h3 id="digression-memory-safety-and-buffer-over-read">Digression:
+Memory Safety and Buffer Over-Read</h3>
+<p>A <strong>buffer over-read</strong> occurs when a program reads data
+past the end of a buffer (an array or memory region), often due to
+incorrect pointer arithmetic or missing bounds checks. In C, this is a
+common source of security vulnerabilities, especially when working with
+stack-allocated arrays.</p>
+<p><strong>Example: Buffer Over-Read in C</strong></p>
+<div class="sourceCode" id="cb129"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> print_secret<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb129-4"><a href="#cb129-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span> buffer<span class="op">[</span><span class="dv">8</span><span class="op">]</span> <span class="op">=</span> <span class="st">&quot;hello&quot;</span><span class="op">;</span></span>
+<span id="cb129-5"><a href="#cb129-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span> secret<span class="op">[</span><span class="dv">8</span><span class="op">]</span> <span class="op">=</span> <span class="st">&quot;SECRET!&quot;</span><span class="op">;</span></span>
+<span id="cb129-6"><a href="#cb129-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">16</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb129-7"><a href="#cb129-7" aria-hidden="true" tabindex="-1"></a>        printf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%c</span><span class="st">&quot;</span><span class="op">,</span> buffer<span class="op">[</span>i<span class="op">]);</span> <span class="co">// Over-reads into secret</span></span>
+<span id="cb129-8"><a href="#cb129-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb129-9"><a href="#cb129-9" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb129-10"><a href="#cb129-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb129-11"><a href="#cb129-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb129-12"><a href="#cb129-12" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb129-13"><a href="#cb129-13" aria-hidden="true" tabindex="-1"></a>    print_secret<span class="op">();</span></span>
+<span id="cb129-14"><a href="#cb129-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb129-15"><a href="#cb129-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Output:</strong></p>
+<pre><code>helloSECRET!</code></pre>
+<p>Here, the loop prints not only the contents of <code>buffer</code>,
+but also the contents of the adjacent <code>secret</code> array, which
+is stored on the stack. This is a classic buffer over-read: the program
+leaks data from memory that should have been inaccessible, illustrating
+why careful memory management and scoping are crucial.</p>
+<h2 id="unified-operators-and-boolean-expressions">4. Unified Operators
+and Boolean Expressions</h2>
+<p>Our language now supports a unified set of operators:</p>
+<ul>
+<li><strong>Arithmetic:</strong> <code>+</code>, <code>-</code>,
+<code>*</code>, <code>/</code>, <code>%</code></li>
+<li><strong>Relational:</strong> <code>==</code>, <code>!=</code>,
 <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>,
 <code>&gt;=</code></li>
-<li>Logical operators: <code>and</code>, <code>or</code></li>
+<li><strong>Boolean:</strong> <code>and</code>, <code>or</code>,
+<code>not</code></li>
 </ul>
-<h3 id="ast-representation-2">AST Representation</h3>
-<p>We add new AST node types for booleans and binary operations:</p>
-<div class="sourceCode" id="cb118"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Boolean:</span>
-<span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a>    value: <span class="bu">bool</span></span>
-<span id="cb118-4"><a href="#cb118-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb118-5"><a href="#cb118-5" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb118-6"><a href="#cb118-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BinOp:</span>
-<span id="cb118-7"><a href="#cb118-7" aria-hidden="true" tabindex="-1"></a>    op: <span class="bu">str</span>  <span class="co"># &#39;+&#39;, &#39;-&#39;, &#39;*&#39;, &#39;/&#39;, &#39;==&#39;, &#39;!=&#39;, &#39;&lt;&#39;, &#39;&gt;&#39;, &#39;&lt;=&#39;, &#39;&gt;=&#39;, &#39;and&#39;, &#39;or&#39;</span></span>
-<span id="cb118-8"><a href="#cb118-8" aria-hidden="true" tabindex="-1"></a>    left: Expression</span>
-<span id="cb118-9"><a href="#cb118-9" aria-hidden="true" tabindex="-1"></a>    right: Expression</span></code></pre></div>
-<h2 id="section-3-conditional-expressions">Section 3: Conditional
-Expressions</h2>
-<h3 id="syntax-and-semantics-1">Syntax and Semantics</h3>
-<p>We add the <code>if</code> expression to our language:</p>
-<pre><code>if: &quot;if&quot; expr &quot;then&quot; expr &quot;else&quot; expr</code></pre>
-<p>This allows us to write expressions like:</p>
-<pre><code>if x &gt; 0 then x else -x</code></pre>
-<h3 id="ast-representation-3">AST Representation</h3>
-<div class="sourceCode" id="cb121"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> If:</span>
-<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
-<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a>    then_branch: Expression</span>
-<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>    else_branch: Expression</span></code></pre></div>
-<h2 id="section-4-parser-and-evaluation-changes">Section 4: Parser and
-Evaluation Changes</h2>
-<h3 id="parser-extensions">Parser Extensions</h3>
-<p>The parser is extended to recognize boolean literals, comparison and
-logical operators, and conditional expressions. For demonstration, we
-use a simple tuple-based parser:</p>
-<div class="sourceCode" id="cb122"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parse(expr):</span>
-<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">int</span>):</span>
-<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Number(expr)</span>
-<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">bool</span>):</span>
-<span id="cb122-5"><a href="#cb122-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Boolean(expr)</span>
-<span id="cb122-6"><a href="#cb122-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">str</span>):</span>
-<span id="cb122-7"><a href="#cb122-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Var(expr)</span>
-<span id="cb122-8"><a href="#cb122-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, <span class="bu">tuple</span>):</span>
-<span id="cb122-9"><a href="#cb122-9" aria-hidden="true" tabindex="-1"></a>        tag <span class="op">=</span> expr[<span class="dv">0</span>]</span>
-<span id="cb122-10"><a href="#cb122-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;let&#39;</span>:</span>
-<span id="cb122-11"><a href="#cb122-11" aria-hidden="true" tabindex="-1"></a>            _, name, value_expr, body_expr <span class="op">=</span> expr</span>
-<span id="cb122-12"><a href="#cb122-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> Let(name, parse(value_expr), parse(body_expr))</span>
-<span id="cb122-13"><a href="#cb122-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="op">==</span> <span class="st">&#39;if&#39;</span>:</span>
-<span id="cb122-14"><a href="#cb122-14" aria-hidden="true" tabindex="-1"></a>            _, cond, then_branch, else_branch <span class="op">=</span> expr</span>
-<span id="cb122-15"><a href="#cb122-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> If(parse(cond), parse(then_branch), parse(else_branch))</span>
-<span id="cb122-16"><a href="#cb122-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tag <span class="kw">in</span> {<span class="st">&#39;+&#39;</span>, <span class="st">&#39;-&#39;</span>, <span class="st">&#39;*&#39;</span>, <span class="st">&#39;/&#39;</span>, <span class="st">&#39;==&#39;</span>, <span class="st">&#39;!=&#39;</span>, <span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;&lt;=&#39;</span>, <span class="st">&#39;&gt;=&#39;</span>, <span class="st">&#39;and&#39;</span>, <span class="st">&#39;or&#39;</span>}:</span>
-<span id="cb122-17"><a href="#cb122-17" aria-hidden="true" tabindex="-1"></a>            _, left, right <span class="op">=</span> expr</span>
-<span id="cb122-18"><a href="#cb122-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> BinOp(tag, parse(left), parse(right))</span>
-<span id="cb122-19"><a href="#cb122-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Cannot parse: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
-<h3 id="evaluation-extensions">Evaluation Extensions</h3>
-<p>The evaluation function is extended to handle booleans, binary
-operations, and conditionals:</p>
-<div class="sourceCode" id="cb123"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> eval_expr(expr: Expression, env: Environment) <span class="op">-&gt;</span> DVal:</span>
-<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Number):</span>
-<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
-<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Boolean):</span>
-<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> expr.value</span>
-<span id="cb123-6"><a href="#cb123-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Var):</span>
-<span id="cb123-7"><a href="#cb123-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> env(expr.name)</span>
-<span id="cb123-8"><a href="#cb123-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, Let):</span>
-<span id="cb123-9"><a href="#cb123-9" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> eval_expr(expr.expr, env)</span>
-<span id="cb123-10"><a href="#cb123-10" aria-hidden="true" tabindex="-1"></a>        extended_env <span class="op">=</span> bind(env, expr.name, value)</span>
-<span id="cb123-11"><a href="#cb123-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> eval_expr(expr.body, extended_env)</span>
-<span id="cb123-12"><a href="#cb123-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, BinOp):</span>
-<span id="cb123-13"><a href="#cb123-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Short-circuit for &#39;and&#39; and &#39;or&#39;</span></span>
-<span id="cb123-14"><a href="#cb123-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;and&#39;</span>:</span>
-<span id="cb123-15"><a href="#cb123-15" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
-<span id="cb123-16"><a href="#cb123-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> left:</span>
-<span id="cb123-17"><a href="#cb123-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">False</span>  <span class="co"># short-circuit</span></span>
-<span id="cb123-18"><a href="#cb123-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
-<span id="cb123-19"><a href="#cb123-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> expr.op <span class="op">==</span> <span class="st">&#39;or&#39;</span>:</span>
-<span id="cb123-20"><a href="#cb123-20" aria-hidden="true" tabindex="-1"></a>            left <span class="op">=</span> eval_expr(expr.left, env)</span>
-<span id="cb123-21"><a href="#cb123-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> left:</span>
-<span id="cb123-22"><a href="#cb123-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">True</span>  <span class="co"># short-circuit</span></span>
-<span id="cb123-23"><a href="#cb123-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="bu">bool</span>(eval_expr(expr.right, env))</span>
-<span id="cb123-24"><a href="#cb123-24" aria-hidden="true" tabindex="-1"></a>        left <span class="op">=</span> eval_expr(expr.left, env)</span>
-<span id="cb123-25"><a href="#cb123-25" aria-hidden="true" tabindex="-1"></a>        right <span class="op">=</span> eval_expr(expr.right, env)</span>
-<span id="cb123-26"><a href="#cb123-26" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ... handle other operators ...</span></span>
-<span id="cb123-27"><a href="#cb123-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(expr, If):</span>
-<span id="cb123-28"><a href="#cb123-28" aria-hidden="true" tabindex="-1"></a>        cond <span class="op">=</span> eval_expr(expr.cond, env)</span>
-<span id="cb123-29"><a href="#cb123-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cond:</span>
-<span id="cb123-30"><a href="#cb123-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.then_branch, env)</span>
-<span id="cb123-31"><a href="#cb123-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
-<span id="cb123-32"><a href="#cb123-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> eval_expr(expr.else_branch, env)</span>
-<span id="cb123-33"><a href="#cb123-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;Unknown expression: </span><span class="sc">{</span>expr<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
-<h2 id="section-5-short-circuit-evaluation">Section 5: Short-Circuit
-Evaluation</h2>
-<p>Short-circuit evaluation means that in logical expressions like
-<code>and</code> and <code>or</code>, the second operand is only
-evaluated if necessary:</p>
+<p><strong>Example:</strong></p>
+<pre><code>var x = 10;
+var y = 5;
+if x &gt; y and not (y == 0) then print x / y else print 0</code></pre>
+<h2 id="grammar-extensions-1">5. Grammar Extensions</h2>
+<p>The grammar is extended to support control flow and booleans:</p>
+<pre><code>?command: assign
+        | print
+        | vardecl
+        | ifelse
+        | while
+
+assign: IDENTIFIER &quot;&lt;-&quot; expr
+print: &quot;print&quot; expr
+vardecl: &quot;var&quot; IDENTIFIER &quot;=&quot; expr
+ifelse: &quot;if&quot; expr &quot;then&quot; CommandSequence &quot;else&quot; CommandSequence
+while: &quot;while&quot; expr &quot;do&quot; CommandSequence
+
+?expr: ...</code></pre>
+<h2 id="abstract-syntax-tree-ast-extensions">6. Abstract Syntax Tree
+(AST) Extensions</h2>
+<p>The AST is extended to represent the new constructs:</p>
+<div class="sourceCode" id="cb133"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> IfElse:</span>
+<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
+<span id="cb133-4"><a href="#cb133-4" aria-hidden="true" tabindex="-1"></a>    then_branch: CommandSequence</span>
+<span id="cb133-5"><a href="#cb133-5" aria-hidden="true" tabindex="-1"></a>    else_branch: CommandSequence</span>
+<span id="cb133-6"><a href="#cb133-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb133-7"><a href="#cb133-7" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb133-8"><a href="#cb133-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> While:</span>
+<span id="cb133-9"><a href="#cb133-9" aria-hidden="true" tabindex="-1"></a>    cond: Expression</span>
+<span id="cb133-10"><a href="#cb133-10" aria-hidden="true" tabindex="-1"></a>    body: CommandSequence</span></code></pre></div>
+<p>Command sequences allow multiple commands in each branch or loop
+body.</p>
+<h2 id="ast-and-semantics-of-operators">6.1 AST and Semantics of
+Operators</h2>
+<h3 id="ast-node-for-operators">AST Node for Operators</h3>
+<p>Operators in the language are represented in the AST using the
+<code>Apply</code> node:</p>
+<div class="sourceCode" id="cb134"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Apply:</span>
+<span id="cb134-3"><a href="#cb134-3" aria-hidden="true" tabindex="-1"></a>    op: <span class="bu">str</span></span>
+<span id="cb134-4"><a href="#cb134-4" aria-hidden="true" tabindex="-1"></a>    args: <span class="bu">list</span>[Expression]</span></code></pre></div>
 <ul>
-<li>For <code>and</code>, if the first operand is <code>False</code>,
-the result is <code>False</code> (second operand not evaluated).</li>
-<li>For <code>or</code>, if the first operand is <code>True</code>, the
-result is <code>True</code> (second operand not evaluated).</li>
+<li><code>op</code> is the operator name (e.g., ‘+’, ‘and’, ‘==’).</li>
+<li><code>args</code> is a list of argument expressions (one for unary,
+two for binary operators).</li>
 </ul>
-<p>This is important for avoiding errors and improving efficiency.</p>
-<h3 id="example-avoiding-division-by-zero">Example: Avoiding Division by
-Zero</h3>
-<div class="sourceCode" id="cb124"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
-<span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a>ast <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
-<span id="cb124-3"><a href="#cb124-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast, empty_env))  <span class="co"># Output: 2 (no error)</span></span></code></pre></div>
-<h2 id="section-6-non-trivial-examples">Section 6: Non-trivial
-Examples</h2>
-<h3 id="example-1-simple-conditional-with-binding">Example 1: Simple
-Conditional with Binding</h3>
-<div class="sourceCode" id="cb125"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 10 in if x &gt; 5 then x else 0</span></span>
-<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>ast1 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">10</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;&gt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">5</span>), <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>)))</span>
-<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast1, empty_env))  <span class="co"># Output: 10</span></span></code></pre></div>
-<h3 id="example-2-nested-binding-and-conditionals">Example 2: Nested
-Binding and Conditionals</h3>
-<div class="sourceCode" id="cb126"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 3 in let y = 4 in if (x &lt; y) and (y &lt; 10) then x + y else 0</span></span>
-<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a>ast2 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">3</span>, (<span class="st">&#39;let&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">4</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), (<span class="st">&#39;&lt;&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="dv">10</span>)), (<span class="st">&#39;+&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>), <span class="dv">0</span>))))</span>
-<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast2, empty_env))  <span class="co"># Output: 7</span></span></code></pre></div>
-<h3 id="example-3-short-circuiting-to-avoid-errors">Example 3:
-Short-circuiting to Avoid Errors</h3>
-<div class="sourceCode" id="cb127"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="co"># let x = 0 in if (x != 0) and (10 // x &gt; 1) then 1 else 2</span></span>
-<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a>ast3 <span class="op">=</span> parse((<span class="st">&#39;let&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>, (<span class="st">&#39;if&#39;</span>, (<span class="st">&#39;and&#39;</span>, (<span class="st">&#39;!=&#39;</span>, <span class="st">&#39;x&#39;</span>, <span class="dv">0</span>), (<span class="st">&#39;&gt;&#39;</span>, (<span class="st">&#39;/&#39;</span>, <span class="dv">10</span>, <span class="st">&#39;x&#39;</span>), <span class="dv">1</span>)), <span class="dv">1</span>, <span class="dv">2</span>)))</span>
-<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(eval_expr(ast3, empty_env))  <span class="co"># Output: 2</span></span></code></pre></div>
-<h2 id="section-7-conclusion-and-next-steps">Section 7: Conclusion and
-Next Steps</h2>
-<p>Adding booleans and conditionals makes our mini-language much more
-expressive, enabling it to represent logic and control flow. In future
-chapters, we will build on this by adding:</p>
+<h3 id="operator-class">Operator Class</h3>
+<p>All operators are stored in the environment as <code>Operator</code>
+objects:</p>
+<div class="sourceCode" id="cb135"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Operator:</span>
+<span id="cb135-3"><a href="#cb135-3" aria-hidden="true" tabindex="-1"></a>    arity: <span class="bu">int</span></span>
+<span id="cb135-4"><a href="#cb135-4" aria-hidden="true" tabindex="-1"></a>    fn: Callable[[<span class="bu">list</span>[EVal]], EVal]</span></code></pre></div>
 <ul>
-<li>Iteration (while and for loops)</li>
-<li>Functions and application</li>
-<li>Recursion</li>
+<li><code>arity</code> is the number of arguments the operator
+expects.</li>
+<li><code>fn</code> is the function implementing the operator’s
+semantics.</li>
 </ul>
-<p>These features will allow us to write even more powerful and
-interesting programs in our mini-language.</p>
+<h3 id="semantics-of-operator-application">Semantics of Operator
+Application</h3>
+<p>Operator application is handled in the expression evaluator as
+follows:</p>
+<div class="sourceCode" id="cb136"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate_expr(expr: Expression, env: Environment, state: State) <span class="op">-&gt;</span> EVal:</span>
+<span id="cb136-2"><a href="#cb136-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> expr:</span>
+<span id="cb136-3"><a href="#cb136-3" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ...</span></span>
+<span id="cb136-4"><a href="#cb136-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> Apply(op, args):</span>
+<span id="cb136-5"><a href="#cb136-5" aria-hidden="true" tabindex="-1"></a>            arg_vals <span class="op">=</span> [evaluate_expr(a, env, state) <span class="cf">for</span> a <span class="kw">in</span> args]</span>
+<span id="cb136-6"><a href="#cb136-6" aria-hidden="true" tabindex="-1"></a>            op_val <span class="op">=</span> lookup(env, op)</span>
+<span id="cb136-7"><a href="#cb136-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="bu">isinstance</span>(op_val, Operator):</span>
+<span id="cb136-8"><a href="#cb136-8" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> op_val.arity <span class="op">!=</span> <span class="bu">len</span>(arg_vals):</span>
+<span id="cb136-9"><a href="#cb136-9" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">raise</span> <span class="pp">ValueError</span>(</span>
+<span id="cb136-10"><a href="#cb136-10" aria-hidden="true" tabindex="-1"></a>                        <span class="ss">f&quot;Operator &#39;</span><span class="sc">{</span>op<span class="sc">}</span><span class="ss">&#39; expects </span><span class="sc">{</span>op_val<span class="sc">.</span>arity<span class="sc">}</span><span class="ss"> arguments, got </span><span class="sc">{</span><span class="bu">len</span>(arg_vals)<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="cb136-11"><a href="#cb136-11" aria-hidden="true" tabindex="-1"></a>                    )</span>
+<span id="cb136-12"><a href="#cb136-12" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> op_val.fn(arg_vals)</span>
+<span id="cb136-13"><a href="#cb136-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;</span><span class="sc">{</span>op<span class="sc">}</span><span class="ss"> is not an operator&quot;</span>)</span></code></pre></div>
+<ul>
+<li>The evaluator checks that the operator exists and that the number of
+arguments matches its arity.</li>
+<li>If the check passes, the operator’s function is applied to the
+evaluated arguments.</li>
+<li>If the check fails, a runtime error is raised.</li>
+</ul>
+<h3 id="example-operator-application">Example: Operator Application</h3>
+<div class="sourceCode" id="cb137"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example: evaluating x + y</span></span>
+<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a>Apply(op<span class="op">=</span><span class="st">&#39;+&#39;</span>, args<span class="op">=</span>[Var(<span class="st">&#39;x&#39;</span>), Var(<span class="st">&#39;y&#39;</span>)])</span></code></pre></div>
+<p>This node will look up the ‘+’ operator in the environment, evaluate
+<code>x</code> and <code>y</code>, check arity, and then apply the
+addition function to the results.</p>
+<h3 id="runtime-type-and-arity-checks">Runtime Type and Arity
+Checks</h3>
+<p>Operator application is checked at runtime for correct arity and
+types, ensuring safe execution and clear error messages. For example,
+applying <code>and</code> to non-booleans or dividing by zero will raise
+an error.</p>
+<h2 id="examples-of-control-flow-in-action">7. Examples of Control Flow
+in Action</h2>
+<h3 id="example-1-if-then-else">Example 1: If-Then-Else</h3>
+<pre><code>var x = 1;
+if x == 1 then print 42 else print 0</code></pre>
+<p><strong>Output:</strong></p>
+<pre><code>42</code></pre>
+<h3 id="example-2-while-loop">Example 2: While Loop</h3>
+<pre><code>var n = 3;
+while n &gt; 0 do print n; n &lt;- n - 1</code></pre>
+<p><strong>Output:</strong></p>
+<pre><code>3
+2
+1</code></pre>
+<h3 id="example-3-euclids-algorithm-gcd-using-subtraction">Example 3:
+Euclid’s Algorithm (GCD) Using Subtraction</h3>
+<pre><code>var a = 48; var b = 18;
+while b != 0 do
+    if a &gt; b then a &lt;- a - b else b &lt;- b - a;
+print a</code></pre>
+<p><strong>Output:</strong></p>
+<pre><code>6</code></pre>
+<h2 id="comparison-with-previous-chapters">8. Comparison with Previous
+Chapters</h2>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 61%" />
+</colgroup>
+<thead>
+<tr>
+<th>Chapter 6: State</th>
+<th>Chapter 7: Control Flow</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State and variable assignment</td>
+<td>Adds conditionals and loops</td>
+</tr>
+<tr>
+<td>No control flow</td>
+<td>Programs can branch and repeat</td>
+</tr>
+<tr>
+<td>Variables global to block</td>
+<td>Block-local variable scoping</td>
+</tr>
+<tr>
+<td>Only arithmetic expressions</td>
+<td>Boolean and relational expressions</td>
+</tr>
+<tr>
+<td>Arithmetic expressions only</td>
+<td>Arithmetic, boolean, and relational expressions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conclusion-and-next-steps">9. Conclusion and Next Steps</h2>
+<p>With the addition of control flow, our mini-language can now express
+a wide range of algorithms and computations. Block-local variables and
+unified operators bring us closer to the features of real-world
+programming languages.</p>
+<p>In the next chapter, we will explore more advanced features, such as
+functions and closures, and discuss the semantic challenges they
+introduce.</p>
+<h2 id="exercises-2">10. Exercises</h2>
+<ol type="1">
+<li><strong>Write a program that prints the first 5 even numbers using a
+while loop.</strong></li>
+<li><strong>Modify the language to support nested if-then-else
+statements.</strong></li>
+<li><strong>Experiment with block-local variables: what happens if you
+declare a variable inside an if or while block?</strong></li>
+<li><strong>Implement a program that computes the factorial of a number
+using a while loop.</strong></li>
+</ol>
+<h2 id="appendix-closures-denotable-values-and-state">Appendix:
+Closures, Denotable Values, and State</h2>
+<p>Closures (functions together with their captured environment) are a
+prime example of a value that can be <strong>denoted</strong> (named and
+referenced in the environment), but not <strong>expressed</strong>
+(evaluated to a simple value) or <strong>memorized</strong> (stored in
+the state), unless special provisions are made.</p>
+<h3 id="why-closures-are-special">Why Closures Are Special</h3>
+<ul>
+<li>In a language with lexical scoping, a closure “remembers” the
+environment in which it was created, including variables that may have
+gone out of scope.</li>
+<li>If closures are allowed to be stored in state (e.g., assigned to
+variables), the variables they capture can outlive their lexical scope,
+breaking the clean separation between environment (static, lexical) and
+state (dynamic, mutable).</li>
+<li>This can lead to subtle bugs and makes reasoning about programs more
+complex.</li>
+</ul>
+<h3 id="special-provisions-for-closures">Special Provisions for
+Closures</h3>
+<p>To allow closures to be stored in state safely, languages typically
+provide:</p>
+<ul>
+<li><strong>Heap allocation for environments:</strong> Captured
+variables are stored on the heap, so they persist as long as the closure
+does, not just for the duration of the block.</li>
+<li><strong>Garbage collection or reference counting:</strong> To
+reclaim memory when closures and their environments are no longer
+accessible.</li>
+<li><strong>First-class environments:</strong> Environments are
+represented as first-class values that can be stored, passed, and
+manipulated at runtime.</li>
+</ul>
+<h4 id="example-javascript">Example (JavaScript):</h4>
+<div class="sourceCode" id="cb144"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">makeCounter</span>() {</span>
+<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb144-3"><a href="#cb144-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">function</span> () {</span>
+<span id="cb144-4"><a href="#cb144-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">++</span>x<span class="op">;</span></span>
+<span id="cb144-5"><a href="#cb144-5" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb144-6"><a href="#cb144-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb144-7"><a href="#cb144-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> counter <span class="op">=</span> <span class="fu">makeCounter</span>()<span class="op">;</span></span>
+<span id="cb144-8"><a href="#cb144-8" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="fu">counter</span>())<span class="op">;</span> <span class="co">// 1</span></span>
+<span id="cb144-9"><a href="#cb144-9" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="fu">counter</span>())<span class="op">;</span> <span class="co">// 2</span></span></code></pre></div>
+<p>Here, <code>x</code> lives as long as the closure does, even after
+<code>makeCounter</code> has returned.</p>
+<h3 id="in-our-mini-language">In Our Mini-Language</h3>
+<p>In the current chapter, only simple values (like numbers and
+booleans) are allowed to be stored in state. Closures are not yet
+supported as storable values, which keeps the semantics simple and
+reasoning about programs tractable. Supporting closures as storable
+values requires the special provisions described above.</p>
 </body>
 </html>
