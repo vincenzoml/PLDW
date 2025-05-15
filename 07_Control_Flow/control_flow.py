@@ -523,7 +523,6 @@ def execute_command(
                 raise ValueError(f"Assignment to undeclared variable '{name}'")
 
         case Print(expr):
-            # MORALLY THIS IS THE IDENTITY FUNCTION
             value = evaluate_expr(expr, env, state)
             print(value)
             return env, state
