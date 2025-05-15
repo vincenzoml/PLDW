@@ -1,12 +1,15 @@
 """
 Lecture 7: Control flow
 
+
 Minimal changes from Lecture 6:
 1. Added if/while commands (conditions must be boolean)
 2. Expressions support booleans and unified ops (arithmetic, relational, boolean)
 3. All operators stored as Operator(arity, fn) in environment
 4. Unified Apply node for all operator applications in AST
 5. Runtime type and arity checks for operators
+
+Scoping rules: This language uses static (lexical) scoping with block-local variables. Variables declared inside a block (such as if, else, or while) are only visible within that block and are not accessible outside of it.
 """
 
 from __future__ import annotations
