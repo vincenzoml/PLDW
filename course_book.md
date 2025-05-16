@@ -1,7 +1,7 @@
 ---
 title: Programming Languages Design Workshop
 author: Vincenzo Ciancia
-date: May 15, 2025
+date: May 16, 2025
 ---
 
 \newpage
@@ -3250,11 +3250,7 @@ Command sequences allow multiple commands in each branch or loop body.
 
 
 
-## 6.1 AST and Semantics of Operators
-
-
-
-### AST Node for Operators
+### 6.1 AST and Semantics of Operators
 
 Operators in the language are represented in the AST using the `Apply` node:
 
@@ -3268,25 +3264,17 @@ class Apply:
 - `op` is the operator name (e.g., '+', 'and', '==').
 - `args` is a list of argument expressions (one for unary, two for binary operators).
 
-
-
-### Operator Class
-
 All operators are stored in the environment as `Operator` objects:
 
 ```python
 @dataclass
 class Operator:
-    arity: int
+    type: tuple[list[type], type]  # (argument types, return type)
     fn: Callable[[list[EVal]], EVal]
 ```
 
-- `arity` is the number of arguments the operator expects.
+- `type` is a tuple where the first element is a list of argument types (e.g., `[int, int]` for binary integer operators, `[bool]` for unary boolean operators), and the second element is the return type.
 - `fn` is the function implementing the operator's semantics.
-
-
-
-### Semantics of Operator Application
 
 Operator application is handled in the expression evaluator as follows:
 
@@ -3298,36 +3286,34 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
             arg_vals = [evaluate_expr(a, env, state) for a in args]
             op_val = lookup(env, op)
             if isinstance(op_val, Operator):
-                if op_val.arity != len(arg_vals):
+                expected_types, _ = op_val.type
+                if len(expected_types) != len(arg_vals):
                     raise ValueError(
-                        f"Operator '{op}' expects {op_val.arity} arguments, got {len(arg_vals)}"
+                        f"Operator '{op}' expects {len(expected_types)} arguments, got {len(arg_vals)}"
                     )
+                for i, (expected, actual) in enumerate(zip(expected_types, arg_vals)):
+                    if type(actual) is not expected:
+                        raise ValueError(
+                            f"Operator '{op}' argument {i+1} expects type {expected.__name__}, got {type(actual).__name__}"
+                        )
                 return op_val.fn(arg_vals)
             raise ValueError(f"{op} is not an operator")
 ```
 
+- The evaluator checks that the operator exists, that the number of arguments matches its type signature, and that each argument matches the expected type.
+- If all checks pass, the operator's function is applied to the evaluated arguments.
+- If any check fails, a runtime error is raised.
 
+Operator application is checked at runtime for both correct arity and argument types (the type signature), ensuring safe execution and clear error messages. For example, applying `and` to non-booleans or dividing by zero will raise an error.
 
-- The evaluator checks that the operator exists and that the number of arguments matches its arity.
-- If the check passes, the operator's function is applied to the evaluated arguments.
-- If the check fails, a runtime error is raised.
-
-
-
-### Example: Operator Application
+**Example:**
 
 ```python
 # Example: evaluating x + y
 Apply(op='+', args=[Var('x'), Var('y')])
 ```
 
-This node will look up the '+' operator in the environment, evaluate `x` and `y`, check arity, and then apply the addition function to the results.
-
-
-
-### Runtime Type and Arity Checks
-
-Operator application is checked at runtime for correct arity and types, ensuring safe execution and clear error messages. For example, applying `and` to non-booleans or dividing by zero will raise an error.
+This node will look up the '+' operator in the environment, evaluate `x` and `y`, check the number and types of arguments, and then apply the addition function to the results.
 
 
 
@@ -3385,7 +3371,7 @@ print a
 ## 8. Comparison with Previous Chapters
 
 | Chapter 6: State              | Chapter 7: Control Flow                         |
-| ----------------------------- | ----------------------------------------------- |
+| :---------------------------- | :---------------------------------------------- |
 | State and variable assignment | Adds conditionals and loops                     |
 | No control flow               | Programs can branch and repeat                  |
 | Variables global to block     | Block-local variable scoping                    |
@@ -3402,20 +3388,9 @@ In the next chapter, we will explore more advanced features, such as functions a
 
 
 
-## 10. Exercises
-
-1. **Write a program that prints the first 5 even numbers using a while loop.**
-2. **Modify the language to support nested if-then-else statements.**
-3. **Experiment with block-local variables: what happens if you declare a variable inside an if or while block?**
-4. **Implement a program that computes the factorial of a number using a while loop.**
-
-
-
 ## Appendix: Closures, Denotable Values, and State
 
-
-
-Closures (functions together with their captured environment) are a prime example of a value that can be **denoted** (named and referenced in the environment), but not **expressed** (evaluated to a simple value) or **memorized** (stored in the state), unless special provisions are made.
+Closures (functions together with their captured environment) are a prime example of a value that can be **denoted** (named and referenced in the environment), but not **expressed** (evaluated to a simple value) or **stored as a value in the program's state**, unless special provisions are made.
 
 
 

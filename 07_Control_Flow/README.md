@@ -296,11 +296,7 @@ Command sequences allow multiple commands in each branch or loop body.
 
 <!-- slide -->
 
-## 6.1 AST and Semantics of Operators
-
-<!-- slide -->
-
-### AST Node for Operators
+### 6.1 AST and Semantics of Operators
 
 Operators in the language are represented in the AST using the `Apply` node:
 
@@ -314,10 +310,6 @@ class Apply:
 - `op` is the operator name (e.g., '+', 'and', '==').
 - `args` is a list of argument expressions (one for unary, two for binary operators).
 
-<!-- slide -->
-
-### Operator Class
-
 All operators are stored in the environment as `Operator` objects:
 
 ```python
@@ -329,10 +321,6 @@ class Operator:
 
 - `type` is a tuple where the first element is a list of argument types (e.g., `[int, int]` for binary integer operators, `[bool]` for unary boolean operators), and the second element is the return type.
 - `fn` is the function implementing the operator's semantics.
-
-<!-- slide -->
-
-### Semantics of Operator Application
 
 Operator application is handled in the expression evaluator as follows:
 
@@ -362,9 +350,9 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
 - If all checks pass, the operator's function is applied to the evaluated arguments.
 - If any check fails, a runtime error is raised.
 
-<!-- slide -->
+Operator application is checked at runtime for both correct arity and argument types (the type signature), ensuring safe execution and clear error messages. For example, applying `and` to non-booleans or dividing by zero will raise an error.
 
-### Example: Operator Application
+**Example:**
 
 ```python
 # Example: evaluating x + y
@@ -372,12 +360,6 @@ Apply(op='+', args=[Var('x'), Var('y')])
 ```
 
 This node will look up the '+' operator in the environment, evaluate `x` and `y`, check the number and types of arguments, and then apply the addition function to the results.
-
-<!-- slide -->
-
-### Runtime Type and Arity Checks
-
-Operator application is checked at runtime for both correct arity and argument types (the type signature), ensuring safe execution and clear error messages. For example, applying `and` to non-booleans or dividing by zero will raise an error.
 
 <!-- slide -->
 
@@ -435,7 +417,7 @@ print a
 ## 8. Comparison with Previous Chapters
 
 | Chapter 6: State              | Chapter 7: Control Flow                         |
-| ----------------------------- | ----------------------------------------------- |
+| :---------------------------- | :---------------------------------------------- |
 | State and variable assignment | Adds conditionals and loops                     |
 | No control flow               | Programs can branch and repeat                  |
 | Variables global to block     | Block-local variable scoping                    |
@@ -452,20 +434,9 @@ In the next chapter, we will explore more advanced features, such as functions a
 
 <!-- slide -->
 
-## 10. Exercises
-
-1. **Write a program that prints the first 5 even numbers using a while loop.**
-2. **Modify the language to support nested if-then-else statements.**
-3. **Experiment with block-local variables: what happens if you declare a variable inside an if or while block?**
-4. **Implement a program that computes the factorial of a number using a while loop.**
-
-<!-- slide -->
-
 ## Appendix: Closures, Denotable Values, and State
 
-<!-- slide -->
-
-Closures (functions together with their captured environment) are a prime example of a value that can be **denoted** (named and referenced in the environment), but not **expressed** (evaluated to a simple value) or **memorized** (stored in the state), unless special provisions are made.
+Closures (functions together with their captured environment) are a prime example of a value that can be **denoted** (named and referenced in the environment), but not **expressed** (evaluated to a simple value) or **stored as a value in the program's state**, unless special provisions are made.
 
 <!-- slide -->
 
