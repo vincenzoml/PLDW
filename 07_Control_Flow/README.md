@@ -323,11 +323,11 @@ All operators are stored in the environment as `Operator` objects:
 ```python
 @dataclass
 class Operator:
-    arity: int
+    type: tuple[list[type], type]  # (argument types, return type)
     fn: Callable[[list[EVal]], EVal]
 ```
 
-- `arity` is the number of arguments the operator expects.
+- `type` is a tuple where the first element is a list of argument types (e.g., `[int, int]` for binary integer operators, `[bool]` for unary boolean operators), and the second element is the return type.
 - `fn` is the function implementing the operator's semantics.
 
 <!-- slide -->
@@ -344,19 +344,23 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
             arg_vals = [evaluate_expr(a, env, state) for a in args]
             op_val = lookup(env, op)
             if isinstance(op_val, Operator):
-                if op_val.arity != len(arg_vals):
+                expected_types, _ = op_val.type
+                if len(expected_types) != len(arg_vals):
                     raise ValueError(
-                        f"Operator '{op}' expects {op_val.arity} arguments, got {len(arg_vals)}"
+                        f"Operator '{op}' expects {len(expected_types)} arguments, got {len(arg_vals)}"
                     )
+                for i, (expected, actual) in enumerate(zip(expected_types, arg_vals)):
+                    if type(actual) is not expected:
+                        raise ValueError(
+                            f"Operator '{op}' argument {i+1} expects type {expected.__name__}, got {type(actual).__name__}"
+                        )
                 return op_val.fn(arg_vals)
             raise ValueError(f"{op} is not an operator")
 ```
 
-<!-- slide -->
-
-- The evaluator checks that the operator exists and that the number of arguments matches its arity.
-- If the check passes, the operator's function is applied to the evaluated arguments.
-- If the check fails, a runtime error is raised.
+- The evaluator checks that the operator exists, that the number of arguments matches its type signature, and that each argument matches the expected type.
+- If all checks pass, the operator's function is applied to the evaluated arguments.
+- If any check fails, a runtime error is raised.
 
 <!-- slide -->
 
@@ -367,13 +371,13 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
 Apply(op='+', args=[Var('x'), Var('y')])
 ```
 
-This node will look up the '+' operator in the environment, evaluate `x` and `y`, check arity, and then apply the addition function to the results.
+This node will look up the '+' operator in the environment, evaluate `x` and `y`, check the number and types of arguments, and then apply the addition function to the results.
 
 <!-- slide -->
 
 ### Runtime Type and Arity Checks
 
-Operator application is checked at runtime for correct arity and types, ensuring safe execution and clear error messages. For example, applying `and` to non-booleans or dividing by zero will raise an error.
+Operator application is checked at runtime for both correct arity and argument types (the type signature), ensuring safe execution and clear error messages. For example, applying `and` to non-booleans or dividing by zero will raise an error.
 
 <!-- slide -->
 
