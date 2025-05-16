@@ -4,7 +4,7 @@ Lecture 7: Control flow
 Minimal changes from Lecture 6:
 1. Added if/while commands (conditions must be boolean)
 2. Expressions support booleans and unified ops (arithmetic, relational, boolean)
-3. All operators stored as Operator(arity, fn) in environment
+3. All operators stored as Operator(type, fn) in environment
 4. Unified Apply node for all operator applications in AST
 5. Runtime type and arity checks for operators
 
@@ -83,16 +83,16 @@ def access(state: State, addr: int) -> MVal:
 def empty_environment() -> Environment:
     """Create an empty environment function"""
 
-    def env(name: str) -> int:
+    def env(name: str) -> DVal:
         raise ValueError(f"Undefined identifier: {name}")
 
     return env
 
 
-# Operator dataclass for arity and function
+# Operator dataclass for type and function
 @dataclass
 class Operator:
-    arity: int
+    type: tuple[list[type], type]  # (argument types, return type)
     fn: Callable[[list[EVal]], EVal]
 
 
@@ -170,22 +170,22 @@ def create_initial_env_state() -> tuple[Environment, State]:
     state = empty_state()
 
     # Arithmetic operators
-    env = bind(env, "+", Operator(2, add))
-    env = bind(env, "-", Operator(2, subtract))
-    env = bind(env, "*", Operator(2, multiply))
-    env = bind(env, "/", Operator(2, divide))
-    env = bind(env, "%", Operator(2, modulo))
+    env = bind(env, "+", Operator(([int, int], int), add))
+    env = bind(env, "-", Operator(([int, int], int), subtract))
+    env = bind(env, "*", Operator(([int, int], int), multiply))
+    env = bind(env, "/", Operator(([int, int], int), divide))
+    env = bind(env, "%", Operator(([int, int], int), modulo))
     # Relational operators
-    env = bind(env, "==", Operator(2, eq))
-    env = bind(env, "!=", Operator(2, ne))
-    env = bind(env, "<", Operator(2, lt))
-    env = bind(env, ">", Operator(2, gt))
-    env = bind(env, "<=", Operator(2, le))
-    env = bind(env, ">=", Operator(2, ge))
+    env = bind(env, "==", Operator(([int, int], bool), eq))
+    env = bind(env, "!=", Operator(([int, int], bool), ne))
+    env = bind(env, "<", Operator(([int, int], bool), lt))
+    env = bind(env, ">", Operator(([int, int], bool), gt))
+    env = bind(env, "<=", Operator(([int, int], bool), le))
+    env = bind(env, ">=", Operator(([int, int], bool), ge))
     # Boolean operators
-    env = bind(env, "and", Operator(2, land))
-    env = bind(env, "or", Operator(2, lor))
-    env = bind(env, "not", Operator(1, lnot))
+    env = bind(env, "and", Operator(([bool, bool], bool), land))
+    env = bind(env, "or", Operator(([bool, bool], bool), lor))
+    env = bind(env, "not", Operator(([bool], bool), lnot))
 
     return env, state
 
@@ -498,10 +498,16 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
             ]  # python idiom for list comprehension
             op_val = lookup(env, op)
             if isinstance(op_val, Operator):
-                if op_val.arity != len(arg_vals):
+                expected_types, _ = op_val.type
+                if len(expected_types) != len(arg_vals):
                     raise ValueError(
-                        f"Operator '{op}' expects {op_val.arity} arguments, got {len(arg_vals)}"
+                        f"Operator '{op}' expects {len(expected_types)} arguments, got {len(arg_vals)}"
                     )
+                for i, (expected, actual) in enumerate(zip(expected_types, arg_vals)):
+                    if type(actual) is not expected:
+                        raise ValueError(
+                            f"Operator '{op}' argument {i+1} expects type {expected.__name__}, got {type(actual).__name__}"
+                        )
                 return op_val.fn(arg_vals)
             raise ValueError(f"{op} is not an operator")
         case Var(name):
