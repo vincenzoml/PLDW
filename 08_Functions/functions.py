@@ -774,8 +774,3 @@ if __name__ == "__main__":
 
     # Run the tests
     run_tests()
-
-
-# Update Expression and Command types
-# Expression = Number | Bool | Var | Let | Apply | FunctionApp
-# Command = Assign | Print | VarDecl | IfElse | While | FunctionDecl
