@@ -222,8 +222,8 @@ grammar = r"""
     assign: IDENTIFIER "<-" expr
     print: "print" expr
     vardecl: "var" IDENTIFIER "=" expr
-    ifelse: "if" expr "then" command_seq "else" command_seq
-    while: "while" expr "do" command_seq
+    ifelse: "if" expr "then" command_seq "else" command_seq "endif"
+    while: "while" expr "do" command_seq "done"
             
     ?expr: bin | mono | let
     mono: ground | paren | var | unary
@@ -648,13 +648,13 @@ def run_tests():
         # Longer program with multiple operations
         "var x = 10; var y = 20; var z = x + y; print z; x <- 30; print x + y",
         # 1. If-then-else on a variable
-        "var x = 1; if x == 1 then print 42 else print 0",
+        "var x = 1; if x == 1 then print 42 else print 0 endif",
         # 1b. If-then-else on a boolean
-        "if true then print 1 else print 0",
+        "if true then print 1 else print 0 endif",
         # 2. Print N times by decrementing a variable
-        "var n = 3; while n > 0 do print n; n <- n - 1",
+        "var n = 3; while n > 0 do print n; n <- n - 1 done",
         # 3. Euclid's algorithm using subtraction
-        "var a = 48; var b = 18; while b != 0 do if a > b then a <- a - b else b <- b - a; print a",
+        "var a = 48; var b = 18; while b != 0 do if a > b then a <- a - b else b <- b - a endif; print a done",
     ]
 
     print("Running tests:")
