@@ -678,6 +678,8 @@ Fragment</a></li>
 </ul></li>
 <li><a href="#abstract-syntax-tree-ast-changes" id="toc-abstract-syntax-tree-ast-changes">3. Abstract Syntax Tree (AST)
 Changes</a></li>
+<li><a href="#semantic-domains-the-role-of-closures" id="toc-semantic-domains-the-role-of-closures">Semantic Domains: The
+Role of Closures</a></li>
 <li><a href="#semantics-of-functions-and-closures" id="toc-semantics-of-functions-and-closures">4. Semantics of Functions
 and Closures</a>
 <ul>
@@ -3561,20 +3563,28 @@ applications:</p>
 <span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FunctionApp:</span>
 <span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
 <span id="cb150-4"><a href="#cb150-4" aria-hidden="true" tabindex="-1"></a>    args: <span class="bu">list</span>[Expression]</span></code></pre></div>
-<div class="sourceCode" id="cb151"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb151-1"><a href="#cb151-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb151-2"><a href="#cb151-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Closure:</span>
-<span id="cb151-3"><a href="#cb151-3" aria-hidden="true" tabindex="-1"></a>    function: FunctionDecl</span>
-<span id="cb151-4"><a href="#cb151-4" aria-hidden="true" tabindex="-1"></a>    env: Environment</span></code></pre></div>
 <ul>
 <li><strong>FunctionDecl</strong>: Represents a function’s name,
 parameter list, and body</li>
 <li><strong>FunctionApp</strong>: Represents a function call with
 arguments</li>
+</ul>
+<h2 id="semantic-domains-the-role-of-closures">Semantic Domains: The
+Role of Closures</h2>
+<p>To support functions and closures, we update our semantic domain of
+denotable values as follows:</p>
+<div class="sourceCode" id="cb151"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb151-1"><a href="#cb151-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb151-2"><a href="#cb151-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Closure:</span>
+<span id="cb151-3"><a href="#cb151-3" aria-hidden="true" tabindex="-1"></a>    function: FunctionDecl</span>
+<span id="cb151-4"><a href="#cb151-4" aria-hidden="true" tabindex="-1"></a>    env: Environment</span>
+<span id="cb151-5"><a href="#cb151-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb151-6"><a href="#cb151-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Denotable values (DVal): can be associated with names in the environment</span></span>
+<span id="cb151-7"><a href="#cb151-7" aria-hidden="true" tabindex="-1"></a><span class="co"># NEW: Closure is now a denotable value!</span></span>
+<span id="cb151-8"><a href="#cb151-8" aria-hidden="true" tabindex="-1"></a>DVal <span class="op">=</span> EVal <span class="op">|</span> Loc <span class="op">|</span> Operator <span class="op">|</span> Closure</span></code></pre></div>
+<ul>
 <li><strong>Closure</strong>: Represents a function paired with its
 declaration environment (lexical scoping)</li>
 </ul>
-<p>These fit into the existing AST alongside expressions, commands, and
-operators.</p>
 <h2 id="semantics-of-functions-and-closures">4. Semantics of Functions
 and Closures</h2>
 <h3 id="function-declaration-and-closure-creation">Function Declaration
@@ -3697,8 +3707,6 @@ for arguments.</p>
 <ul>
 <li><strong>Dynamic scoping</strong>: pass the calling environment
 instead of the closure’s environment</li>
-<li><strong>Pass both environment and store</strong>: allow more complex
-sharing or mutation</li>
 <li><strong>Call-by-reference</strong>: pass locations instead of
 values</li>
 </ul>

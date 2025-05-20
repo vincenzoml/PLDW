@@ -89,20 +89,28 @@ class FunctionApp:
     args: list[Expression]
 ```
 
+- **FunctionDecl**: Represents a function's name, parameter list, and body
+- **FunctionApp**: Represents a function call with arguments
+
+<!-- slide -->
+
+## Semantic Domains: The Role of Closures
+
+To support functions and closures, we update our semantic domain of denotable values as follows:
+
 ```python
 @dataclass
 class Closure:
     function: FunctionDecl
     env: Environment
+
+# Denotable values (DVal): can be associated with names in the environment
+# NEW: Closure is now a denotable value!
+DVal = EVal | Loc | Operator | Closure
+
 ```
 
-<!-- slide -->
-
-- **FunctionDecl**: Represents a function's name, parameter list, and body
-- **FunctionApp**: Represents a function call with arguments
 - **Closure**: Represents a function paired with its declaration environment (lexical scoping)
-
-These fit into the existing AST alongside expressions, commands, and operators.
 
 <!-- slide -->
 
@@ -233,7 +241,6 @@ This is a form of **lexical scoping** with call-by-value for arguments.
 ### Possible Alternatives
 
 - **Dynamic scoping**: pass the calling environment instead of the closure's environment
-- **Pass both environment and store**: allow more complex sharing or mutation
 - **Call-by-reference**: pass locations instead of values
 
 Each alternative has different implications for modularity, reasoning, and security.
