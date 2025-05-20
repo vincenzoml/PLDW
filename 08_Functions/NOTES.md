@@ -1,5 +1,7 @@
 # Lecture 8: Function Abstraction - Design and Semantics
 
+please check these NOTES and see what is now obsolete w.r.t. the new implementaiton, and what is still valid. By this, and follwing closely the style of Lectures 6 and 7, write a README.md for Lecture 8. Keep in mind it's a book chapter. Please address the TODO
+
 TODO: add a comment about the purpose similarity between Operator and Closure. We leave them distinct for clarity. In particular the similarity augments if closures are saved semantically, by putting in the environment the function of state and env that computes the resulting value and the resulting state. In that case, operators are just closures that do not capture any state.
 
 TODO: explain that in a modern real-world language, function application and operator application are the same thing and one can also define or redefine operators. In our language, we leave them distinct for clarity and ease of explanation.
