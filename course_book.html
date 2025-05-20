@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Vincenzo Ciancia" />
-  <meta name="dcterms.date" content="2025-05-16" />
+  <meta name="dcterms.date" content="2025-05-20" />
   <title>Programming Languages Design Workshop</title>
   <style>
 html {
@@ -237,7 +237,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; }
 <header id="title-block-header">
 <h1 class="title">Programming Languages Design Workshop</h1>
 <p class="author">Vincenzo Ciancia</p>
-<p class="date">May 16, 2025</p>
+<p class="date">May 20, 2025</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -658,6 +658,58 @@ Mini-Language</a></li>
 </ul></li>
 <li><a href="#example-the-danger-of-memorizing-closures" id="toc-example-the-danger-of-memorizing-closures">Example: The Danger
 of Memorizing Closures</a></li>
+</ul></li>
+<li><a href="#chapter-8-function-abstraction-design-and-semantics" id="toc-chapter-8-function-abstraction-design-and-semantics">Chapter 8:
+Function Abstraction — Design and Semantics</a>
+<ul>
+<li><a href="#introduction" id="toc-introduction">1. Introduction</a>
+<ul>
+<li><a href="#what-you-will-learn" id="toc-what-you-will-learn">What you
+will learn</a></li>
+</ul></li>
+<li><a href="#parser-and-grammar-changes" id="toc-parser-and-grammar-changes">2. Parser and Grammar Changes</a>
+<ul>
+<li><a href="#function-declaration-syntax" id="toc-function-declaration-syntax">Function Declaration
+Syntax</a></li>
+<li><a href="#function-application-syntax" id="toc-function-application-syntax">Function Application
+Syntax</a></li>
+<li><a href="#grammar-fragment" id="toc-grammar-fragment">Grammar
+Fragment</a></li>
+</ul></li>
+<li><a href="#abstract-syntax-tree-ast-changes" id="toc-abstract-syntax-tree-ast-changes">3. Abstract Syntax Tree (AST)
+Changes</a></li>
+<li><a href="#semantics-of-functions-and-closures" id="toc-semantics-of-functions-and-closures">4. Semantics of Functions
+and Closures</a>
+<ul>
+<li><a href="#function-declaration-and-closure-creation" id="toc-function-declaration-and-closure-creation">Function Declaration
+and Closure Creation</a></li>
+<li><a href="#function-application-step-by-step" id="toc-function-application-step-by-step">Function Application (Step by
+Step)</a></li>
+</ul></li>
+<li><a href="#problems-closure-escape-and-state" id="toc-problems-closure-escape-and-state">5. Problems: Closure Escape
+and State</a>
+<ul>
+<li><a href="#the-closure-escape-problem" id="toc-the-closure-escape-problem">The Closure Escape Problem</a></li>
+<li><a href="#why-closures-cannot-escape" id="toc-why-closures-cannot-escape">Why closures cannot escape</a></li>
+</ul></li>
+<li><a href="#implementation-closures-cannot-be-returned-from-expressions" id="toc-implementation-closures-cannot-be-returned-from-expressions">6.
+Implementation: Closures Cannot Be Returned from Expressions</a></li>
+<li><a href="#stateful-closures-and-effects-in-expressions" id="toc-stateful-closures-and-effects-in-expressions">7. Stateful
+Closures and Effects in Expressions</a></li>
+<li><a href="#calling-convention-what-is-passed" id="toc-calling-convention-what-is-passed">8. Calling Convention: What
+Is Passed?</a>
+<ul>
+<li><a href="#current-convention" id="toc-current-convention">Current
+Convention</a></li>
+<li><a href="#possible-alternatives" id="toc-possible-alternatives">Possible Alternatives</a></li>
+</ul></li>
+<li><a href="#exercises-and-extensions" id="toc-exercises-and-extensions">9. Exercises and Extensions</a>
+<ul>
+<li><a href="#exercise-1.-procedures" id="toc-exercise-1.-procedures">Exercise 1. Procedures</a></li>
+<li><a href="#exercise-2.-stateful-functions" id="toc-exercise-2.-stateful-functions">Exercise 2. Stateful
+Functions</a></li>
+</ul></li>
+<li><a href="#summary" id="toc-summary">Summary</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -3046,7 +3098,7 @@ commands</li>
 <h3 id="if-then-else">2.1 If-Then-Else</h3>
 <p>The <code>if</code> command allows a program to choose between two
 branches based on a boolean condition. The syntax is:</p>
-<pre><code>if &lt;condition&gt; then &lt;commands&gt; else &lt;commands&gt;</code></pre>
+<pre><code>if &lt;condition&gt; then &lt;commands&gt; else &lt;commands&gt; endif</code></pre>
 <ul>
 <li>The <code>&lt;condition&gt;</code> must be a boolean
 expression.</li>
@@ -3082,13 +3134,13 @@ within that branch, and their memory is reclaimed after the branch
 ends.</p>
 <p><strong>Example:</strong></p>
 <pre><code>var x = 1;
-if x == 1 then print 42 else print 0</code></pre>
+if x == 1 then print 42 else print 0 endif</code></pre>
 <p>This program prints <code>42</code> because the condition
 <code>x == 1</code> is true.</p>
 <h3 id="while-loops">2.2 While Loops</h3>
 <p>The <code>while</code> command allows repeated execution of a block
 of commands as long as a condition holds:</p>
-<pre><code>while &lt;condition&gt; do &lt;commands&gt;</code></pre>
+<pre><code>while &lt;condition&gt; do &lt;commands&gt; done</code></pre>
 <ul>
 <li>The <code>&lt;condition&gt;</code> must be a boolean
 expression.</li>
@@ -3117,9 +3169,7 @@ expression.</li>
 <span id="cb124-14"><a href="#cb124-14" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> env, state</span></code></pre></div>
 <p><strong>Example:</strong></p>
 <pre><code>var n = 3;
-while n &gt; 0 do
-    print n;
-    n &lt;- n - 1</code></pre>
+while n &gt; 0 do print n; n &lt;- n - 1 done</code></pre>
 <p>This program prints <code>3</code>, <code>2</code>, and
 <code>1</code> on separate lines.</p>
 <h2 id="block-local-variables-and-scoping">3. Block-Local Variables and
@@ -3312,12 +3362,12 @@ arguments, and then apply the addition function to the results.</p>
 in Action</h2>
 <h3 id="example-1-if-then-else">Example 1: If-Then-Else</h3>
 <pre><code>var x = 1;
-if x == 1 then print 42 else print 0</code></pre>
+if x == 1 then print 42 else print 0 endif</code></pre>
 <p><strong>Output:</strong></p>
 <pre><code>42</code></pre>
 <h3 id="example-2-while-loop">Example 2: While Loop</h3>
 <pre><code>var n = 3;
-while n &gt; 0 do print n; n &lt;- n - 1</code></pre>
+while n &gt; 0 do print n; n &lt;- n - 1 done</code></pre>
 <p><strong>Output:</strong></p>
 <pre><code>3
 2
@@ -3326,8 +3376,8 @@ while n &gt; 0 do print n; n &lt;- n - 1</code></pre>
 Euclid’s Algorithm (GCD) Using Subtraction</h3>
 <pre><code>var a = 48; var b = 18;
 while b != 0 do
-    if a &gt; b then a &lt;- a - b else b &lt;- b - a;
-print a</code></pre>
+    if a &gt; b then a &lt;- a - b else b &lt;- b - a endif;
+print a done</code></pre>
 <p><strong>Output:</strong></p>
 <pre><code>6</code></pre>
 <h2 id="comparison-with-previous-chapters">8. Comparison with Previous
@@ -3452,5 +3502,238 @@ errors.</p>
 <p>This illustrates why special care is needed when allowing closures to
 be stored in state: the captured environment must persist as long as the
 closure does, or else memory safety and correctness are compromised.</p>
+<h1 id="chapter-8-function-abstraction-design-and-semantics">Chapter 8:
+Function Abstraction — Design and Semantics</h1>
+<h2 id="introduction">1. Introduction</h2>
+<p>In this chapter, we take a major step in the evolution of our
+mini-language: we add <strong>user-defined functions</strong>. This
+enables abstraction, modularity, and code reuse, and brings our language
+closer to real-world programming languages.</p>
+<h3 id="what-you-will-learn">What you will learn</h3>
+<ul>
+<li>How to extend the parser and grammar to support function definitions
+and applications</li>
+<li>How to update the abstract syntax tree (AST) to represent functions
+and closures</li>
+<li>The semantics of function declaration, closure creation, and
+application</li>
+<li>Subtle issues such as closure escape and stateful closures</li>
+<li>The implications for state and effects in expressions</li>
+<li>The calling convention and possible alternatives</li>
+<li>Extensions and exercises</li>
+</ul>
+<h2 id="parser-and-grammar-changes">2. Parser and Grammar Changes</h2>
+<p>To support user-defined functions, we extend the grammar with new
+rules for <strong>function declaration</strong> and <strong>function
+application</strong>.</p>
+<h3 id="function-declaration-syntax">Function Declaration Syntax</h3>
+<p>A function is declared as:</p>
+<pre><code>function f(x, y) = expr</code></pre>
+<ul>
+<li><code>f</code> is the function name</li>
+<li><code>x, y</code> are parameters (zero or more)</li>
+<li><code>expr</code> is the function body (an expression)</li>
+</ul>
+<h3 id="function-application-syntax">Function Application Syntax</h3>
+<p>A function is applied as:</p>
+<pre><code>f(3, 4)</code></pre>
+<ul>
+<li><code>f</code> is the function name</li>
+<li><code>3, 4</code> are argument expressions</li>
+</ul>
+<h3 id="grammar-fragment">Grammar Fragment</h3>
+<pre><code>fundecl: &quot;function&quot; IDENTIFIER &quot;(&quot; param_list &quot;)&quot; &quot;=&quot; expr
+param_list: IDENTIFIER (&quot;,&quot; IDENTIFIER)*
+funapp: IDENTIFIER &quot;(&quot; arg_list &quot;)&quot;
+arg_list: expr (&quot;,&quot; expr)*</code></pre>
+<p>These rules are integrated into the parser, allowing functions to be
+declared in any block and called in any expression.</p>
+<h2 id="abstract-syntax-tree-ast-changes">3. Abstract Syntax Tree (AST)
+Changes</h2>
+<p>We introduce new AST nodes to represent functions and their
+applications:</p>
+<div class="sourceCode" id="cb149"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb149-2"><a href="#cb149-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FunctionDecl:</span>
+<span id="cb149-3"><a href="#cb149-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
+<span id="cb149-4"><a href="#cb149-4" aria-hidden="true" tabindex="-1"></a>    params: <span class="bu">list</span>[<span class="bu">str</span>]</span>
+<span id="cb149-5"><a href="#cb149-5" aria-hidden="true" tabindex="-1"></a>    body: Expression</span></code></pre></div>
+<div class="sourceCode" id="cb150"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FunctionApp:</span>
+<span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
+<span id="cb150-4"><a href="#cb150-4" aria-hidden="true" tabindex="-1"></a>    args: <span class="bu">list</span>[Expression]</span></code></pre></div>
+<div class="sourceCode" id="cb151"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb151-1"><a href="#cb151-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb151-2"><a href="#cb151-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Closure:</span>
+<span id="cb151-3"><a href="#cb151-3" aria-hidden="true" tabindex="-1"></a>    function: FunctionDecl</span>
+<span id="cb151-4"><a href="#cb151-4" aria-hidden="true" tabindex="-1"></a>    env: Environment</span></code></pre></div>
+<ul>
+<li><strong>FunctionDecl</strong>: Represents a function’s name,
+parameter list, and body</li>
+<li><strong>FunctionApp</strong>: Represents a function call with
+arguments</li>
+<li><strong>Closure</strong>: Represents a function paired with its
+declaration environment (lexical scoping)</li>
+</ul>
+<p>These fit into the existing AST alongside expressions, commands, and
+operators.</p>
+<h2 id="semantics-of-functions-and-closures">4. Semantics of Functions
+and Closures</h2>
+<h3 id="function-declaration-and-closure-creation">Function Declaration
+and Closure Creation</h3>
+<p>When a function is declared, its name is bound in the current
+environment to a <strong>closure</strong>:</p>
+<ul>
+<li>The closure contains the function’s code (parameters and body)</li>
+<li>The closure captures the environment at the point of
+declaration</li>
+</ul>
+<p>This enables <strong>lexical (static) scoping</strong>: the function
+“remembers” the variables in scope when it was defined.</p>
+<h4 id="example-closure-creation">Example: Closure Creation</h4>
+<pre><code>var x = 10;
+function f(y) = x + y</code></pre>
+<p>Here, <code>f</code> is bound to a closure that captures the current
+environment, including the binding of <code>x</code>.</p>
+<h3 id="function-application-step-by-step">Function Application (Step by
+Step)</h3>
+<p>To apply a function:</p>
+<ol type="1">
+<li>Look up the closure for the function name in the environment</li>
+<li>Evaluate the argument expressions in the <em>calling</em>
+environment and state</li>
+<li>Extend the closure’s environment with parameter-to-argument
+bindings</li>
+<li>Evaluate the function body in the extended environment and the
+current state</li>
+</ol>
+<p>This ensures that the function body sees the environment at
+declaration, not at call.</p>
+<h4 id="example-lexical-scoping">Example: Lexical Scoping</h4>
+<pre><code>var x = 10;
+function f(y) = x + y;
+var x = 100;
+print f(1)  # prints 11, not 101</code></pre>
+<ul>
+<li>The function <code>f</code> captures <code>x = 10</code> at its
+declaration, so <code>f(1)</code> evaluates to <code>11</code>.</li>
+</ul>
+<h2 id="problems-closure-escape-and-state">5. Problems: Closure Escape
+and State</h2>
+<h3 id="the-closure-escape-problem">The Closure Escape Problem</h3>
+<p>If closures could be stored in the store (i.e., if they were
+<strong>memorizable</strong>), they could outlive their declaring block
+and access or update state that no longer exists.</p>
+<p>This would break the stack discipline of our state model and could
+lead to subtle bugs (see the appendix in Lecture 7 for a discussion of
+this issue).</p>
+<h4 id="example-not-allowed-in-our-language">Example (not allowed in our
+language):</h4>
+<pre><code>var a = 0;
+if cond then
+    var x = 42;
+    function f() = x + 1;
+    a = f  # not possible: closures are not memorizable
+endif
+# a would reference x after the block ends!</code></pre>
+<h3 id="why-closures-cannot-escape">Why closures cannot escape</h3>
+<ul>
+<li>In our language, <strong>closures are not memorizable</strong>: they
+cannot be stored in the store, only in the environment</li>
+<li>There is <strong>no heap</strong>: all memory is stack-allocated,
+and locations are reused after a block ends</li>
+<li>This ensures that closures cannot outlive their environment or
+access invalid state</li>
+</ul>
+<h2 id="implementation-closures-cannot-be-returned-from-expressions">6.
+Implementation: Closures Cannot Be Returned from Expressions</h2>
+<ul>
+<li>In our language, <strong>expressions can only return expressible
+values</strong>: integers and booleans.</li>
+<li><strong>Closures are not expressible values</strong>; they are
+denotable values, which means they can be bound to names in the
+environment, but not stored in the store or returned as results of
+expressions.</li>
+</ul>
+<p>If closures could be returned from expressions, they could be stored
+in variables (i.e., in the store), or passed around as values,
+potentially escaping the block in which they were defined. This would
+break the stack discipline of our state model, as closures could
+reference variables that no longer exist (see the closure escape
+problem).</p>
+<ul>
+<li><strong>Reading</strong>: When an expression refers to a variable,
+it looks up the value in the environment. If the value is a closure, it
+can only be used in a function application context, not as a value to be
+returned or stored.</li>
+<li><strong>Returning</strong>: Only expressible values (int, bool) can
+be returned from expressions. Attempting to return a closure would be a
+type error in our semantics.</li>
+</ul>
+<h2 id="stateful-closures-and-effects-in-expressions">7. Stateful
+Closures and Effects in Expressions</h2>
+<p>If a closure captures a variable by environment, and the function
+body assigns to that variable, then the closure is
+<strong>stateful</strong>.</p>
+<h4 id="example-stateful-closure">Example: Stateful Closure</h4>
+<pre><code>var x = 0;
+function inc() = x &lt;- x + 1;
+inc(); inc(); print x  # would print 2 if allowed</code></pre>
+<p>Since functions can be called in expressions, and if functions could
+have side effects, then <strong>expressions themselves become
+effectful</strong>. This blurs the line between expressions and
+commands, and is a key design decision in language semantics.</p>
+<h2 id="calling-convention-what-is-passed">8. Calling Convention: What
+Is Passed?</h2>
+<h3 id="current-convention">Current Convention</h3>
+<ul>
+<li>When a function is called, the <strong>store</strong> (state) at the
+call site is passed to the function body</li>
+<li>The <strong>environment</strong> is the one captured by the closure
+at declaration, extended with parameter bindings</li>
+<li>The calling environment is <em>not</em> passed</li>
+</ul>
+<p>This is a form of <strong>lexical scoping</strong> with call-by-value
+for arguments.</p>
+<h3 id="possible-alternatives">Possible Alternatives</h3>
+<ul>
+<li><strong>Dynamic scoping</strong>: pass the calling environment
+instead of the closure’s environment</li>
+<li><strong>Pass both environment and store</strong>: allow more complex
+sharing or mutation</li>
+<li><strong>Call-by-reference</strong>: pass locations instead of
+values</li>
+</ul>
+<p>Each alternative has different implications for modularity,
+reasoning, and security.</p>
+<h2 id="exercises-and-extensions">9. Exercises and Extensions</h2>
+<h3 id="exercise-1.-procedures">Exercise 1. Procedures</h3>
+<p>Extend the language with <strong>procedures</strong>: a variant of
+functions that can only be called as commands, not as expressions.</p>
+<p>For example:</p>
+<pre><code>procedure p(x) = print x;
+p(42)</code></pre>
+<ul>
+<li>Procedures can perform side effects but do not return values</li>
+<li>How would you change the grammar, AST, and semantics to support
+this?</li>
+</ul>
+<h3 id="exercise-2.-stateful-functions">Exercise 2. Stateful
+Functions</h3>
+<p>Allow functions to update variables in their environment (i.e., allow
+assignment in function bodies).</p>
+<ul>
+<li>What changes are needed to the AST and semantics? How does this
+affect the distinction between expressions and commands?</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<ul>
+<li>Functions are first-class, block-local, and lexically scoped</li>
+<li>Closures pair function code with the environment at declaration</li>
+<li>Closures are not memorizable, so cannot escape their block or break
+state</li>
+<li>Operators and closures are both denotable values, but are kept
+distinct for clarity</li>
+<li>The semantics are modular and support correct state and environment
+handling for closures</li>
+</ul>
 </body>
 </html>

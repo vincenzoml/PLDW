@@ -1,7 +1,7 @@
 ---
 title: "Lecture 07: Control_Flow"
 author: "Vincenzo Ciancia"
-date: "May 16, 2025"
+date: "May 20, 2025"
 ---
 
 # Chapter 7: Control Flow
@@ -43,7 +43,7 @@ We also introduce **block-local variables** and extend the language to support b
 The `if` command allows a program to choose between two branches based on a boolean condition. The syntax is:
 
 ```
-if <condition> then <commands> else <commands>
+if <condition> then <commands> else <commands> endif
 ```
 
 - The `<condition>` must be a boolean expression.
@@ -95,7 +95,7 @@ This ensures that variables declared inside a branch are only visible within tha
 
 ```
 var x = 1;
-if x == 1 then print 42 else print 0
+if x == 1 then print 42 else print 0 endif
 ```
 
 This program prints `42` because the condition `x == 1` is true.
@@ -108,7 +108,7 @@ This program prints `42` because the condition `x == 1` is true.
 The `while` command allows repeated execution of a block of commands as long as a condition holds:
 
 ```
-while <condition> do <commands>
+while <condition> do <commands> done
 ```
 
 - The `<condition>` must be a boolean expression.
@@ -155,9 +155,7 @@ def execute_command(cmd: Command, env: Environment, state: State) -> tuple[Envir
 
 ```
 var n = 3;
-while n > 0 do
-    print n;
-    n <- n - 1
+while n > 0 do print n; n <- n - 1 done
 ```
 
 This program prints `3`, `2`, and `1` on separate lines.
@@ -396,7 +394,7 @@ This node will look up the '+' operator in the environment, evaluate `x` and `y`
 
 ```
 var x = 1;
-if x == 1 then print 42 else print 0
+if x == 1 then print 42 else print 0 endif
 ```
 
 **Output:**
@@ -412,7 +410,7 @@ if x == 1 then print 42 else print 0
 
 ```
 var n = 3;
-while n > 0 do print n; n <- n - 1
+while n > 0 do print n; n <- n - 1 done
 ```
 
 **Output:**
@@ -431,8 +429,8 @@ while n > 0 do print n; n <- n - 1
 ```
 var a = 48; var b = 18;
 while b != 0 do
-    if a > b then a <- a - b else b <- b - a;
-print a
+    if a > b then a <- a - b else b <- b - a endif;
+print a done
 ```
 
 **Output:**
