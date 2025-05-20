@@ -29,7 +29,8 @@ class Loc:
 
 type EVal = int | bool  # Expressible value type (for expressions)
 type MVal = EVal  # Main value type for store and evaluation (expressible)
-type DVal = EVal | Loc | Operator  # Denotable values: can be associated with names
+type DVal = EVal | Loc | Operator | Closure  # Denotable values: can be associated with names, now includes Closure
+
 
 type Environment = Callable[[str], DVal]
 
@@ -218,14 +219,17 @@ grammar = r"""
             | vardecl
             | ifelse
             | while
-            
+            | fundecl
+    
     assign: IDENTIFIER "<-" expr
     print: "print" expr
     vardecl: "var" IDENTIFIER "=" expr
-    ifelse: "if" expr "then" command_seq "else" command_seq
-    while: "while" expr "do" command_seq
-            
-    ?expr: bin | mono | let
+    ifelse: "if" expr "then" command_seq "else" command_seq "endif"
+    while: "while" expr "do" command_seq "done"
+    fundecl: "function" IDENTIFIER "(" param_list ")" "=" expr
+    param_list: IDENTIFIER ("," IDENTIFIER)*
+
+    ?expr: bin | mono | let | funapp
     mono: ground | paren | var | unary
     paren: "(" expr ")"
     bin: expr OP mono
@@ -233,6 +237,8 @@ grammar = r"""
     ground: NUMBER | BOOL
     var: IDENTIFIER
     let: "let" IDENTIFIER "=" expr "in" expr
+    funapp: IDENTIFIER "(" arg_list ")"
+    arg_list: expr ("," expr)*
 
     NUMBER: /[0-9]+/
     BOOL: "true" | "false"
@@ -278,8 +284,28 @@ class Let:
     body: Expression
 
 
+# Insert moved function abstraction dataclasses here
+@dataclass
+class FunctionDecl:
+    name: str
+    params: list[str]
+    body: Expression
+
+
+@dataclass
+class FunctionApp:
+    name: str
+    args: list[Expression]
+
+
+@dataclass
+class Closure:
+    function: FunctionDecl
+    env: Environment
+
+
 # Define Expression as a union type
-type Expression = Number | Bool | Var | Let | Apply
+type Expression = Number | Bool | Var | Let | Apply | FunctionApp
 
 
 # AST Definitions for Commands
@@ -319,8 +345,7 @@ class While:
     body: CommandSequence
 
 
-# Update Command type comment
-type Command = Assign | Print | VarDecl | IfElse | While
+type Command = Assign | Print | VarDecl | IfElse | While | FunctionDecl
 
 
 # Parse tree transformation for expressions
@@ -328,6 +353,7 @@ def transform_expr_tree(tree: Tree) -> Expression:
     # NOTE: The distinction between unary and binary operator parse tree nodes is necessary here
     # because the grammar and parse tree structure are different for prefix (unary) and infix (binary) ops.
     # However, both are unified as Apply nodes in the AST for evaluation and further processing.
+
     match tree:
         case Tree(data="mono", children=[subtree]):
             return transform_expr_tree(cast(Tree, subtree))
@@ -357,16 +383,41 @@ def transform_expr_tree(tree: Tree) -> Expression:
                 expr=transform_expr_tree(cast(Tree, expr)),
                 body=transform_expr_tree(cast(Tree, body)),
             )
+        case Tree(
+            data="funapp",
+            children=[Token(type="IDENTIFIER", value=name), arg_list_tree],
+        ):
+            # arg_list_tree can be a Tree or a single expr
+            if isinstance(arg_list_tree, Tree):
+                args = [
+                    transform_expr_tree(cast(Tree, child))
+                    for child in arg_list_tree.children
+                ]
+            else:
+                args = [transform_expr_tree(cast(Tree, arg_list_tree))]
+            return FunctionApp(name=name, args=args)
         case x:
-            print("******")
-            print(x.pretty())
-            print("******")
             raise ValueError(f"Unexpected parse tree structure for expression")
+
+
+# Parse tree transformation for function bodies and function declarations
+def transform_return_stmt_tree(tree: Tree) -> Expression:
+    # return_stmt: "return" expr
+    match tree:
+        case Tree(data="return_stmt", children=[expr_tree]):
+            return transform_expr_tree(cast(Tree, expr_tree))
+        case _:
+            raise ValueError(f"Unexpected return_stmt tree: {tree}")
 
 
 # Parse tree transformation for commands
 def transform_command_tree(tree: Tree) -> Command:
     match tree:
+        # If a command_seq node is encountered, raise an error with a clear message
+        case Tree(data="command_seq", children=_):
+            raise ValueError(
+                "transform_command_tree received a command_seq node; this should be handled by transform_command_seq_tree."
+            )
         case Tree(
             data="assign",
             children=[
@@ -438,43 +489,73 @@ def transform_command_tree(tree: Tree) -> Command:
                 body=body_seq,
             )
 
+        case Tree(
+            data="fundecl",
+            children=[
+                Token(type="IDENTIFIER", value=name),
+                param_list_tree,
+                body_expr_tree,
+            ],
+        ):
+            if isinstance(param_list_tree, Tree):
+                params = [
+                    t.value
+                    for t in param_list_tree.children
+                    if isinstance(t, Token) and t.type == "IDENTIFIER"
+                ]
+            elif (
+                isinstance(param_list_tree, Token)
+                and param_list_tree.type == "IDENTIFIER"
+            ):
+                params = [param_list_tree.value]
+            else:
+                params = []
+            return FunctionDecl(
+                name=name,
+                params=params,
+                body=transform_expr_tree(cast(Tree, body_expr_tree)),
+            )
+
         case x:
-            print("******")
-            print(x.pretty())
-            print("******")
             raise ValueError(f"Unexpected parse tree structure for command")
 
 
 # Parse tree transformation for command sequences
 def transform_command_seq_tree(tree: Tree) -> CommandSequence:
     match tree:
-        case Tree(
-            data="command_seq",
-            children=[first_command, rest_seq],
-        ):
-            return CommandSequence(
-                first=transform_command_tree(cast(Tree, first_command)),
-                rest=transform_command_seq_tree(cast(Tree, rest_seq)),
-            )
-
-        case Tree(
-            data="command_seq",
-            children=[single_command],
-        ):
+        # Flatten nested command_seq nodes
+        case Tree(data="command_seq", children=[first_command, rest_seq]):
+            # If rest_seq is itself a command_seq, recurse
+            if isinstance(rest_seq, Tree) and rest_seq.data == "command_seq":
+                return CommandSequence(
+                    first=transform_command_tree(cast(Tree, first_command)),
+                    rest=transform_command_seq_tree(rest_seq),
+                )
+            else:
+                # If rest_seq is a single command, wrap it
+                return CommandSequence(
+                    first=transform_command_tree(cast(Tree, first_command)),
+                    rest=CommandSequence(
+                        first=transform_command_tree(cast(Tree, rest_seq))
+                    ),
+                )
+        case Tree(data="command_seq", children=[single_command]):
             return CommandSequence(
                 first=transform_command_tree(cast(Tree, single_command)),
             )
-
         # Handle the case where the root is a single command node
-        case _ if tree.data in {"vardecl", "assign", "print", "ifelse", "while"}:
+        case _ if hasattr(tree, "data") and tree.data in {
+            "vardecl",
+            "assign",
+            "print",
+            "ifelse",
+            "while",
+            "fundecl",
+        }:
             return CommandSequence(
                 first=transform_command_tree(tree),
             )
-
         case x:
-            print("******")
-            print(x.pretty())
-            print("******")
             raise ValueError(f"Unexpected parse tree structure for command sequence")
 
 
@@ -526,6 +607,26 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
             value = evaluate_expr(expr, env, state)
             extended_env = bind(env, name, value)
             return evaluate_expr(body, extended_env, state)
+        case FunctionApp(name, arg):
+            dval = lookup(env, name)
+            if not isinstance(dval, Closure):
+                raise ValueError(f"{name} is not a function")
+            closure: Closure = dval
+            params = closure.function.params
+            # arg is now a list of expressions
+            arg_vals = (
+                [evaluate_expr(a, env, state) for a in arg]
+                if isinstance(arg, list)
+                else [evaluate_expr(arg, env, state)]
+            )
+            if len(arg_vals) != len(params):
+                raise ValueError(
+                    f"Function {name} expects {len(params)} arguments, got {len(arg_vals)}"
+                )
+            new_env = closure.env
+            for p, v in zip(params, arg_vals):
+                new_env = bind(new_env, p, v)
+            return evaluate_expr(closure.function.body, new_env, state)
         case _:
             raise ValueError(f"Unexpected expression type: {expr}")
 
@@ -586,6 +687,10 @@ def execute_command(
                 return execute_command(While(cond, body), env, state2)
             else:
                 return env, state
+        case FunctionDecl(name, _, _):  # Q: WHY THE UNDERSCORES?
+            closure = Closure(function=cmd, env=env)
+            new_env = bind(env, name, closure)
+            return new_env, state
         case _:
             raise ValueError(f"Unknown command type: {cmd}")
 
@@ -637,29 +742,25 @@ def REPL():
 def run_tests():
     """Run some test expressions to verify the parser and evaluator"""
     test_programs = [
-        # Simple declaration, assignment, and printing
-        "var x = 42; print x",
-        # Multiple declarations and assignments
-        "var x = 10; var y = x + 5; print y",
-        # Updating variables
-        "var x = 10; print x; x <- 20; print x",
-        # Using let expressions in commands
-        "var x = let y = 5 in y * 2; print x",
-        # Longer program with multiple operations
-        "var x = 10; var y = 20; var z = x + y; print z; x <- 30; print x + y",
-        # 1. If-then-else on a variable
-        "var x = 1; if x == 1 then print 42 else print 0",
-        # 1b. If-then-else on a boolean
-        "if true then print 1 else print 0",
-        # 2. Print N times by decrementing a variable
-        "var n = 3; while n > 0 do print n; n <- n - 1",
-        # 3. Euclid's algorithm using subtraction
-        "var a = 48; var b = 18; while b != 0 do if a > b then a <- a - b else b <- b - a; print a",
+        # Test: Multi-argument pure function in block
+        """
+        var x = 10;
+        if x > 0 then
+            var y = 42;
+            function f(a, b) = y + a + b;
+            print f(3, 0);
+            print f(1, 2)
+        else
+            function g(a, b) = x + a + b;
+            print g(5, 5)
+        endif
+        """,
     ]
 
     print("Running tests:")
     for program in test_programs:
-        print(f"\nProgram: {program}")
+        print("\n--- Running test program ---")
+        print(program)
         try:
             execute_program(program)
             print("Execution successful")
@@ -673,3 +774,8 @@ if __name__ == "__main__":
 
     # Run the tests
     run_tests()
+
+
+# Update Expression and Command types
+# Expression = Number | Bool | Var | Let | Apply | FunctionApp
+# Command = Assign | Print | VarDecl | IfElse | While | FunctionDecl
