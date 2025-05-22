@@ -607,25 +607,25 @@ def evaluate_expr(expr: Expression, env: Environment, state: State) -> EVal:
             value = evaluate_expr(expr, env, state)
             extended_env = bind(env, name, value)
             return evaluate_expr(body, extended_env, state)
-        case FunctionApp(name, arg):
+        case FunctionApp(name, args):
             dval = lookup(env, name)
             if not isinstance(dval, Closure):
                 raise ValueError(f"{name} is not a function")
             closure: Closure = dval
             params = closure.function.params
-            # arg is now a list of expressions
-            arg_vals = (
-                [evaluate_expr(a, env, state) for a in arg]
-                if isinstance(arg, list)
-                else [evaluate_expr(arg, env, state)]
-            )
-            if len(arg_vals) != len(params):
+
+            if len(args) != len(params):
                 raise ValueError(
-                    f"Function {name} expects {len(params)} arguments, got {len(arg_vals)}"
+                    f"Function {name} expects {len(params)} arguments, got {len(args)}"
                 )
+
+            args_vals = [evaluate_expr(a, env, state) for a in args]
+
             new_env = closure.env
-            for p, v in zip(params, arg_vals):
+
+            for p, v in zip(params, args_vals):
                 new_env = bind(new_env, p, v)
+
             return evaluate_expr(closure.function.body, new_env, state)
         case _:
             raise ValueError(f"Unexpected expression type: {expr}")
