@@ -1,7 +1,7 @@
 ---
 title: "Lecture 01: Introduction"
 author: "Vincenzo Ciancia"
-date: "May 20, 2025"
+date: "October 02, 2025"
 ---
 
 ## Section 1: What is a Programming Language?
@@ -170,7 +170,7 @@ Python is well-suited for implementing language interpreters and exploring langu
 
 - **Readability**: Python's clean syntax makes interpreter code easier to understand
 - **High-level constructs**: Python provides lists, dictionaries, and other structures useful for language implementation
-- **Dynamic typing**: Simplifies working with diverse language constructs
+- **Dynamic typing**: Simplifies working with diverse language constructs (NOT REALLY! left here for discussion)
 - **Rich standard library**: Includes parsing tools, regular expressions, and other useful utilities
 - **Interactive development**: Makes experimenting with language features easier
 
@@ -213,7 +213,12 @@ class Number:
 @dataclass
 class Variable:
     name: str
+```
 
+
+---
+
+```python
 @dataclass
 class BinaryOp:
     left: 'Expr'
@@ -238,51 +243,11 @@ expr = BinaryOp(
 
 ---
 
-### Implementing an Evaluator
-
-The evaluator traverses the AST and computes the result. For example:
-
-```python
-def evaluate(expr: Expr, environment: dict = None) -> float:
-    """Evaluate an expression in the given environment."""
-    if environment is None:
-        environment = {}
-    
-    if isinstance(expr, Number):
-        return expr.value
-    elif isinstance(expr, Variable):
-        if expr.name not in environment:
-            raise NameError(f"Variable '{expr.name}' not defined")
-        return environment[expr.name]
-    elif isinstance(expr, BinaryOp):
-        left_val = evaluate(expr.left, environment)
-        right_val = evaluate(expr.right, environment)
-        
-        if expr.operator == '+':
-            return left_val + right_val
-        elif expr.operator == '-':
-            return left_val - right_val
-        elif expr.operator == '*':
-            return left_val * right_val
-        elif expr.operator == '/':
-            return left_val / right_val
-        else:
-            raise ValueError(f"Unknown operator: {expr.operator}")
-```
-
-
----
-
 ### Pattern Matching for AST Processing
 
 Python 3.10's pattern matching provides a more elegant way to implement evaluators:
 
 ```python
-def evaluate_with_match(expr: Expr, environment: dict = None) -> float:
-    """Evaluate an expression using pattern matching."""
-    if environment is None:
-        environment = {}
-    
     match expr:
         case Number(value):
             return value
@@ -310,49 +275,6 @@ def evaluate_with_match(expr: Expr, environment: dict = None) -> float:
 
 ---
 
-### Simple Type Checking
-
-We can implement basic type checking for our language:
-
-```python
-from enum import Enum, auto
-from dataclasses import dataclass
-from typing import Dict
-
-class Type(Enum):
-    NUMBER = auto()
-    BOOLEAN = auto()
-    STRING = auto()
-
-def type_check(expr: Expr, type_env: Dict[str, Type]) -> Type:
-    """Determine the type of an expression."""
-    match expr:
-        case Number(_):
-            return Type.NUMBER
-        case Variable(name):
-            if name not in type_env:
-                raise TypeError(f"Variable '{name}' not defined")
-            return type_env[name]
-        case BinaryOp(left, operator, right):
-            left_type = type_check(left, type_env)
-            right_type = type_check(right, type_env)
-            
-            # Type checking rules for operators
-            if operator in ['+', '-', '*', '/']:
-                if left_type != Type.NUMBER or right_type != Type.NUMBER:
-                    raise TypeError(f"Operator '{operator}' requires number operands")
-                return Type.NUMBER
-            elif operator in ['==', '!=', '<', '>', '<=', '>=']:
-                if left_type != right_type:
-                    raise TypeError("Comparison operators require operands of the same type")
-                return Type.BOOLEAN
-            else:
-                raise ValueError(f"Unknown operator: {operator}")
-```
-
-
----
-
 ## Section 6: Course Structure
 
 This course will introduce you to programming language design concepts through hands-on implementation in Python.
@@ -362,31 +284,17 @@ This course will introduce you to programming language design concepts through h
 
 ### Course Topics
 
-Throughout this course, we will cover:
+Throughout this course, we will build a simple programming language interpreter while covering key topics:
 
 1. **Language Syntax and Semantics**
    - Parsing and lexical analysis
    - Abstract syntax trees
-   - Operational semantics
 
-2. **Type Systems**
-   - Static vs. dynamic typing
-   - Type inference
-   - Polymorphism
-   - Advanced type features (generics, algebraic data types)
-
-3. **Language Features**
-   - Functions and closures
-   - Pattern matching
-   - Object-oriented programming
-   - Concurrency models
-   - Memory management approaches
-
-4. **Interpreter and Compiler Implementation**
-   - Building a simple interpreter
-   - Environment and scope
-   - Evaluation strategies
-   - Introduction to compilation concepts
+2. **Language Features**    
+    - Environment (how to assign names to things?)
+    - State (how to represent changing values?)
+    - Control flow (if, while, for, etc.)
+    - Static scoping (how do variable names related to nested environments)
 
 
 ---
@@ -403,11 +311,6 @@ The course will include:
 
 ---
 
-## Section 7: Prerequisites and Setup
-
-
----
-
 ### Knowledge Prerequisites
 
 To get the most out of this course, you should have:
@@ -420,39 +323,7 @@ To get the most out of this course, you should have:
 No prior experience with compiler or interpreter development is required.
 
 
----
-
-### Python Environment Setup
-
-To follow along with the course examples and exercises:
-
-1. **Install Python 3.10 or later**
-   - Required for pattern matching and other modern features
-
-2. **Recommended development tools**
-   - Visual Studio Code with Python extension
-   - PyCharm
-   - Jupyter Notebook/Lab for interactive exploration
-
-3. **Useful libraries**
-   - mypy for static type checking
-   - pytest for testing your implementations
-
-
----
-
-## Section 8: Additional Resources
-
-
----
-
-### Books on Programming Language Design
-
-- **"Crafting Interpreters"** by Robert Nystrom
-- **"Programming Language Pragmatics"** by Michael Scott
-- **"Types and Programming Languages"** by Benjamin Pierce
-- **"Concepts of Programming Languages"** by Robert Sebesta
-- **"Structure and Interpretation of Computer Programs"** by Abelson and Sussman
+## Additional Resources
 
 
 ---
