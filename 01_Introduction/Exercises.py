@@ -21,6 +21,14 @@ while i < len(example_list):
 
 print(i)
 
+#%% example if statement
+
+x = 5
+if x < 3:
+    print("x is less than 3")
+    print("still in the if")
+elif x < 10:
+    print("x is between 3 and 10")
 
 
 # %%
