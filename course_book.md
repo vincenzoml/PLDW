@@ -1,7 +1,7 @@
 ---
 title: Programming Languages Design Workshop
 author: Vincenzo Ciancia
-date: October 02, 2025
+date: October 13, 2025
 ---
 
 \newpage
