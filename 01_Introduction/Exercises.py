@@ -3,15 +3,36 @@
 # Write a program that parses arithmetic expressions like "2 + 5 - 3 * 4" and returns the result.
 # Assumptions:
 # - Operators and operands are separated by spaces
-# - Only binary operators (+, -, *, /) are used
+# - Only binary operators (+, -, *) are used
 # - No parentheses are in the expressions
-# - Operations should be evaluated with standard precedence rules (* and / before + and -)
+# - Operations should be evaluated ignoring standard precedence rules; just run left to right
 # - Operands are integers
 # - Expression is well-formed (no syntax errors)
 
-# %%
-from typing import List, Tuple, Union
+# Do use string splitting, for instance "a b c".split() returns ["a", "b", "c"]
 
+# %% example while loop over a list of integers
+
+example_list = [1, 2, 3, 4, 5]
+
+i = 0
+while i < len(example_list):
+    i = example_list[i] + i
+
+print(i)
+
+#%% example if statement
+
+x = 5
+if x < 3:
+    print("x is less than 3")
+    print("still in the if")
+elif x < 10:
+    print("x is between 3 and 10")
+
+
+# %%
+from typing import List, Tuple
 
 # Solution 1: Naive recursive solution using string splitting
 def parse_expression_naive(expression: str) -> int:
@@ -159,3 +180,26 @@ def parse_expression_naive_classic(expression: str) -> int | None:
 parse_expression_naive_classic("2 + 5 * 3")
 
 # %%
+
+# Bonus Exercise (balanced parentheses problem)
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# Write a program that parses an expression composed of parentheses and returns true if they are balanced 
+# (i.e, every open parenthesis has a correspondent closed parenthesis and the order of opening and closing is correct) and false otherwise.
+
+#Solution 1
+
+def balanced_parentheses(expression: str) -> bool:
+    stack = []
+    couples = {')': '(', ']': '[', '}': '{'} 
+    
+    for c in expression:
+        if c in "([{":
+            stack.append(c)
+        elif c in ")]}":
+            if not stack or stack[-1] != couples[c]:
+                return False
+            stack.pop()
+    
+    return len(stack) == 0
+
+

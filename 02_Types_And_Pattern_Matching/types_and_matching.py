@@ -154,8 +154,7 @@ greet_people((Person(name="Alice", age=25), Person(name="Bob", age=30)))
 greet_people("Alice")
 greet_people(25)  # Q: WHY does this work? (Hint: type checking)
 
-# %%
-
+# %% 
 
 def process_lst(lst: list[int]) -> None:
     match lst:
