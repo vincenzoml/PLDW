@@ -9,7 +9,7 @@ grammar = r"""
     expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
-    bin: expr OP mono
+    bin: expr OP mono    
     ground: NUMBER
 
     NUMBER: /[0-9]+/
@@ -24,7 +24,7 @@ parser = Lark(grammar, start="expr")
 
 parse_tree = parser.parse("(1 + 2) - 3")
 
-# print(parse_tree.pretty())
+print(parse_tree.pretty())
 
 # expr
 # └── bin
@@ -86,7 +86,7 @@ type Expression = Number | BinaryExpression
 
 
 # %%
-def transform_parse_tree(tree: Tree) -> Expression:
+def transform_parse_tree(tree: str| Tree) -> Expression: # Q: why str??
     match tree:
         case Tree(data="expr", children=[subtree]):
             return transform_parse_tree(subtree)
@@ -113,10 +113,10 @@ def transform_parse_tree(tree: Tree) -> Expression:
                 left=transform_parse_tree(left),
                 right=transform_parse_tree(right),
             )
-
+    
         case _:
-            raise ValueError(f"Unexpected parse tree structure")
-
+            raise ValueError(f"Unknown parse tree node: {tree}")
+        
 
 def parse_ast(expression: str) -> Expression:
     parse_tree = parser.parse(expression)
@@ -212,12 +212,20 @@ def safe_mod(a: int, b: int) -> int:
         raise ValueError("Division by zero")
     return a % b
 
+def plus(x,y):
+    return x+y
+
+def minus(x,y):
+    return x-y
+
+def multiply(x,y):
+    return x*y
 
 # Create the operator environment
 operator_env: OperatorEnv = {
-    "+": lambda a, b: a + b,
-    "-": lambda a, b: a - b,
-    "*": lambda a, b: a * b,
+    "+": plus,
+    "-": minus,
+    "*": multiply,
     "/": safe_div,
     "%": safe_mod,
 }
