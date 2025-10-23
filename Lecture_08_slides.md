@@ -1,7 +1,7 @@
 ---
 title: "Lecture 08: Functions"
 author: "Vincenzo Ciancia"
-date: "October 13, 2025"
+date: "October 23, 2025"
 ---
 
 # Chapter 8: Function Abstraction — Design and Semantics

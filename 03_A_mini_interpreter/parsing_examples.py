@@ -178,4 +178,77 @@ def REPL():
                 print(e)
 
 
-REPL()
+# REPL()
+
+# %%
+
+# Alternative approach: Using an operator environment
+# Instead of hardcoding operators in match statements, we can use a dictionary
+# that maps operator strings to binary functions
+
+from typing import Callable
+
+# Define the operator environment as a mapping from strings to binary functions
+type BinaryOp = Callable[[int, int], int]
+type OperatorEnv = dict[str, BinaryOp]
+
+
+def safe_div(a: int, b: int) -> int:
+    """Integer division with zero check"""
+    if b == 0:
+        raise ValueError("Division by zero")
+    return a // b
+
+
+def safe_mod(a: int, b: int) -> int:
+    """Modulo with zero check"""
+    if b == 0:
+        raise ValueError("Division by zero")
+    return a % b
+
+
+# Create the operator environment
+operator_env: OperatorEnv = {
+    "+": lambda a, b: a + b,
+    "-": lambda a, b: a - b,
+    "*": lambda a, b: a * b,
+    "/": safe_div,
+    "%": safe_mod,
+}
+
+
+# %%
+
+
+def evaluate_with_env(ast: Expression, env: OperatorEnv) -> int:
+    """Evaluate an expression using an operator environment"""
+    match ast:
+        case Number(value):
+            return value
+        case BinaryExpression(op, left, right):
+            left_value = evaluate_with_env(left, env)
+            right_value = evaluate_with_env(right, env)
+            if op in env:
+                return env[op](left_value, right_value)
+            else:
+                raise ValueError(f"Unknown operator: {op}")
+
+
+# %%
+
+# Test the environment-based evaluator
+print("Testing environment-based evaluator:")
+print(f"(1+2)-3 = {evaluate_with_env(parse_ast('(1+2)-3'), operator_env)}")
+print(f"10*5 = {evaluate_with_env(parse_ast('10*5'), operator_env)}")
+print(f"17%5 = {evaluate_with_env(parse_ast('17%5'), operator_env)}")
+
+# %%
+
+# We can easily add new operators by extending the environment
+extended_env: OperatorEnv = {
+    **operator_env,
+    "**": lambda a, b: a**b,  # Exponentiation (if we add it to grammar)
+}
+
+print(f"\nWith extended environment (if grammar supported **):")
+print(f"Note: ** not in grammar, just showing extensibility")

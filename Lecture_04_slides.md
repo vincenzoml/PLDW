@@ -1,7 +1,7 @@
 ---
 title: "Lecture 04: Domains"
 author: "Vincenzo Ciancia"
-date: "October 13, 2025"
+date: "October 23, 2025"
 ---
 
 ## Section 1: Introduction to Semantic Domains

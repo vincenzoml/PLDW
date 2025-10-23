@@ -36,295 +36,212 @@ We'll implement each of these components in our mini interpreter.
 
 <!-- slide -->
 
-## Section 2: Lexical Analysis
+## Section 2: Using Lark Parser
 
-The first step in interpreting code is breaking it down into tokens - the smallest meaningful units in the language.
-
-<!-- slide -->
-
-### Tokens and Lexical Structure
-
-Tokens are the building blocks of a language, similar to words in natural language. Common token types include:
-
-- **Keywords**: Reserved words with special meaning (e.g., `if`, `while`)
-- **Identifiers**: Names given to variables, functions, etc.
-- **Literals**: Constant values (numbers, strings, booleans)
-- **Operators**: Symbols that perform operations (`+`, `-`, `*`, `/`)
-- **Punctuation**: Symbols that structure the code (`;`, `,`, `{}`, `()`)
+Instead of manually implementing a lexer and parser, we'll use the Lark parsing library, which provides a powerful and declarative way to parse expressions.
 
 <!-- slide -->
 
-### Implementing a Lexer
+### Why Use Lark?
 
-Our lexer will convert a string of source code into a list of tokens:
+Lark is a modern parsing library for Python that offers several advantages:
+
+1. **Declarative Grammar**: Define your language using EBNF notation
+2. **Automatic Tokenization**: No need to write a manual lexer
+3. **Parse Tree Generation**: Automatically creates parse trees
+4. **Pattern Matching**: Easy to transform parse trees into ASTs
+
+<!-- slide -->
+
+### Installing Lark
+
+First, ensure Lark is installed in your environment:
+
+```bash
+pip install lark
+```
+
+<!-- slide -->
+
+### Defining the Grammar
+
+We define our arithmetic expression grammar using Lark's EBNF format:
 
 ```python
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import List, Optional
+from __future__ import annotations
+from lark import Lark, Token, Tree
 
-# Define token types
-class TokenType(Enum):
-    NUMBER = auto()
-    PLUS = auto()
-    MINUS = auto()
-    MULTIPLY = auto()
-    DIVIDE = auto()
-    LPAREN = auto()
-    RPAREN = auto()
-    EOF = auto()  # End of file
+grammar = r"""
+    ?expr: bin | mono
+    mono: ground | paren
+    paren: "(" expr ")"
+    bin: expr OP mono
+    ground: NUMBER
 
-@dataclass
-class Token:
-    type: TokenType
-    value: Optional[str] = None
-    
-def tokenize(text: str) -> List[Token]:
-    tokens = []
-    i = 0
-    
-    while i < len(text):
-        char = text[i]
-        
-        # Skip whitespace
-        if char.isspace():
-            i += 1
-            continue
-            
-        # Process numbers
-        if char.isdigit():
-            num = ""
-            while i < len(text) and text[i].isdigit():
-                num += text[i]
-                i += 1
-            tokens.append(Token(TokenType.NUMBER, num))
-            continue
-            
-        # Process operators
-        if char == '+':
-            tokens.append(Token(TokenType.PLUS))
-        elif char == '-':
-            tokens.append(Token(TokenType.MINUS))
-        elif char == '*':
-            tokens.append(Token(TokenType.MULTIPLY))
-        elif char == '/':
-            tokens.append(Token(TokenType.DIVIDE))
-        elif char == '(':
-            tokens.append(Token(TokenType.LPAREN))
-        elif char == ')':
-            tokens.append(Token(TokenType.RPAREN))
-        else:
-            raise ValueError(f"Unexpected character: {char}")
-            
-        i += 1
-        
-    tokens.append(Token(TokenType.EOF))
-    return tokens
+    NUMBER: /[0-9]+/
+    OP: "+" | "-" | "*" | "/" | "%"
+
+    %import common.WS
+    %ignore WS
+"""
 ```
 
 <!-- slide -->
 
-### Testing the Lexer
+### Understanding the Grammar
 
-Let's test our lexer with a simple arithmetic expression:
+The grammar defines:
+
+- **expr**: An expression can be binary operation or monadic (single value)
+
+- **mono**: A monadic expression is either a ground value or parenthesized expression
+
+- **ground**: A basic number literal
+
+- **bin**: A binary operation (left operand, operator, right operand)
+
+- **NUMBER**: A regex pattern matching digits
+
+- **OP**: Operators (+, -, *, /, %)
+
+- **WS**: Whitespace is imported and ignored
+
+<!-- slide -->
+
+### Creating the Parser
 
 ```python
-def test_lexer():
-    source = "3 + 4 * (2 - 1)"
-    tokens = tokenize(source)
-    
-    expected = [
-        Token(TokenType.NUMBER, "3"),
-        Token(TokenType.PLUS),
-        Token(TokenType.NUMBER, "4"),
-        Token(TokenType.MULTIPLY),
-        Token(TokenType.LPAREN),
-        Token(TokenType.NUMBER, "2"),
-        Token(TokenType.MINUS),
-        Token(TokenType.NUMBER, "1"),
-        Token(TokenType.RPAREN),
-        Token(TokenType.EOF)
-    ]
-    
-    assert tokens == expected, f"Expected {expected}, got {tokens}"
-    print("Lexer test passed!")
+# Create the Lark parser
+parser = Lark(grammar, start="expr")
 
-test_lexer()
+# Parse an expression
+parse_tree = parser.parse("(1 + 2) - 3")
 ```
 
 <!-- slide -->
 
-## Section 3: Parsing and Abstract Syntax Trees
+### Examining Parse Trees
 
-Once we have tokens, we need to organize them into a structured representation of the program - an Abstract Syntax Tree (AST).
+Lark provides a convenient method to visualize the parse tree:
+
+```python
+print(parse_tree.pretty())
+
+# Output:
+# bin
+# ├── mono
+# │   └── paren
+# │       └── bin
+# │           ├── mono
+# │           │   └── ground
+# │           │       └── 1
+# │           ├── OP    +
+# │           └── mono
+# │               └── ground
+# │                   └── 2
+# ├── OP    -
+# └── mono
+#     └── ground
+#         └── 3
+```
 
 <!-- slide -->
 
-### Understanding Abstract Syntax Trees
+## Section 3: Transforming Parse Trees to ASTs
 
-An AST is a tree representation of the abstract syntactic structure of source code. Each node in the tree represents a construct in the source code.
-
-For example, the expression `3 + 4 * 2` would be represented as:
-
-```
-    (+)
-   /   \
-  3    (*)
-      /   \
-     4     2
-```
-
-The tree captures the structure and precedence of operations.
+While Lark creates parse trees automatically, we need to transform them into our own Abstract Syntax Tree (AST) representation for evaluation.
 
 <!-- slide -->
 
 ### Defining AST Nodes
 
-Let's define classes for our AST nodes:
+We define our AST using Python's type system and dataclasses:
 
 ```python
 from dataclasses import dataclass
-from typing import Union, Optional
+from typing import Literal
+
+# Define operator type
+type Op = Literal["+", "-", "*", "/", "%"]
 
 @dataclass
 class Number:
-    value: float
+    value: int
 
 @dataclass
-class BinaryOp:
-    left: 'Expression'
-    operator: str
-    right: 'Expression'
+class BinaryExpression:
+    op: Op
+    left: Expression
+    right: Expression
 
-# Define our Expression type
-Expression = Union[Number, BinaryOp]
+type Expression = Number | BinaryExpression
 ```
 
 <!-- slide -->
 
-### Implementing a Recursive Descent Parser
+### Understanding AST vs Parse Tree
 
-A recursive descent parser is a top-down parser that uses a set of recursive procedures to process the input:
+- **Parse Tree**: Generated by Lark, contains all grammar details
+- **AST**: Simplified tree with only semantically relevant information
+- **Transformation**: We convert parse trees to ASTs using pattern matching
+
+<!-- slide -->
+
+### Transforming Parse Trees with Pattern Matching
+
+We use Python's pattern matching to transform Lark's parse trees into our AST:
 
 ```python
-class Parser:
-    def __init__(self, tokens: List[Token]):
-        self.tokens = tokens
-        self.current = 0
-    
-    def peek(self) -> Token:
-        return self.tokens[self.current]
-    
-    def previous(self) -> Token:
-        return self.tokens[self.current - 1]
-    
-    def advance(self) -> Token:
-        if not self.is_at_end():
-            self.current += 1
-        return self.previous()
-    
-    def is_at_end(self) -> bool:
-        return self.peek().type == TokenType.EOF
-    
-    def check(self, type: TokenType) -> bool:
-        if self.is_at_end():
-            return False
-        return self.peek().type == type
-    
-    def match(self, *types: TokenType) -> bool:
-        for type in types:
-            if self.check(type):
-                self.advance()
-                return True
-        return False
-    
-    def consume(self, type: TokenType, message: str) -> Token:
-        if self.check(type):
-            return self.advance()
-        raise Exception(message)
-    
-    def parse(self) -> Expression:
-        return self.expression()
-    
-    def expression(self) -> Expression:
-        return self.term()
-    
-    def term(self) -> Expression:
-        expr = self.factor()
+def transform_parse_tree(tree: Tree) -> Expression:
+    match tree:
+        case Tree(data="mono", children=[subtree]):
+            return transform_parse_tree(subtree)
         
-        while self.match(TokenType.PLUS, TokenType.MINUS):
-            operator = self.previous().type
-            right = self.factor()
-            expr = BinaryOp(
-                expr, 
-                "+" if operator == TokenType.PLUS else "-", 
-                right
-            )
-            
-        return expr
-    
-    def factor(self) -> Expression:
-        expr = self.primary()
-        
-        while self.match(TokenType.MULTIPLY, TokenType.DIVIDE):
-            operator = self.previous().type
-            right = self.primary()
-            expr = BinaryOp(
-                expr, 
-                "*" if operator == TokenType.MULTIPLY else "/", 
-                right
-            )
-            
-        return expr
-    
-    def primary(self) -> Expression:
-        if self.match(TokenType.NUMBER):
-            return Number(float(self.previous().value))
-            
-        if self.match(TokenType.LPAREN):
-            expr = self.expression()
-            self.consume(TokenType.RPAREN, "Expect ')' after expression.")
-            return expr
-            
-        raise Exception(f"Unexpected token: {self.peek()}")
-```
-
-This parser implements the following grammar:
-
-```
-expression → term
-term       → factor (("+"|"-") factor)*
-factor     → primary (("*"|"/") primary)*
-primary    → NUMBER | "(" expression ")"
+        case Tree(data="ground", children=[Token(type="NUMBER", value=actual_value)]):
+            return Number(value=int(actual_value))
 ```
 
 <!-- slide -->
 
-### Testing the Parser
+```python
+        case Tree(data="paren", children=[subtree]):
+            return transform_parse_tree(subtree)
+        
+        case Tree(
+            data="bin",
+            children=[
+                left,
+                Token(type="OP", value=op),
+                right,
+            ],
+        ):
+            return BinaryExpression(
+                op=op,
+                left=transform_parse_tree(left),
+                right=transform_parse_tree(right),
+            )
+```
 
-Let's test our parser with the same expression:
+<!-- slide -->
 
 ```python
-def test_parser():
-    tokens = tokenize("3 + 4 * 2")
-    parser = Parser(tokens)
-    ast = parser.parse()
-    
-    # Expected: BinaryOp(Number(3), "+", BinaryOp(Number(4), "*", Number(2)))
-    expected = BinaryOp(
-        Number(3),
-        "+",
-        BinaryOp(
-            Number(4),
-            "*",
-            Number(2)
-        )
-    )
-    
-    assert ast == expected, f"Expected {expected}, got {ast}"
-    print("Parser test passed!")
+        case _:
+            raise ValueError(f"Unexpected parse tree structure")
+```
 
-test_parser()
+<!-- slide -->
+
+### Complete Parsing Function
+
+Combining Lark parsing with our transformation:
+
+```python
+def parse_ast(expression: str) -> Expression:
+    parse_tree = parser.parse(expression)
+    return transform_parse_tree(parse_tree)
+
+# Example usage
+ast = parse_ast("(1+2)-3")
 ```
 
 <!-- slide -->
@@ -347,295 +264,223 @@ Evaluation is the process of computing the result of an expression. It typically
 
 ### Implementing an Evaluator
 
-For our mini interpreter, we'll implement a simple evaluator that computes arithmetic expressions:
+We implement the evaluator using pattern matching:
 
 ```python
-def evaluate(expr: Expression) -> float:
-    """Evaluate an expression and return its value."""
-    match expr:
+def evaluate(ast: Expression) -> int:
+    match ast:
         case Number(value):
             return value
-        case BinaryOp(left, operator, right):
+```
+
+<!-- slide -->
+
+```python
+        case BinaryExpression(op, left, right):
             left_value = evaluate(left)
             right_value = evaluate(right)
-            
-            match operator:
+            match op:
                 case "+":
                     return left_value + right_value
                 case "-":
                     return left_value - right_value
+```
+
+<!-- slide -->
+
+```python
                 case "*":
                     return left_value * right_value
                 case "/":
                     if right_value == 0:
-                        raise ZeroDivisionError("Division by zero")
-                    return left_value / right_value
-                case _:
-                    raise ValueError(f"Unknown operator: {operator}")
+                        raise ValueError("Division by zero")
+                    return left_value // right_value
+                case "%":
+                    if right_value == 0:
+                        raise ValueError("Division by zero")
+                    return left_value % right_value
 ```
 
 <!-- slide -->
 
-### Testing the Evaluator
+### Convenience Function
 
-Let's test our evaluator with a few expressions:
+We can combine parsing and evaluation:
 
 ```python
-def test_evaluator():
-    expressions = [
-        ("3 + 4", 7),
-        ("3 * 4", 12),
-        ("10 - 2", 8),
-        ("20 / 5", 4),
-        ("3 + 4 * 2", 11),  # Tests operator precedence
-        ("(3 + 4) * 2", 14),  # Tests parentheses
-    ]
-    
-    for source, expected in expressions:
-        tokens = tokenize(source)
-        parser = Parser(tokens)
-        ast = parser.parse()
-        result = evaluate(ast)
-        
-        assert result == expected, f"For '{source}', expected {expected}, got {result}"
-    
-    print("Evaluator tests passed!")
+def evaluate_string(expression: str) -> int:
+    ast = parse_ast(expression)
+    return evaluate(ast)
 
-test_evaluator()
+# Example
+result = evaluate_string("(1+2)*3")  # Returns 9
 ```
 
 <!-- slide -->
 
-## Section 5: Putting It All Together
+## Section 5: Building a REPL
 
-Now we'll combine our lexer, parser, and evaluator into a complete mini interpreter.
+Now we'll create a Read-Eval-Print Loop (REPL) for interactive use.
 
 <!-- slide -->
 
-### The Full Interpreter
+### Implementing the REPL
 
 ```python
-def interpret(source: str) -> float:
-    """Interpret a source string and return the result."""
-    try:
-        tokens = tokenize(source)
-        parser = Parser(tokens)
-        ast = parser.parse()
-        return evaluate(ast)
-    except Exception as e:
-        print(f"Error: {e}")
-        return float('nan')  # Return NaN for errors
-
-def run_repl():
-    """Run a simple Read-Eval-Print Loop."""
-    print("Mini Interpreter REPL")
-    print("Enter expressions to evaluate, or 'exit' to quit")
-    
-    while True:
-        try:
-            source = input("> ")
-            if source.lower() in ("exit", "quit"):
-                break
-                
-            result = interpret(source)
-            print(f"= {result}")
-        except KeyboardInterrupt:
-            break
-        except Exception as e:
-            print(f"Error: {e}")
-    
-    print("Goodbye!")
-
-if __name__ == "__main__":
-    run_repl()
+def REPL():
+    exit = False
+    while not exit:
+        expression = input("Enter an expression (exit to quit): ")
+        if expression == "exit":
+            exit = True
+        else:
+            try:
+                print(evaluate_string(expression))
+            except Exception as e:
+                print(e)
 ```
 
 <!-- slide -->
 
-### Example Usage
-
-Using our interpreter:
-
-```
-Mini Interpreter REPL
-Enter expressions to evaluate, or 'exit' to quit
-> 3 + 4
-= 7.0
-> 3 * (4 + 2)
-= 18.0
-> 10 / (2 - 2)
-Error: Division by zero
-> (3 + 4) * (5 - 2)
-= 21.0
-> exit
-Goodbye!
-```
-
-<!-- slide -->
-
-## Section 6: Extending the Interpreter
-
-Our mini interpreter is very basic, but we can extend it with more features.
-
-<!-- slide -->
-
-### Adding Variables
-
-To add variable support, we need:
-
-1. An environment to store variable bindings
-2. New AST nodes for variable references and assignments
-3. Updated parsing rules
-4. Updated evaluation logic
-
-Let's implement a simple environment first:
+### Running the REPL
 
 ```python
-@dataclass
-class Environment:
-    values: dict[str, float] = None
-    
-    def __post_init__(self):
-        if self.values is None:
-            self.values = {}
-    
-    def define(self, name: str, value: float) -> None:
-        """Define a variable with the given name and value."""
-        self.values[name] = value
-    
-    def get(self, name: str) -> float:
-        """Get the value of a variable."""
-        if name in self.values:
-            return self.values[name]
-        raise ValueError(f"Undefined variable: {name}")
+# Start the interactive interpreter
+REPL()
 ```
 
 <!-- slide -->
 
-### New AST Nodes for Variables
+### Example Session
+
+```
+Enter an expression (exit to quit): 1+2
+3
+Enter an expression (exit to quit): (10+20)*2
+60
+Enter an expression (exit to quit): 100/0
+Division by zero
+Enter an expression (exit to quit): 17%5
+2
+Enter an expression (exit to quit): exit
+```
+
+<!-- slide -->
+
+## Section 6: Debugging Parse Trees
+
+Lark provides useful tools for debugging and understanding parse trees.
+
+<!-- slide -->
+
+### Printing Parse Trees
+
+You can inspect the raw parse tree structure:
 
 ```python
-@dataclass
-class Variable:
-    name: str
+def print_tree(tree: Tree | Token):
+    match tree:
+        case Tree(data=data, children=children):
+            print("Tree", data)
+            for child in children:
+                print_tree(child)
+        case Token(type=type, value=value):
+            print("Token", type, value)
 
-@dataclass
-class Assignment:
-    name: str
-    value: 'Expression'
-
-# Update Expression type
-Expression = Union[Number, BinaryOp, Variable, Assignment]
+# Usage
+parse_tree = parser.parse("(1+2)-3")
+print_tree(parse_tree)
 ```
 
 <!-- slide -->
 
-### Updating the Parser
+### Pretty Printing
+
+Lark's built-in pretty printer is even more convenient:
 
 ```python
-class Parser:
-    # ... existing code ...
-    
-    def parse(self) -> Expression:
-        return self.assignment()
-    
-    def assignment(self) -> Expression:
-        expr = self.expression()
-        
-        if self.match(TokenType.EQUAL):
-            if isinstance(expr, Variable):
-                value = self.assignment()
-                return Assignment(expr.name, value)
-            raise Exception("Invalid assignment target")
-            
-        return expr
-    
-    # ... update tokenize() to handle identifiers and '=' ...
+parse_tree = parser.parse("(1+2)-3")
+print(parse_tree.pretty())
 ```
+
+This shows the hierarchical structure with indentation, making it easy to understand how the parser interpreted the expression.
 
 <!-- slide -->
 
-### Updating the Evaluator
+## Section 7: Extending the Interpreter
+
+Our mini interpreter is basic but extensible. Here are some ideas for enhancements:
+
+<!-- slide -->
+
+### Possible Extensions
+
+1. **Variables**: Add variable storage and assignment
+2. **Functions**: Support function definitions and calls
+3. **More Operators**: Add comparison (<, >, ==) and logical operators (and, or, not)
+4. **Control Flow**: Implement if-then-else expressions
+5. **Type System**: Add type checking before evaluation
+6. **Error Messages**: Improve error reporting with line numbers and context
+
+<!-- slide -->
+
+### Modifying the Grammar
+
+To extend the language, you can modify the Lark grammar:
 
 ```python
-def evaluate(expr: Expression, env: Environment) -> float:
-    """Evaluate an expression in the given environment."""
-    match expr:
-        case Number(value):
-            return value
-        case Variable(name):
-            return env.get(name)
-        case Assignment(name, value):
-            result = evaluate(value, env)
-            env.define(name, result)
-            return result
-        case BinaryOp(left, operator, right):
-            # ... existing code ...
+# Add comparison operators
+grammar = r"""
+    ?expr: comparison | bin | mono
+    comparison: expr COMP mono
+    mono: ground | paren
+    paren: "(" expr ")"
+    bin: expr OP mono
+    ground: NUMBER
+
+    NUMBER: /[0-9]+/
+    OP: "+" | "-" | "*" | "/" | "%"
+    COMP: "==" | "!=" | "<" | ">" | "<=" | ">="
+
+    %import common.WS
+    %ignore WS
+"""
 ```
 
-<!-- slide -->
-
-### Adding Control Flow
-
-We can extend our language with if-expressions:
-
-```python
-@dataclass
-class If:
-    condition: Expression
-    then_branch: Expression
-    else_branch: Expression
-
-# Update Expression type
-Expression = Union[Number, BinaryOp, Variable, Assignment, If]
-
-# Update evaluator
-def evaluate(expr: Expression, env: Environment) -> float:
-    match expr:
-        # ... existing cases ...
-        case If(condition, then_branch, else_branch):
-            if evaluate(condition, env) != 0:  # Non-zero is true
-                return evaluate(then_branch, env)
-            else:
-                return evaluate(else_branch, env)
-```
+Then update your AST and transformer accordingly.
 
 <!-- slide -->
 
-## Section 7: Further Exploration
-
-Here are some ways you could extend our mini interpreter further:
-
-<!-- slide -->
-
-### Additional Features to Implement
-
-1. **Functions**: Add function declarations and calls
-2. **Loops**: Implement while or for loops
-3. **More Operators**: Add comparison, logical, and bitwise operators
-4. **Error Handling**: Improve error messages and recovery
-5. **Type System**: Add a simple type system
-6. **Standard Library**: Implement built-in functions for common operations
-
-<!-- slide -->
-
-### Learning Resources
+## Section 8: Learning Resources
 
 To learn more about interpreters and language implementation:
 
+<!-- slide -->
+
+### Recommended Reading
+
 - **"Crafting Interpreters"** by Robert Nystrom: A comprehensive guide to implementing interpreters
 - **"Programming Language Pragmatics"** by Michael Scott: Covers theoretical aspects of language design
-- **"Structure and Interpretation of Computer Programs"** by Abelson and Sussman: A classic text on programming language concepts
+- **Lark Documentation**: https://lark-parser.readthedocs.io/
+
+<!-- slide -->
+
+### Key Takeaways
+
+1. **Lark simplifies parsing**: No need to write manual lexers and parsers
+2. **Pattern matching is powerful**: Transforming parse trees to ASTs is elegant with pattern matching
+3. **Recursive evaluation**: AST evaluation naturally uses recursion
+4. **Extensibility**: The architecture supports easy addition of new features
 
 <!-- slide -->
 
 ## Conclusion
 
-Building a mini interpreter helps understand how programming languages work under the hood. We've seen how to:
+We've built a mini interpreter that:
 
-1. Tokenize source code into lexical tokens
-2. Parse tokens into an abstract syntax tree
-3. Evaluate the AST to produce results
-4. Extend the interpreter with new features
+1. Uses Lark to parse arithmetic expressions into parse trees
+2. Transforms parse trees into ASTs using pattern matching
+3. Evaluates ASTs recursively to produce results
+4. Provides an interactive REPL for testing
 
 This foundation can be expanded to build more complex languages and tools.
