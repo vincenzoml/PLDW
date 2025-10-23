@@ -761,8 +761,9 @@ We define our arithmetic expression grammar using Lark's EBNF format:
 from __future__ import annotations
 from lark import Lark, Token, Tree
 
+# Define the grammar in Lark's EBNF format
 grammar = r"""
-    ?expr: bin | mono
+    expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
     bin: expr OP mono
@@ -781,12 +782,19 @@ grammar = r"""
 ### Understanding the Grammar
 
 The grammar defines:
+
 - **expr**: An expression can be binary operation or monadic (single value)
+
 - **mono**: A monadic expression is either a ground value or parenthesized expression
+
 - **ground**: A basic number literal
+
 - **bin**: A binary operation (left operand, operator, right operand)
+
 - **NUMBER**: A regex pattern matching digits
+
 - **OP**: Operators (+, -, *, /, %)
+
 - **WS**: Whitespace is imported and ignored
 
 
@@ -811,21 +819,22 @@ Lark provides a convenient method to visualize the parse tree:
 print(parse_tree.pretty())
 
 # Output:
-# bin
-# ├── mono
-# │   └── paren
-# │       └── bin
-# │           ├── mono
-# │           │   └── ground
-# │           │       └── 1
-# │           ├── OP    +
-# │           └── mono
-# │               └── ground
-# │                   └── 2
-# ├── OP    -
-# └── mono
-#     └── ground
-#         └── 3
+# expr
+#   bin
+#     expr
+#       mono
+#         paren
+#           expr
+#             bin
+#               expr
+#                 mono
+#                   ground        1
+#               +
+#               mono
+#                 ground  2
+#     -
+#     mono
+#       ground    3
 ```
 
 
@@ -877,6 +886,9 @@ We use Python's pattern matching to transform Lark's parse trees into our AST:
 ```python
 def transform_parse_tree(tree: Tree) -> Expression:
     match tree:
+        case Tree(data="expr", children=[subtree]):
+            return transform_parse_tree(subtree)
+        
         case Tree(data="mono", children=[subtree]):
             return transform_parse_tree(subtree)
         
@@ -1114,7 +1126,7 @@ To extend the language, you can modify the Lark grammar:
 ```python
 # Add comparison operators
 grammar = r"""
-    ?expr: comparison | bin | mono
+    expr: comparison | bin | mono
     comparison: expr COMP mono
     mono: ground | paren
     paren: "(" expr ")"

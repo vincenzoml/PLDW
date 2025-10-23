@@ -5,9 +5,8 @@ from __future__ import annotations
 
 from lark import Lark, Token, Tree
 
-# Define the grammar in Lark's EBNF format
 grammar = r"""
-    ?expr: bin | mono
+    expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
     bin: expr OP mono
@@ -27,21 +26,25 @@ parse_tree = parser.parse("(1 + 2) - 3")
 
 # print(parse_tree.pretty())
 
-# bin
-# ├── mono
-# │   └── paren
-# │       └── bin
-# │           ├── mono
-# │           │   └── ground
-# │           │       └── 1
-# │           ├── op
-# │           └── mono
-# │               └── ground
-# │                   └── 2
-# ├── op
-# └── mono
-#     └── ground
-#         └── 3
+# expr
+# └── bin
+#     ├── expr
+#     │   └── mono
+#     │       └── paren
+#     │           └── expr
+#     │               └── bin
+#     │                   ├── expr
+#     │                   │   └── mono
+#     │                   │       └── ground
+#     │                   │           └── 1
+#     │                   ├── +
+#     │                   └── mono
+#     │                       └── ground
+#     │                           └── 2
+#     ├── -
+#     └── mono
+#         └── ground
+#             └── 3
 
 
 # %%
@@ -85,6 +88,9 @@ type Expression = Number | BinaryExpression
 # %%
 def transform_parse_tree(tree: Tree) -> Expression:
     match tree:
+        case Tree(data="expr", children=[subtree]):
+            return transform_parse_tree(subtree)
+        
         case Tree(data="mono", children=[subtree]):
             return transform_parse_tree(subtree)
 

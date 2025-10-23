@@ -65,14 +65,14 @@ pip install lark
 
 ### Defining the Grammar
 
-We define our arithmetic expression grammar using Lark's EBNF format:
+Our arithmetic expression grammar uses Lark's EBNF format:
 
 ```python
-from __future__ import annotations
 from lark import Lark, Token, Tree
 
+# Define the grammar in Lark's EBNF format
 grammar = r"""
-    ?expr: bin | mono
+    expr: bin | mono
     mono: ground | paren
     paren: "(" expr ")"
     bin: expr OP mono
@@ -118,31 +118,31 @@ parser = Lark(grammar, start="expr")
 parse_tree = parser.parse("(1 + 2) - 3")
 ```
 
-<!-- slide -->
-
-### Examining Parse Trees
-
 Lark provides a convenient method to visualize the parse tree:
 
 ```python
 print(parse_tree.pretty())
+```
 
-# Output:
-# bin
-# ├── mono
-# │   └── paren
-# │       └── bin
-# │           ├── mono
-# │           │   └── ground
-# │           │       └── 1
-# │           ├── OP    +
-# │           └── mono
-# │               └── ground
-# │                   └── 2
-# ├── OP    -
-# └── mono
-#     └── ground
-#         └── 3
+<!-- slide -->
+
+```
+expr
+  bin
+    expr
+      mono
+        paren
+          expr
+            bin
+              expr
+                mono
+                  ground        1
+              +
+              mono
+                ground  2
+    -
+    mono
+      ground    3
 ```
 
 <!-- slide -->
@@ -163,7 +163,9 @@ from typing import Literal
 
 # Define operator type
 type Op = Literal["+", "-", "*", "/", "%"]
-
+````
+<!-- slide -->
+```python
 @dataclass
 class Number:
     value: int
@@ -194,6 +196,9 @@ We use Python's pattern matching to transform Lark's parse trees into our AST:
 ```python
 def transform_parse_tree(tree: Tree) -> Expression:
     match tree:
+        case Tree(data="expr", children=[subtree]):
+            return transform_parse_tree(subtree)
+        
         case Tree(data="mono", children=[subtree]):
             return transform_parse_tree(subtree)
         
@@ -431,7 +436,7 @@ To extend the language, you can modify the Lark grammar:
 ```python
 # Add comparison operators
 grammar = r"""
-    ?expr: comparison | bin | mono
+    expr: comparison | bin | mono
     comparison: expr COMP mono
     mono: ground | paren
     paren: "(" expr ")"
@@ -448,20 +453,6 @@ grammar = r"""
 ```
 
 Then update your AST and transformer accordingly.
-
-<!-- slide -->
-
-## Section 8: Learning Resources
-
-To learn more about interpreters and language implementation:
-
-<!-- slide -->
-
-### Recommended Reading
-
-- **"Crafting Interpreters"** by Robert Nystrom: A comprehensive guide to implementing interpreters
-- **"Programming Language Pragmatics"** by Michael Scott: Covers theoretical aspects of language design
-- **Lark Documentation**: https://lark-parser.readthedocs.io/
 
 <!-- slide -->
 

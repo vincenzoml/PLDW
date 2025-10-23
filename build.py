@@ -5,7 +5,9 @@ import re
 import subprocess
 import sys
 import argparse
+import time
 from datetime import date
+from pathlib import Path
 
 
 def find_lecture_dirs():
@@ -293,6 +295,141 @@ def build_slides_for_all_chapters(force=False):
     print(f"Slides generation complete. Generated slides for {success_count} chapters.")
 
 
+def get_files_to_watch():
+    """Get all files that should be watched for changes."""
+    files = []
+    
+    # Add all lecture README.md files
+    files.extend(get_all_lecture_readmes())
+    
+    # Add main README if it exists
+    if os.path.exists("README.md"):
+        files.append("README.md")
+    
+    return files
+
+
+def get_file_mtimes(files):
+    """Get modification times for a list of files."""
+    mtimes = {}
+    for file in files:
+        if os.path.exists(file):
+            mtimes[file] = os.path.getmtime(file)
+    return mtimes
+
+
+def watch_mode(watch_slides=False, watch_book=False, watch_chapter=None, force=False):
+    """Watch files for changes and rebuild when needed."""
+    print("=" * 60)
+    print("WATCH MODE STARTED")
+    print("=" * 60)
+    print("Watching for file changes. Press Ctrl+C to stop.")
+    print()
+    
+    # Determine what to watch and build
+    if watch_chapter:
+        # Find the specific chapter directory
+        chapter_dir = None
+        for dir_name in find_lecture_dirs():
+            if dir_name.startswith(watch_chapter):
+                chapter_dir = dir_name
+                break
+        
+        if not chapter_dir:
+            print(f"Error: Chapter {watch_chapter} not found.")
+            return
+        
+        readme_path = os.path.join(chapter_dir, "README.md")
+        if not os.path.exists(readme_path):
+            print(f"Error: {readme_path} not found.")
+            return
+        
+        files_to_watch = [readme_path]
+        print(f"Watching: {readme_path}")
+        print(f"Will rebuild: Lecture_{watch_chapter} slides")
+    else:
+        files_to_watch = get_files_to_watch()
+        print(f"Watching {len(files_to_watch)} files:")
+        for f in files_to_watch:
+            print(f"  - {f}")
+        
+        build_targets = []
+        if watch_book:
+            build_targets.append("book")
+        if watch_slides:
+            build_targets.append("all slides")
+        if not build_targets:
+            build_targets = ["book", "all slides"]
+        
+        print(f"Will rebuild: {', '.join(build_targets)}")
+    
+    print()
+    print("Performing initial build...")
+    print("-" * 60)
+    
+    # Initial build
+    if watch_chapter:
+        generate_slides_for_chapter(chapter_dir, force=force)
+    else:
+        if watch_book or not watch_slides:
+            build_book(force=force)
+        if watch_slides or not watch_book:
+            build_slides_for_all_chapters(force=force)
+    
+    print("-" * 60)
+    print("Initial build complete. Watching for changes...")
+    print()
+    
+    # Track modification times
+    last_mtimes = get_file_mtimes(files_to_watch)
+    
+    try:
+        while True:
+            time.sleep(1)  # Check every second
+            
+            current_mtimes = get_file_mtimes(files_to_watch)
+            changed_files = []
+            
+            for file in files_to_watch:
+                if file in current_mtimes and file in last_mtimes:
+                    if current_mtimes[file] != last_mtimes[file]:
+                        changed_files.append(file)
+            
+            if changed_files:
+                print()
+                print("=" * 60)
+                print(f"DETECTED CHANGES at {time.strftime('%H:%M:%S')}")
+                print("=" * 60)
+                for f in changed_files:
+                    print(f"  Changed: {f}")
+                print()
+                print("Rebuilding...")
+                print("-" * 60)
+                
+                if watch_chapter:
+                    generate_slides_for_chapter(chapter_dir, force=True)
+                else:
+                    if watch_book or not watch_slides:
+                        build_book(force=True)
+                    if watch_slides or not watch_book:
+                        build_slides_for_all_chapters(force=True)
+                
+                print("-" * 60)
+                print(f"Rebuild complete at {time.strftime('%H:%M:%S')}. Watching for changes...")
+                print()
+                
+                # Update tracked times
+                last_mtimes = get_file_mtimes(files_to_watch)
+                
+    except KeyboardInterrupt:
+        print()
+        print()
+        print("=" * 60)
+        print("WATCH MODE STOPPED")
+        print("=" * 60)
+        sys.exit(0)
+
+
 def main():
     """Parse command-line arguments and run the requested actions."""
     parser = argparse.ArgumentParser(description="Build course book and slides")
@@ -310,8 +447,23 @@ def main():
         action="store_true",
         help="Force regeneration even if output is newer than source",
     )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Watch mode: automatically rebuild when files change",
+    )
 
     args = parser.parse_args()
+
+    # Watch mode
+    if args.watch:
+        watch_mode(
+            watch_slides=args.slides,
+            watch_book=args.book,
+            watch_chapter=args.chapter,
+            force=args.force
+        )
+        return
 
     # By default, build both book and all slides if no specific options are given
     if not (args.slides or args.chapter or args.book):
