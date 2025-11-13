@@ -7,7 +7,7 @@ from lark import Lark, Token, Tree
 
 # Define the semantic domains
 # Using Python 3.13 simplified syntax for union types
-type DenOperator = Callable[[int, int], int]
+type DenOperator = Callable[[int, int], int] 
 type DVal = DenOperator  # Denotable values: can be stored in environment
 
 # Environment as a function
@@ -163,7 +163,11 @@ def evaluate(ast: Expression, env: Environment) -> int:
         case BinaryExpression(op, left, right):
             try:
                 # Get operator from environment
-                operator = lookup(env, op)
+                operator = lookup(env, op) # or simply operator = env(op)
+
+                # env : str -> DenOperator
+                # op : str 
+                # lookup(env, op) : DenOperator
 
                 # Ensure it's a DenOperator
                 if not isinstance(operator, Callable):

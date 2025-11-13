@@ -52,6 +52,8 @@ def bind(env: Environment, name: str, value: DVal) -> Environment:
 
 
 # Define grammar for parsing
+
+# (let x = 3 in x + 1) + x
 grammar = r"""
     ?expr: bin | mono | let 
     mono: ground | paren | var
