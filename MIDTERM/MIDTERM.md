@@ -1,6 +1,6 @@
 # PROGETTO INTERMEDIO: Implementazione di un Linguaggio Specifico di Dominio
 
-**Scadenza:** 28 Aprile 2025
+**Scadenza:** giovedì 27 Novembre 2025
 
 ## Panoramica del Progetto
 
