@@ -575,17 +575,22 @@ def execute_command(
                 state2 = State(store=state1.store, next_loc=saved_next_loc)
                 return env, state2
         case While(cond, body):
-            cond_val = evaluate_expr(cond, env, state)
-            if not isinstance(cond_val, bool):
-                raise ValueError("While condition must be boolean")
-            saved_next_loc = state.next_loc
-            if cond_val:
-                _, state1 = execute_command_seq(body, env, state)
-                # Restore next_loc after block
-                state2 = State(store=state1.store, next_loc=saved_next_loc)  #
-                return execute_command(While(cond, body), env, state2)
-            else:
-                return env, state
+            
+            def rec_fn (env: Environment, state: State) -> tuple[Environment, State]: 
+                cond_val = evaluate_expr(cond, env, state)
+                if not isinstance(cond_val, bool):
+                    raise ValueError("While condition must be boolean")
+                saved_next_loc = state.next_loc                   
+                if cond_val:
+                    _, state1 = execute_command_seq(body, env, state)
+                    # Restore next_loc after block
+                    state2 = State(store=state1.store, next_loc=saved_next_loc)  #
+                    return rec_fn(env, state2)
+                
+                else:
+                    return env, state
+                
+            return rec_fn(env, state)
         case _:
             raise ValueError(f"Unknown command type: {cmd}")
 
