@@ -673,3 +673,16 @@ if __name__ == "__main__":
 
     # Run the tests
     run_tests()
+
+
+
+###### EXERCISE
+
+#### FOR LOOPS
+
+### Add a command: 
+# for IDENTIFIER = expr to expr do command_seq done
+#
+# 2 variants 
+#  1) identifier is a let binding 
+#  2) identifier is a variable that can be modified
