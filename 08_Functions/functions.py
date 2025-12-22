@@ -1,17 +1,5 @@
 """
-Lecture 7: Control flow
-
-Minimal changes from Lecture 6:
-1. Added if/while commands (conditions must be boolean)
-2. Expressions support booleans and unified ops (arithmetic, relational, boolean)
-3. All operators stored as Operator(type, fn) in environment
-4. Unified Apply node for all operator applications in AST
-5. Runtime type and arity checks for operators
-
-Scoping rules: This language uses static (lexical) scoping with block-local variables. Variables declared inside a block (such as if, else, or while) are only visible within that block and are not accessible outside of it.
-
-Block-local variables are allocated using a stack discipline: their memory locations are reused after the block ends by resetting the next available location counter. This prevents unbounded growth of the store for temporary variables. The values remain assigned (cf: real memory implementation, and security issues therein, buffer over-read attacks, the famous Heartbleed bug (see https://heartbleed.com/) which however was against the heap, not the stack).
-
+Lecture 8: Functions - defined using a "copying rule": the denotation of a function includes the AST of its body
 """
 
 from __future__ import annotations
