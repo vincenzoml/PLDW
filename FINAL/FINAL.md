@@ -1,7 +1,6 @@
 # PROGETTO INTERMEDIO: Implementazione di un Linguaggio Specifico di Dominio
 
-**Scadenza:** giovedì 27 Novembre 2025
-
+**Scadenza:** 12 gennaio 2026
 ## Panoramica del Progetto
 
 In questo progetto finale è richiesto di progettare e implementare un Linguaggio Specifico di Dominio (Domain-Specific Language o DSL) e in particolare, nel midterm, costituito *almeno* da espressioni, let binding, funzioni, ifthenelse e cicli while, focalizzato su un dominio applicativo a scelta. Il compito si basa sui concetti trattati nel corso, tra cui:
