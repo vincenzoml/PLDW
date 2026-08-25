@@ -1,4 +1,4 @@
-# PROGETTO INTERMEDIO: Implementazione di un Linguaggio Specifico di Dominio
+# PROGETTO FINALE: Implementazione di un Linguaggio Specifico di Dominio
 
 **Scadenza:** 12 gennaio 2026
 ## Panoramica del Progetto
