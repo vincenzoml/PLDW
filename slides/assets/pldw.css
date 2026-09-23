@@ -1,0 +1,82 @@
+/* PLDW slides — a theme on top of reveal.js. Flat, high contrast, no chrome.
+   Palette shared with the book: ink, paper, indigo, burnt orange. */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;1,400&display=swap');
+
+:root {
+  --ink: #15181e; --paper: #fafaf7; --muted: #6e7480; --rule: #d9d9d2;
+  --accent: #3b3fcf; --warm: #d9541f; --code: #f1f1ec;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --serif: "IBM Plex Serif", Georgia, serif;
+  --r-background-color: var(--paper);
+  --r-main-font: var(--sans);
+  --r-main-font-size: 34px;
+  --r-main-color: var(--ink);
+  --r-heading-font: var(--sans);
+  --r-heading-color: var(--ink);
+  --r-link-color: var(--accent);
+  --r-code-font: var(--mono);
+}
+.reveal-viewport { background: var(--paper); }
+.reveal { font-family: var(--sans); font-size: var(--r-main-font-size); color: var(--ink); line-height: 1.35; }
+.reveal .slides { text-align: left; }
+.reveal .slides section { padding: 0 .6em; }
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--sans); font-weight: 600; text-transform: none; letter-spacing: 0; line-height: 1.15; }
+.reveal h2 { font-size: 1.35em; margin: 0 0 .7em; padding-bottom: .25em; border-bottom: 3px solid var(--accent); display: inline-block; }
+.reveal h3 { font-size: 1.05em; margin: .6em 0 .3em; }
+.reveal p { margin: 0 0 .6em; }
+.reveal ul, .reveal ol { margin: 0 0 .6em 1em; display: block; }
+.reveal li { margin: .18em 0; }
+.reveal strong { font-weight: 600; }
+.reveal em { font-style: italic; }
+.reveal a { color: var(--accent); }
+.reveal .muted { color: var(--muted); }
+.reveal .warm { color: var(--warm); }
+.reveal .small { font-size: .72em; }
+.reveal blockquote { font-family: var(--serif); font-style: italic; border-left: 4px solid var(--warm);
+  background: none; box-shadow: none; padding: .1em .8em; margin: .5em 0 .8em; width: auto; text-align: left; }
+.reveal blockquote p { margin: .3em 0; }
+.reveal pre { width: 100%; box-shadow: none; margin: .4em 0 .8em; font-size: .62em; line-height: 1.4; }
+.reveal pre code { background: var(--code); color: var(--ink); padding: .8em 1em; border-radius: 6px; max-height: none; }
+.reveal code { font-family: var(--mono); background: var(--code); padding: .05em .3em; border-radius: 3px; font-size: .9em; }
+.reveal pre code { font-size: 1em; }
+.reveal img { border: 0; box-shadow: none; background: none; margin: .3em 0; max-height: 62vh; }
+.reveal figure { margin: 0; }
+.reveal figcaption { font-size: .6em; color: var(--muted); margin-top: .2em; }
+.reveal table { font-size: .75em; }
+.reveal table th, .reveal table td { border-bottom: 1px solid var(--rule); padding: .25em .6em; }
+
+/* title slide */
+.reveal section.title { text-align: left; }
+.reveal section.title h1 { font-size: 2.1em; margin: 0 0 .25em; }
+.reveal section.title .sub { font-size: .8em; color: var(--muted); }
+.reveal section.title .who { font-size: .65em; color: var(--muted); margin-top: 2em; }
+
+/* section divider */
+.reveal section.part { }
+.reveal section.part h2 { border: 0; font-size: 1.9em; }
+.reveal section.part .kicker { font-family: var(--mono); font-size: .6em; color: var(--warm); letter-spacing: .08em; text-transform: uppercase; }
+
+/* two columns */
+.reveal .cols { display: flex; gap: 1.2em; align-items: flex-start; }
+.reveal .cols > * { flex: 1; min-width: 0; }
+.reveal .cols > .narrow { flex: .7; }
+
+/* the one big sentence */
+.reveal section.moral p { font-family: var(--serif); font-size: 1.35em; line-height: 1.3; }
+
+/* progress and controls */
+.reveal .progress { color: var(--accent); height: 4px; }
+.reveal .controls { color: var(--muted); }
+.reveal .slide-number { background: none; color: var(--muted); font-family: var(--mono); font-size: .45em; }
+
+@media print { .reveal pre { font-size: .6em; } }
+
+/* highlight.js github theme, toned to the palette */
+.reveal pre code.hljs { background: var(--code); }
+.hljs-keyword, .hljs-built_in { color: var(--accent); }
+.hljs-string { color: var(--warm); }
+.hljs-comment { color: var(--muted); }
+.hljs-number { color: #1a7f5a; }
+.reveal pre { font-size: .66em; }
+.reveal .cols figure img { width: 100%; max-height: 58vh; object-fit: contain; }

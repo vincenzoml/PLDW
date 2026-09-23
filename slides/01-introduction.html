@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What a language is made of</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>What a language is made of</h1>
+  <p class="sub">Lecture 1, part B. From here on, everything is in the exam programme.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI</p>
+</section>
+
+<section>
+  <h2>Forty lines</h2>
+  <p>Part A said a language is worth building. Now: what is one made of?</p>
+  <p>By the end of this hour you will have built one — forty lines of Python, which run — and seen its two halves:</p>
+  <ul>
+    <li><strong>syntax</strong>: which programs exist;</li>
+    <li><strong>semantics</strong>: what they mean.</li>
+  </ul>
+  <p class="muted">We use arithmetic, because you already know what its programs mean.</p>
+</section>
+
+<section>
+  <h2>The characters are not the program</h2>
+  <pre><code class="language-text" data-trim>2 + (x * 3)      2+(x*3)      2 +
+                              (x * 3)</code></pre>
+  <p>Same program, three times. What stays fixed is a <strong>tree</strong>: an addition whose right operand is a multiplication.</p>
+  <p>The parentheses are not in the tree. They only told the reader <em>which</em> tree: <code>2 + x * 3</code> could have been <code>(2 + x) * 3</code>.</p>
+</section>
+
+<section>
+  <h2>Abstract and concrete</h2>
+  <p>The tree is the <strong>abstract syntax tree</strong> (AST): it has forgotten spaces, brackets, line breaks — everything that does not affect meaning.</p>
+  <p>The characters are the <strong>concrete syntax</strong>: one of many ways to write the tree down.</p>
+  <p>Characters → tree is the job of a <strong>parser</strong> (Chapter 3). Until then, we write the trees by hand.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Half one</p>
+  <h2>Syntax: which trees exist</h2>
+</section>
+
+<section>
+  <h2>The syntax, in Python</h2>
+  <pre><code class="language-python" data-trim>
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Number:
+    value: float
+
+@dataclass(frozen=True)
+class Variable:
+    name: str
+
+@dataclass(frozen=True)
+class BinaryOp:
+    left: Expr
+    operator: str
+    right: Expr
+
+type Expr = Number | Variable | BinaryOp
+  </code></pre>
+  <p class="small">Read the last line as a definition: <em>an expression is a number, or a variable, or a binary operation — and nothing else.</em></p>
+</section>
+
+<section>
+  <h2>The tree for <code>2 + (x * 3)</code></h2>
+  <pre><code class="language-python" data-trim>
+example = BinaryOp(
+    left=Number(2.0),
+    operator="+",
+    right=BinaryOp(left=Variable("x"), operator="*", right=Number(3.0)),
+)
+  </code></pre>
+  <p>A <code>BinaryOp</code> contains two further expressions: the definition is <strong>recursive</strong>, so trees of any depth exist.</p>
+  <p><code>frozen=True</code>: a tree never changes after it is built. (Chapter 2 says why.)</p>
+</section>
+
+<section>
+  <h2>The same thing, as a mathematician writes it</h2>
+  <p style="font-size:1.3em; text-align:center; margin:.6em 0">\( e ::= n \;\mid\; x \;\mid\; e \; \mathit{op} \; e \)</p>
+  <p>"An expression is a numeral, or a name, or an expression, an operator and an expression."</p>
+  <p>This is a <strong>grammar</strong>, in the notation Chomsky's work led to. The Python and the grammar say the same thing. The grammar is shorter; the Python runs.</p>
+  <p class="muted">Moving between the two is a skill this course teaches.</p>
+</section>
+
+<section>
+  <h2>What syntax does not say</h2>
+  <p><code>BinaryOp(Number(1), "?", Number(2))</code> is a perfectly good tree.</p>
+  <p>Syntax does not say that <code>x</code> has a value, that division by zero is forbidden, or that <code>+</code> adds.</p>
+  <p class="warm">Syntax says which trees exist. It is deliberately silent about what they mean.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Half two</p>
+  <h2>Semantics: what a tree means</h2>
+</section>
+
+<section>
+  <h2>The meaning of an expression</h2>
+  <p>…is a number — once we know the value of every variable.</p>
+  <p>So the meaning of a tree is a function from an <strong>environment</strong> (a table from names to values) to a number.</p>
+  <pre><code class="language-python" data-trim>
+type Env = dict[str, float]
+
+def evaluate(expr: Expr, env: Env) -> float:
+    ...
+  </code></pre>
+</section>
+
+<section>
+  <h2>One case per kind of node</h2>
+  <pre><code class="language-python" data-trim>
+def evaluate(expr: Expr, env: Env) -> float:
+    match expr:
+        case Number(value):
+            return value
+        case Variable(name):
+            if name not in env:
+                raise NameError(f"variable '{name}' is not defined")
+            return env[name]
+        case BinaryOp(left, operator, right):
+            lv = evaluate(left, env)
+            rv = evaluate(right, env)
+            match operator:
+                case "+": return lv + rv
+                case "-": return lv - rv
+                case "*": return lv * rv
+                case "/": return lv / rv
+                case _: raise ValueError(f"unknown operator '{operator}'")
+  </code></pre>
+</section>
+
+<section>
+  <h2>It runs</h2>
+  <pre><code class="language-python" data-trim>
+>>> evaluate(example, {"x": 4.0})
+14.0
+  </code></pre>
+  <p>Three things to stare at. The whole course is in them.</p>
+</section>
+
+<section>
+  <h2>1. The shape of the function is the shape of the syntax</h2>
+  <p>One case per kind of node, nothing else. <code>match</code> takes the tree apart: <code>case BinaryOp(left, operator, right)</code> names the three children.</p>
+  <p>Add a kind of node to <code>Expr</code> → add a case to <code>evaluate</code>.</p>
+  <p class="muted">Not a coincidence of Python. This is what a definition of meaning looks like.</p>
+</section>
+
+<section>
+  <h2>2. Recursive exactly where the syntax is</h2>
+  <p style="font-size:1.15em; text-align:center; margin:.5em 0">\( ⟦e_1 + e_2⟧\rho \;=\; ⟦e_1⟧\rho + ⟦e_2⟧\rho \)</p>
+  <p>"The meaning of the tree <code>e₁ + e₂</code> in environment ρ is the sum of the meanings of the subtrees."</p>
+  <p>The <code>+</code> on the left is a piece of <strong>syntax</strong>. The <code>+</code> on the right is addition of <strong>numbers</strong>.</p>
+  <p>The equation and the line <code>case "+": return lv + rv</code> say the same thing.</p>
+</section>
+
+<section>
+  <h2>3. The decisions are visible</h2>
+  <p>A missing variable: we raise. A spreadsheet returns 0. A computer algebra system leaves <code>x</code> in the answer.</p>
+  <p><code>1 / 0</code>: right now, whatever Python does.</p>
+  <p class="warm">None of these is forced by the syntax. Each is a decision about what the language <em>means</em>. A designer who has not made them has not finished designing.</p>
+</section>
+
+<section>
+  <h2>Same characters, different trees</h2>
+  <pre><code class="language-python" data-trim>
+left_first  = BinaryOp(BinaryOp(Number(2), "*", Number(3)), "+", Number(4))
+right_first = BinaryOp(Number(2), "*", BinaryOp(Number(3), "+", Number(4)))
+
+>>> evaluate(left_first, {}), evaluate(right_first, {})
+(10.0, 14.0)
+  </code></pre>
+  <p><code>evaluate</code> does not know about precedence and does not need to. Precedence is a rule about which tree a <em>string</em> stands for: it belongs to the parser.</p>
+  <p class="muted">Keeping the two apart lets you change the surface of a language without touching its meaning — and the other way round.</p>
+</section>
+
+<section>
+  <h2>What we have, and what we do not</h2>
+  <p>A language: a syntax that says which trees exist, and a semantics that gives each tree a number. Everything the course adds extends one half or the other.</p>
+  <table>
+    <tr><td>Ch. 2</td><td>the Python we just used, and why these features</td></tr>
+    <tr><td>Ch. 3</td><td>the parser: from characters to trees</td></tr>
+    <tr><td>Ch. 4</td><td>semantic domains; the environment as an object of study</td></tr>
+    <tr><td>Ch. 5–8</td><td><code>let</code> · state and commands · <code>if</code>, <code>while</code> · functions</td></tr>
+  </table>
+  <p class="warm small">What we do not have: a reason for this language to exist. Nobody needs a new calculator.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Practical matters</p>
+  <h2>How this course works</h2>
+</section>
+
+<section>
+  <h2>What you build</h2>
+  <p>You pick an <strong>application domain</strong> — images, music, geometry, graphs, sound, text, 3D models, or one you propose — and design a domain-specific language for it:</p>
+  <ul>
+    <li>analyse the domain and choose its <strong>primitives</strong>;</li>
+    <li>decide their <strong>semantics</strong>;</li>
+    <li>build an <strong>interpreter</strong>, and make the results <strong>visible</strong>;</li>
+    <li>write examples that show the language is good for something.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>How you are assessed</h2>
+  <ul>
+    <li><strong>Midway submission (1/3).</strong> Required and graded: your domain, your primitives and why, a first interpreter that runs.</li>
+    <li><strong>Final presentation (2/3).</strong> Slides and a live demo in front of the class, then questions on your code and on the theory.</li>
+  </ul>
+  <p>In the presentation you say <strong>why your language is right, and where it is wrong</strong>. That last part is the exam.</p>
+  <p class="muted small">Full rules: repository, folder <code>exam/</code>.</p>
+</section>
+
+<section>
+  <h2>Tools and rules</h2>
+  <ul>
+    <li>Python 3.12+; <code>lark</code> from Chapter 3 on.</li>
+    <li>AI assistants are <strong>allowed and expected</strong>. Not hidden, not confessed.</li>
+    <li>What you must own: every primitive, every example, every design decision.</li>
+  </ul>
+  <p class="warm">A language you cannot explain is not your language, whoever typed it.</p>
+  <p class="muted small">Prerequisites: functions, lists, dictionaries, recursion. Rusty? <code>code/01-introduction/python_crash_course.py</code>.</p>
+</section>
+
+<section>
+  <h2>Before next week</h2>
+  <ol>
+    <li>Run <code>code/01-introduction/language.py</code>. Add a <code>Negate</code> node.</li>
+    <li>Make undefined variables evaluate to <code>0.0</code>. One sentence: why a spreadsheet might want this and a bank might not.</li>
+    <li>Write <code>variables(expr) -> set[str]</code>. Same shape as <code>evaluate</code>. Why?</li>
+    <li><em>Blindfolded parsing:</em> evaluate <code>"2 + 5 - 3 * 4"</code> left to right, from the string. Then via the tree.</li>
+    <li>Pick a domain you might choose. Write five operations as <code>name(arguments)</code>. Implement nothing.</li>
+  </ol>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>

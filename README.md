@@ -1,122 +1,87 @@
-# Programming Language Design Workshop
+# Programming Languages Lab
 
-A hands-on course exploring programming language design concepts using Python's modern features. This course leverages Python's type system and structural pattern matching to demonstrate key programming language concepts and implementations.
+An open textbook, with slides and code, on **writing interpreters for small
+languages** — the laboratory module of *Linguaggi di Programmazione* at the University of
+Pisa (3 credits, one lecture a week). Taught by Vincenzo Ciancia (CNR-ISTI).
 
-## Course Overview
+**Read it here:** <https://vincenzoml.github.io/PLDW/>
 
-This workshop consists of 10 lectures (2 hours each) that combine theoretical foundations with practical implementations. Students will learn about programming language design principles while getting hands-on experience with Python's advanced features.
+## What the course is about
 
-## Course Structure
+You already know how to write a program. This course asks why anyone would build a
+*language* instead, and answers by making you build one: a domain-specific language for a
+domain of your choice — images, music, geometry, graphs, sound, text, 3D models — with a
+parser, an interpreter, and examples that show it is good for something.
 
-### Lecture 1: Introduction to Programming Language Design
+The thesis is that a language is how a person keeps control of an automatic system. AI
+assistants are allowed and expected while you build; what you must own is every
+primitive, every example and every design decision, because the exam is you explaining
+your language in front of the class and saying where it is wrong.
 
-- What is a programming language?
-- The importance of programming language design
-- The course structure and expectations
-- Python as a language for exploring language design concepts
+## Programme
 
-### Lecture 2: Types and Structural Pattern Matching in Python
+Lectures appear here as they are taught. The full sequence:
 
-- Introduction to Python's type system
-- Type hints and type checking
-- Structural pattern matching (match/case statements)
-- Practical applications and examples
+| # | Lecture | Exam |
+|---|---------|------|
+| 1 | **Why build a language** (part A) — Chomsky, symbolic AI, one real case: VoxLogicA | no |
+| 1 | **What a language is made of** (part B) — syntax, semantics, forty lines of Python | yes |
+| 2 | Types and pattern matching in Python | yes |
+| 3 | AI-assisted coding and GitHub — how to work | no |
+| 4 | A mini interpreter — parsing with Lark, ASTs, evaluation | yes |
+| 5 | Semantic domains and environments | yes |
+| 6 | Binding and scoping | yes |
+| 7 | State and commands | yes |
+| 8 | Control flow | yes |
+| 9 | Functions and closures | yes |
+| 10 | A language in the wild: spatial logic and VoxLogicA | no |
 
-### Lecture 3: Programming Language Implementation: A mini interpreter
+Each lecture is a chapter of the book (`book/`), a deck of slides (`slides/`) and a folder
+of code that runs (`code/`). The book chapters are numbered by topic, so chapter numbers
+and lecture numbers differ slightly.
 
-- Parsing and lexical analysis
-- Abstract Syntax Trees (AST)
-- Program semantics
-- Implementing lexer, parser, and evaluator components
+## Exam
 
-### Lecture 4: Semantic Domains and Environment-Based Interpreters
+A midway submission, required and graded (one third): your domain, your primitives and
+why, a first interpreter that runs. A final presentation with slides and a live demo in
+front of the class, followed by questions on your code and on the theory (two thirds).
+Texts and rules, in Italian: [`exam/`](exam/).
 
-- Semantic domains: expressible values, denotable values, and environments
-- Environment-based interpreters
-- Implementing a simple language with variables, functions, and recursion
-- Pure functions vs side effects
-
-### Lecture 5: Binding and Scoping
-
-- Variable binding through let expressions
-- Static vs dynamic scoping
-- Implementing lexical scope
-- Environment manipulation and memory management
-
-### Lecture 6: State and Commands
-
-- Introducing state to our language
-- Expressions vs commands
-- Variable declaration, assignment, and print commands
-- Command sequences
-
-### Lecture 7: Control Flow
-
-- Conditionals (if/else) and loops (while)
-- Boolean values and expressions
-- Unified operator handling
-- Block-local variable scoping
-
-### Lecture 8: TBA
-
-### Lecture 9: TBA
-
-### Lecture 10: TBA
-
-## Prerequisites
-
-- Python 3.10 or higher (for pattern matching support)
-- Basic Python programming knowledge
-- Understanding of basic programming concepts
-
-## Repository Structure
-
-Each lecture has its own directory containing:
-
-- A detailed README.md with lecture notes and exercises
-- Python modules with examples and implementations
-- Additional resources and references when applicable
-
-## Building the Course Materials
-
-### Requirements
-
-```
-pip install -r requirements.txt
-```
-
-### Generating Materials
-
-Use the `build.py` script to generate course materials:
+## Running the code
 
 ```bash
-# Generate slides for all chapters
-python build.py --slides
-
-# Generate slides for a specific chapter
-python build.py --slides --chapter 01
-
-# Generate the course book (PDF and HTML)
-python build.py --book
-
-# Generate both slides and course book
-python build.py --slides --book
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 code/01-introduction/language.py
 ```
 
-The slides are generated from the README.md files in each lecture directory. Slide separators are indicated by HTML comments (`<!-- slide -->`).
+Python 3.12 or later. The only library the interpreters need is `lark`.
 
-### Output Files
+## Building the site
 
-- Slides: `Lecture_XX.pdf` (where XX is the chapter number)
-- Course book: `course_book.pdf` and `course_book.html`
+```bash
+python3 tools/build.py          # -> site/  (needs pandoc)
+python3 tools/build.py --serve  # then open http://localhost:8000
+python3 tools/build.py --pdf    # also site/book.pdf (needs xelatex and IBM Plex fonts)
+```
 
-## Getting Started
+The slides are plain HTML files that open in any browser, with or without a build.
 
-1. Clone this repository
-2. Ensure you have Python 3.10+ installed
-3. Navigate to the specific lecture directory
-4. Follow the instructions in each lecture's README.md
+## Layout
 
-## License
+```
+book/       one Markdown file per chapter, figures in book/figures/, STYLE.md for authors
+slides/     one HTML5 deck per lecture (reveal.js), shared theme in slides/assets/
+code/       the code shown in each chapter, one folder per chapter
+exam/       exam rules and the texts of the two assignments (Italian)
+docs/       the teacher's programme and notes (Italian)
+tools/      the build script and the book stylesheet
+```
 
-[MIT License](LICENSE)
+## Licence
+
+Text and figures: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+Code: [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). Figures from published
+papers are reproduced with the authors' permission and cited in the chapters.
+
+The previous edition of the course (2025, PDF slides generated from the same sources) is
+on the branch `edizione-2025`.

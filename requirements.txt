@@ -1,8 +1,4 @@
-ipykernel
-typing-extensions>=4.0.0
-black
-pylint
+lark>=1.2
+pillow
 mypy
-lark
-pyre-check
-pytype
+ipykernel

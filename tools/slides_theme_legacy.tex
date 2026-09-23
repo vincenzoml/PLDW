@@ -1,0 +1,157 @@
+% ---------------------------------------------------------------------------
+% PLDW slide theme
+% Loaded by build.py via pandoc's --include-in-header, on top of metropolis.
+% Typography: IBM Plex (shipped with TeX Live). Flat, high-contrast, no chrome.
+% ---------------------------------------------------------------------------
+
+\metroset{
+  progressbar=frametitle,
+  numbering=fraction,
+  block=fill,
+  sectionpage=progressbar,
+  subsectionpage=none,
+  titleformat=regular,
+  titleformat title=regular,
+  titleformat subtitle=regular,
+  titleformat section=regular,
+  titleformat frame=regular
+}
+
+% --- palette --------------------------------------------------------------
+\definecolor{pldwInk}{HTML}{15181E}   % near-black, faintly blue
+\definecolor{pldwPaper}{HTML}{FAFAF7} % warm off-white
+\definecolor{pldwMuted}{HTML}{6E7480} % secondary text, rules
+\definecolor{pldwAccent}{HTML}{3B3FCF}% indigo: structure, links, progress
+\definecolor{pldwWarm}{HTML}{D9541F}  % burnt orange: emphasis, alerts
+\definecolor{pldwCode}{HTML}{F1F1EC}  % code block ground
+
+% --- fonts ----------------------------------------------------------------
+\usepackage{fontspec}
+\setsansfont{IBMPlexSans}[
+  UprightFont    = *-Regular,
+  ItalicFont     = *-Italic,
+  BoldFont       = *-SemiBold,
+  BoldItalicFont = *-SemiBoldItalic,
+  Extension      = .otf,
+  Ligatures      = TeX
+]
+\setmonofont{IBMPlexMono}[
+  UprightFont    = *-Regular,
+  ItalicFont     = *-Italic,
+  BoldFont       = *-SemiBold,
+  BoldItalicFont = *-SemiBoldItalic,
+  Extension      = .otf,
+  Scale          = 0.82
+]
+\newfontfamily\pldwLight{IBMPlexSans}[UprightFont=*-Light, Extension=.otf]
+
+% --- colours --------------------------------------------------------------
+\setbeamercolor{normal text}{fg=pldwInk, bg=pldwPaper}
+\setbeamercolor{alerted text}{fg=pldwWarm}
+\setbeamercolor{example text}{fg=pldwAccent}
+\setbeamercolor{structure}{fg=pldwAccent}
+
+\setbeamercolor{frametitle}{fg=pldwInk, bg=pldwPaper}
+\setbeamercolor{progress bar}{fg=pldwAccent, bg=pldwInk!12}
+\setbeamercolor{progress bar in head/foot}{fg=pldwAccent, bg=pldwInk!12}
+\setbeamercolor{progress bar in section page}{fg=pldwAccent, bg=pldwInk!12}
+
+\setbeamercolor{title}{fg=pldwInk}
+\setbeamercolor{subtitle}{fg=pldwMuted}
+\setbeamercolor{author}{fg=pldwMuted}
+\setbeamercolor{date}{fg=pldwMuted}
+\setbeamercolor{institute}{fg=pldwMuted}
+\setbeamercolor{title separator}{fg=pldwAccent}
+
+% blocks: tinted, not filled — a slab of solid colour reads as 2016
+\setbeamercolor{block title}{fg=pldwAccent, bg=pldwAccent!10}
+\setbeamercolor{block body}{fg=pldwInk, bg=pldwAccent!4}
+\setbeamercolor{block title alerted}{fg=pldwWarm, bg=pldwWarm!12}
+\setbeamercolor{block body alerted}{fg=pldwInk, bg=pldwWarm!5}
+\setbeamercolor{block title example}{fg=pldwInk, bg=pldwInk!8}
+\setbeamercolor{block body example}{fg=pldwInk, bg=pldwInk!3}
+
+\setbeamercolor{itemize item}{fg=pldwAccent}
+\setbeamercolor{itemize subitem}{fg=pldwMuted}
+\setbeamercolor{enumerate item}{fg=pldwAccent}
+\setbeamercolor{description item}{fg=pldwInk}
+\setbeamercolor{section title}{fg=pldwInk}
+\setbeamercolor{footline}{fg=pldwMuted}
+\setbeamercolor{page number in head/foot}{fg=pldwMuted}
+
+% --- type scale -----------------------------------------------------------
+\setbeamerfont{title}{size=\Huge, series=\bfseries}
+\setbeamerfont{subtitle}{size=\large, series=\mdseries}
+\setbeamerfont{author}{size=\normalsize}
+\setbeamerfont{date}{size=\small}
+\setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+\setbeamerfont{section title}{size=\Huge, series=\bfseries}
+\setbeamerfont{block title}{size=\normalsize, series=\bfseries}
+\setbeamerfont{footline}{size=\scriptsize}
+
+% a continued frame is marked discreetly, not with roman numerals
+\setbeamertemplate{frametitle continuation}{\normalfont\small\color{pldwMuted}(cont.)}
+
+% roomier frame titles, no all-caps
+\setbeamertemplate{frametitle begin}{}
+\addtobeamertemplate{frametitle}{\vspace*{0.35em}}{\vspace*{0.15em}}
+
+% --- markers: flat, small, accented ---------------------------------------
+\setbeamertemplate{itemize item}{\raisebox{0.12em}{\rule{0.42em}{0.42em}}}
+\setbeamertemplate{itemize subitem}{\raisebox{0.18em}{\rule{0.3em}{0.08em}}}
+\setbeamertemplate{itemize subsubitem}{\raisebox{0.18em}{\rule{0.3em}{0.08em}}}
+
+% content sits at the top of the frame, not floating in the middle
+\makeatletter
+\beamer@centeredfalse
+\makeatother
+\setbeamersize{text margin left=0.9cm, text margin right=0.9cm}
+
+% breathing room
+\setlength{\parskip}{0.6em}
+\setbeamertemplate{itemize/enumerate body begin}{\setlength{\itemsep}{0.45em}}
+
+% --- code blocks: tinted ground, real padding, wrapped long lines -------
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+
+% fvextra teaches fancyvrb (which pandoc uses for listings) to wrap a line
+% that would otherwise run off the right edge of the block.
+\usepackage{fvextra}
+\fvset{
+  breaklines=true,
+  breakanywhere=true,
+  breaksymbolleft={\color{pldwMuted}\tiny\ensuremath{\hookrightarrow}\,},
+  breaksymbolright={},
+  breakindent=1.2em
+}
+
+\newtcolorbox{pldwcodebox}{
+  colback=pldwCode, colframe=pldwCode, boxrule=0pt, sharp corners,
+  left=0.8em, right=0.8em, top=0.55em, bottom=0.55em, boxsep=0pt,
+  enhanced, breakable, before skip=0.5em, after skip=0.5em
+}
+\ifdefined\Shaded
+  \renewenvironment{Shaded}
+    {\setlength{\parskip}{0pt}\begin{pldwcodebox}}
+    {\end{pldwcodebox}}
+\fi
+
+% --- rules and links ------------------------------------------------------
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=pldwAccent, urlcolor=pldwAccent,
+            citecolor=pldwAccent}
+
+% quotes read as pull-quotes: an accent rule on the left, no italic mush
+\renewenvironment{quote}
+  {\begin{tcolorbox}[blanker, left=1.1em, top=0.3em, bottom=0.3em,
+     borderline west={2pt}{0pt}{pldwAccent}]%
+   \color{pldwInk!88}}
+  {\end{tcolorbox}}
+
+% tables: hairlines only
+\usepackage{booktabs}
+\usepackage{colortbl}
+\setlength{\heavyrulewidth}{0.9pt}
+\setlength{\lightrulewidth}{0.35pt}
+\arrayrulecolor{pldwInk!25}

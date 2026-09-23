@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why build a language?</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>Why build a language?</h1>
+  <p class="sub">Lecture 1, part A — motivation. Not in the exam programme.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI</p>
+</section>
+
+<section>
+  <h2>The question</h2>
+  <p>You already know how to write a program.</p>
+  <p>So why would anyone build a <strong>language</strong> instead of just writing the program?</p>
+  <p class="muted">A little history, older than computers. Then one real case.</p>
+</section>
+
+<section>
+  <h2>Languages were formal before they were programmed</h2>
+  <p><strong>Chomsky, 1956–1959.</strong> A language is a <em>set of strings</em>; a <em>grammar</em> is a finite device that generates it. Regular, context-free, context-sensitive, unrestricted: each level has its own machine.</p>
+  <p>He was studying English. One year after <em>Syntactic Structures</em>, the ALGOL 60 report defined a programming language with a context-free grammar.</p>
+  <p class="warm">Every parser you will write in this course descends from that idea.</p>
+</section>
+
+<section>
+  <h2>Syntax is not meaning</h2>
+  <blockquote><p>Colorless green ideas sleep furiously.</p></blockquote>
+  <p class="muted small">— Chomsky, 1957</p>
+  <p>Grammatically perfect. Meaningless.</p>
+  <p>A grammar says which sentences <strong>exist</strong>. It does not say what they <strong>mean</strong>.</p>
+  <p class="muted">The grammar takes one lecture. The meaning takes the rest of the course.</p>
+</section>
+
+<section>
+  <h2>Program semantics</h2>
+  <blockquote><p>What's in a name? That which we call a rose<br>by any other name would smell as sweet.</p></blockquote>
+  <p class="muted small">— Romeo and Juliet</p>
+  <p>Semantics is the art of giving <strong>meaning to symbols</strong> — and of making sure that two people, or a person and a machine, mean the same thing by them.</p>
+</section>
+
+<section>
+  <h2>Symbolic AI: knowledge, written down</h2>
+  <p>For thirty years "artificial intelligence" meant <strong>writing knowledge in a language</strong>: LISP (1958), Prolog (1972), expert systems. MYCIN chose antibiotics from about 600 rules — and could <strong>show the rules behind each answer</strong>.</p>
+  <p>Readable, checkable, laborious. Machine learning makes the opposite trade: nobody writes the rules, nobody can read them.</p>
+  <p class="warm"><strong>This is not an AI course.</strong> It teaches the other half: how to design the language in which something can be written down, read, and checked.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">One real case</p>
+  <h2>Drawing a tumour</h2>
+</section>
+
+<section>
+  <h2>Brain tumour delineation</h2>
+  <div class="cols">
+    <figure><img src="../book/figures/00-why-a-language/tumour_flair_and_contour.jpg" alt="FLAIR slice and manual contour"></figure>
+    <div>
+      <p>Before radiotherapy, someone draws the tumour on the scan: which voxels are tumour, which are not.</p>
+      <p>A human does it, slice by slice. Slow, tiring, and <strong>different experts draw different boundaries</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Automated — in the literature</h2>
+  <p>A yearly challenge since 2012. In 2017: about <strong>50 papers</strong>, essentially all machine learning, some excellent.</p>
+  <p><strong>Not used in clinical workflows. Why?</strong></p>
+  <ul>
+    <li><strong>Accountability</strong> — who is responsible when it is wrong?</li>
+    <li><strong>Compliance</strong> — guidelines are published. Does the program follow them?</li>
+    <li><strong>Quality assurance</strong> — can you certify a procedure you cannot read?</li>
+    <li><strong>Innovation</strong> — a new idea has no training data behind it.</li>
+  </ul>
+  <p class="warm">None of these is about accuracy. All are about <strong>a person reading the procedure</strong>.</p>
+</section>
+
+<section>
+  <h2>So we built a language</h2>
+  <pre><code class="language-text" data-trim>
+let brain        = !touch(flair <. 0.1, border)
+let pflair       = percentiles(flair, brain, 0.5)
+let hyperIntense = flt(5.0, pflair >. 0.95)
+let veryIntense  = flt(2.0, pflair >. 0.86)
+let tumour       = grow(hyperIntense, veryIntense)
+  </code></pre>
+  <p class="small"><em>The brain is what does not touch the border. The tumour is the brightest 5%, grown into the brightest 14% around it.</em></p>
+  <p>A radiologist can read that — and <strong>disagree with it</strong>. You cannot disagree with a weight matrix.</p>
+  <p class="muted small">VoxLogicA — Belmonte, Ciancia, Latella, Massink, TACAS 2019</p>
+</section>
+
+<section>
+  <h2>Look at the vocabulary</h2>
+  <p>Not <code>for</code>, <code>while</code>, <code>array</code>. Instead:</p>
+  <p style="font-family: var(--mono); font-size: .9em">touch · grow · near · percentiles · distance from · largest connected component</p>
+  <p><strong>The operations of the domain</strong>, promoted to primitives of the language. That is what makes it a domain-specific language rather than a library with a fancy name.</p>
+  <p class="warm">Choosing those words took years. Implementing them took much less.</p>
+</section>
+
+<section>
+  <h2>It worked, and it travelled</h2>
+  <figure><img src="../book/figures/00-why-a-language/tacas19_segmentation.jpg" alt="VoxLogicA vs manual segmentation" style="width:78%"><figcaption>Red: VoxLogicA. Blue: manual. Purple: where they agree. (TACAS 2019)</figcaption></figure>
+  <p class="small">About 200 cases: accuracy in line with the state of the art, 5–10 seconds per 3D image on a desktop, and the procedure is <strong>a page of readable text</strong>. Then reused for skin lesions, white and grey matter, video streams, 3D meshes.</p>
+  <p><strong>The program solves one problem. The language solves the ones you had not thought of yet.</strong></p>
+</section>
+
+<section>
+  <h2>To be continued</h2>
+  <p>How this language actually works is a lecture of its own, at the end of the course, when you have built interpreters yourselves:</p>
+  <ul>
+    <li>the <strong>spatial logic</strong> behind the primitives;</li>
+    <li>the <strong>interpreter</strong>: memoisation, sharing, parallel execution;</li>
+    <li>what the language let us <strong>see</strong> about accuracy scores;</li>
+    <li>the second version, and how it works <strong>with neural networks</strong>.</li>
+  </ul>
+  <p class="muted">Today you only need the moral.</p>
+</section>
+
+<section class="moral">
+  <h2>The moral</h2>
+  <p>A domain-specific language is how a person keeps hold of an automatic system: a small, readable, inspectable, re-runnable vocabulary that someone designed on purpose.</p>
+  <p class="small muted" style="font-family: var(--sans)">True whoever — or whatever — writes the programs. An assistant that writes in a vocabulary you chose is one you can check. This is a position, not a theorem: argue with it.</p>
+</section>
+
+<section>
+  <h2>The uncomfortable half</h2>
+  <p>An interpreter for a small language is, today, a couple of hours of work with an assistant. Writing it is no longer the hard part — you are expected to use those tools.</p>
+  <p>What does <strong>not</strong> get cheaper:</p>
+  <ul>
+    <li>knowing <strong>which</strong> primitives belong in the language, and which do not;</li>
+    <li>knowing <strong>what each one means</strong>, exactly, including at the edges;</li>
+    <li>showing a case where your language earns its keep;</li>
+    <li>saying <strong>what it cannot do</strong>.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Three things to believe by the end</h2>
+  <ol>
+    <li>A language is a way of <strong>keeping a human in control</strong> of an automatic system.</li>
+    <li>Building one is now cheap. <strong>Deciding what goes in it is not.</strong></li>
+    <li>That decision — what to make expressible, and what to leave out — is the actual content of this course.</li>
+  </ol>
+  <p class="muted small" style="margin-top:1.5em">Part B: what a language is made of. Forty lines of Python.</p>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>

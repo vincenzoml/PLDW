@@ -1,0 +1,74 @@
+/* PLDW book — one stylesheet for the chapters, the index and the exam pages.
+   Same palette as the slides: ink, paper, indigo, burnt orange. */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --ink: #15181e; --paper: #fafaf7; --muted: #6e7480; --rule: #d9d9d2;
+  --accent: #3b3fcf; --warm: #d9541f; --code: #f1f1ec;
+  --serif: "IBM Plex Serif", Georgia, serif;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #e8e8e2; --paper: #16181d; --muted: #9aa0ab; --rule: #33363d;
+          --accent: #8b8ef5; --warm: #f0865a; --code: #1f2127; }
+}
+html { background: var(--paper); color: var(--ink); }
+body { font-family: var(--serif); font-size: 1.08rem; line-height: 1.6;
+       max-width: 46rem; margin: 0 auto; padding: 1.5rem 1.2rem 4rem; }
+h1, h2, h3, h4 { font-family: var(--sans); font-weight: 600; line-height: 1.2; }
+h1.title { font-size: 2rem; margin: 1.5rem 0 .2rem; }
+p.subtitle { font-family: var(--sans); color: var(--muted); margin-top: 0; }
+h1 { font-size: 1.9rem; margin: 2rem 0 1rem; }
+h2 { font-size: 1.35rem; margin: 2.4rem 0 .8rem; border-top: 2px solid var(--rule); padding-top: .8rem; }
+h3 { font-size: 1.1rem; margin: 1.6rem 0 .5rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { font-weight: 600; }
+p { margin: 0 0 1rem; }
+blockquote { border-left: 3px solid var(--warm); margin: 1rem 0; padding: .1rem 1rem; color: var(--muted); }
+blockquote p { margin: .4rem 0; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code); padding: .05em .3em; border-radius: 3px; }
+pre { background: var(--code); padding: .9rem 1rem; overflow-x: auto; border-radius: 6px;
+      line-height: 1.45; font-size: .92rem; margin: 1rem 0 1.2rem; }
+pre code { background: none; padding: 0; font-size: 1em; }
+img { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+figure { margin: 1.4rem 0; }
+figcaption { font-family: var(--sans); font-size: .9rem; color: var(--muted); text-align: center; }
+table { border-collapse: collapse; margin: 1rem 0; font-size: .95rem; font-family: var(--sans); }
+th, td { border-bottom: 1px solid var(--rule); padding: .35rem .7rem; text-align: left; vertical-align: top; }
+th { font-weight: 600; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2rem 0; }
+ul, ol { padding-left: 1.4rem; }
+li { margin: .25rem 0; }
+
+/* table of contents */
+nav#TOC { font-family: var(--sans); font-size: .95rem; border: 1px solid var(--rule);
+          border-radius: 6px; padding: .6rem 1rem; margin: 1rem 0 2rem; }
+nav#TOC ul { list-style: none; padding-left: 0; margin: 0; }
+nav#TOC ul ul { padding-left: 1rem; }
+nav#TOC li { margin: .15rem 0; }
+
+/* top navigation between chapters */
+nav.top { font-family: var(--sans); font-size: .9rem; display: flex; gap: 1.2rem;
+          flex-wrap: wrap; color: var(--muted); margin-bottom: 1rem; }
+nav.top a:first-child { font-weight: 600; }
+
+/* index */
+body.index ol.chapters { list-style: none; padding: 0; }
+body.index ol.chapters li { margin: .5rem 0; font-family: var(--sans); }
+body.index .num { display: inline-block; min-width: 6.2rem; color: var(--muted); font-size: .9rem; }
+body.index a.deck { font-size: .8rem; margin-left: .4rem; padding: .05rem .45rem;
+                    border: 1px solid var(--rule); border-radius: 999px; color: var(--muted); }
+body.index a.deck:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+
+footer.site { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--rule);
+              font-family: var(--sans); font-size: .85rem; color: var(--muted); }
+
+/* pandoc syntax highlighting: tone it down to the palette */
+pre > code.sourceCode span.kw { color: var(--accent); font-weight: 500; }
+pre > code.sourceCode span.st { color: var(--warm); }
+pre > code.sourceCode span.co { color: var(--muted); font-style: italic; }
+pre > code.sourceCode span.dv, pre > code.sourceCode span.fl { color: #1a7f5a; }
+pre > code.sourceCode span.bu, pre > code.sourceCode span.fu { color: inherit; }
+@media (max-width: 600px) { body { font-size: 1rem; padding: 1rem .9rem 3rem; } pre { font-size: .85rem; } }
