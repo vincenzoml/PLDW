@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why build a language?</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+
+<section class="title">
+  <h1>Why build a language?</h1>
+  <p class="sub">Lecture 0 — motivation. Not in the exam programme.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<section class="statement">
+  <p class="lead muted">You already know how to write a program.</p>
+  <p class="big">So why would anyone build a <strong>language</strong> instead of just writing the program?</p>
+  <p class="note">A little history, older than computers. Then one real case.</p>
+</section>
+
+<section>
+  <h2>Languages were formal before they were programmed</h2>
+  <div class="split flip">
+    <div>
+      <p><strong>Chomsky, 1956–1959.</strong> A language is a <em>set of strings</em>; a <em>grammar</em> is a finite device that generates it. Regular, context-free, context-sensitive, unrestricted: each level has its own machine.</p>
+      <p>He was studying English. One year after <em>Syntactic Structures</em>, the ALGOL 60 report defined a programming language with a context-free grammar.</p>
+    </div>
+    <figure class="diagram"><svg viewBox="0 0 820 334" role="img" aria-label="Chomsky&#x27;s hierarchy: regular inside context-free inside context-sensitive inside unrestricted, each with its machine"><rect x="0" y="0" width="560" height="330" rx="18" class="d-box-soft"/><text x="16" y="24" class="d-t-b" style="font-size:15px">unrestricted</text><text x="590" y="24" class="d-t-muted">Turing machine</text><line x1="560" y1="19" x2="582" y2="19" class="d-dash"/><rect x="34" y="34" width="492" height="262" rx="16" class="d-fill-paper"/><text x="50" y="58" class="d-t-b" style="font-size:15px">context-sensitive</text><text x="590" y="58" class="d-t-muted">linear-bounded automaton</text><line x1="526" y1="53" x2="582" y2="53" class="d-dash"/><rect x="68" y="68" width="424" height="194" rx="14" class="d-box-accent"/><text x="84" y="92" class="d-t-b" style="font-size:15px">context-free</text><text x="590" y="92" class="d-t-muted">pushdown automaton</text><line x1="492" y1="87" x2="582" y2="87" class="d-dash"/><rect x="102" y="102" width="356" height="126" rx="12" class="d-fill-paper"/><text x="118" y="126" class="d-t-b" style="font-size:15px">regular</text><text x="590" y="126" class="d-t-muted">finite automaton</text><line x1="458" y1="121" x2="582" y2="121" class="d-dash"/><text x="280.0" y="250" text-anchor="middle" class="d-t-warm">ALGOL 60 · every parser in this course</text></svg><figcaption>Each class of grammars inside the next, each with the machine that recognises it.</figcaption></figure>
+  </div>
+  <p class="punch" style="max-width:none">Every parser you will write in this course descends from that idea.</p>
+</section>
+
+<section>
+  <h2>Syntax is not meaning</h2>
+  <div class="split">
+    <div>
+      <blockquote><p>Colorless green ideas sleep furiously.</p></blockquote>
+      <p class="cite">Chomsky, 1957</p>
+      <p style="margin-top:1em">Grammatically perfect. Meaningless.</p>
+      <p>A grammar says which sentences <strong>exist</strong>. It does not say what they <strong>mean</strong>.</p>
+      <p class="note">The grammar takes one lecture. The meaning takes the rest of the course.</p>
+    </div>
+    <figure class="diagram"><svg viewBox="0 0 536 248" role="img" aria-label="The sentence colorless green ideas sleep furiously has a perfect parse tree"><line x1="60.0" y1="165.0" x2="60.0" y2="193.0" class="d-line"/><line x1="164.0" y1="165.0" x2="164.0" y2="193.0" class="d-line"/><line x1="268.0" y1="165.0" x2="268.0" y2="193.0" class="d-line"/><line x1="164.0" y1="103.0" x2="60.0" y2="131.0" class="d-line"/><line x1="164.0" y1="103.0" x2="164.0" y2="131.0" class="d-line"/><line x1="164.0" y1="103.0" x2="268.0" y2="131.0" class="d-line"/><line x1="372.0" y1="165.0" x2="372.0" y2="193.0" class="d-line"/><line x1="476.0" y1="165.0" x2="476.0" y2="193.0" class="d-line"/><line x1="424.0" y1="103.0" x2="372.0" y2="131.0" class="d-line"/><line x1="424.0" y1="103.0" x2="476.0" y2="131.0" class="d-line"/><line x1="294.0" y1="41.0" x2="164.0" y2="69.0" class="d-line"/><line x1="294.0" y1="41.0" x2="424.0" y2="69.0" class="d-line"/><rect x="2.6" y="193.0" width="114.8" height="34" rx="17.0" class="d-box"/><text x="60.0" y="215.0" text-anchor="middle" class="d-t-m">colorless</text><rect x="30.2" y="131.0" width="59.6" height="34" rx="17.0" class="d-box-soft"/><text x="60.0" y="153.0" text-anchor="middle" class="d-t-m">Adj</text><rect x="125.0" y="193.0" width="78.0" height="34" rx="17.0" class="d-box"/><text x="164.0" y="215.0" text-anchor="middle" class="d-t-m">green</text><rect x="134.2" y="131.0" width="59.6" height="34" rx="17.0" class="d-box-soft"/><text x="164.0" y="153.0" text-anchor="middle" class="d-t-m">Adj</text><rect x="229.0" y="193.0" width="78.0" height="34" rx="17.0" class="d-box"/><text x="268.0" y="215.0" text-anchor="middle" class="d-t-m">ideas</text><rect x="247.4" y="131.0" width="41.2" height="34" rx="17.0" class="d-box-soft"/><text x="268.0" y="153.0" text-anchor="middle" class="d-t-m">N</text><rect x="138.8" y="69.0" width="50.4" height="34" rx="17.0" class="d-box-accent"/><text x="164.0" y="91.0" text-anchor="middle" class="d-t-m">NP</text><rect x="333.0" y="193.0" width="78.0" height="34" rx="17.0" class="d-box"/><text x="372.0" y="215.0" text-anchor="middle" class="d-t-m">sleep</text><rect x="351.4" y="131.0" width="41.2" height="34" rx="17.0" class="d-box-soft"/><text x="372.0" y="153.0" text-anchor="middle" class="d-t-m">V</text><rect x="418.6" y="193.0" width="114.8" height="34" rx="17.0" class="d-box"/><text x="476.0" y="215.0" text-anchor="middle" class="d-t-m">furiously</text><rect x="446.2" y="131.0" width="59.6" height="34" rx="17.0" class="d-box-soft"/><text x="476.0" y="153.0" text-anchor="middle" class="d-t-m">Adv</text><rect x="398.8" y="69.0" width="50.4" height="34" rx="17.0" class="d-box-accent"/><text x="424.0" y="91.0" text-anchor="middle" class="d-t-m">VP</text><rect x="273.4" y="7.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="294.0" y="29.0" text-anchor="middle" class="d-t-m">S</text></svg><figcaption>A perfect parse tree, and no meaning at all.</figcaption></figure>
+  </div>
+</section>
+
+<section class="statement">
+  <blockquote style="max-width:30ch; font-size:1.5em"><p>What's in a name? That which we call a rose<br>by any other name would smell as sweet.</p></blockquote>
+  <p class="cite">Romeo and Juliet</p>
+  <p class="lead" style="margin-top:1.2em; max-width:38ch"><strong>Program semantics</strong> is the art of giving <strong>meaning to symbols</strong> — and of making sure that two people, or a person and a machine, mean the same thing by them.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Before the case</p>
+  <h2>A short history of <em>artificial intelligence</em></h2>
+</section>
+
+<section>
+  <h2>Two ways to make a machine intelligent</h2>
+  <div class="cards" style="--n:3; margin-top:10px">
+    <div class="card"><p class="idx">SYMBOLIC</p><h3>Write the knowledge down</h3><p>Logic and rule-based systems. Explicit knowledge representation. Reasoning chains a person can follow.</p></div>
+    <div class="card warm"><p class="idx">SUBSYMBOLIC</p><h3>Learn it from data</h3><p>Statistical and neural approaches. Distributed representations. Patterns learned from examples.</p></div>
+    <div class="card" style="border-top-color:var(--ink)"><p class="idx">HYBRID</p><h3>Both, together</h3><p>Learned perception, structured reasoning. Wanted wherever interpretability, robustness and safety are required — medicine first.</p></div>
+  </div>
+</section>
+
+<section class="question">
+  <h2>Is hybrid AI difficult?</h2>
+  <p class="answer fragment">No. The difficult part is symbolic AI.</p>
+  <p class="fragment muted" style="margin-top:.6em">…and symbolic AI is, above all, a matter of <strong>languages</strong>.</p>
+</section>
+
+<section>
+  <h2>Ninety years in one picture</h2>
+  <figure class="diagram"><svg viewBox="0 65 1060 273" role="img" aria-label="A timeline of AI from 1936 to today: symbolic milestones above, subsymbolic below, hybrid systems as diamonds, the two AI winters shaded"><rect x="452" y="103" width="67" height="207" style="fill:var(--paper-2)"/><text x="486" y="117" text-anchor="middle" class="d-t-mono-s">winter</text><rect x="597" y="103" width="67" height="207" style="fill:var(--paper-2)"/><text x="630" y="117" text-anchor="middle" class="d-t-mono-s">winter</text><rect x="20" y="200" width="1020" height="26" rx="4" class="d-fill-paper"/><text x="75" y="218" text-anchor="middle" class="d-t-mono-s">1940</text><text x="186" y="218" text-anchor="middle" class="d-t-mono-s">1950</text><text x="297" y="218" text-anchor="middle" class="d-t-mono-s">1960</text><text x="408" y="218" text-anchor="middle" class="d-t-mono-s">1970</text><text x="519" y="218" text-anchor="middle" class="d-t-mono-s">1980</text><text x="630" y="218" text-anchor="middle" class="d-t-mono-s">1990</text><text x="741" y="218" text-anchor="middle" class="d-t-mono-s">2000</text><text x="852" y="218" text-anchor="middle" class="d-t-mono-s">2010</text><text x="962" y="218" text-anchor="middle" class="d-t-mono-s">2020</text><line x1="31" y1="192" x2="31" y2="189" class="d-dash"/><circle data-node="s1936" cx="31" cy="200" r="6" class="d-fill-accent"/><text x="73" y="184" text-anchor="middle" class="d-t" style="font-size:14px">Turing machine</text><line x1="186" y1="192" x2="186" y2="189" class="d-dash"/><circle data-node="s1950" cx="186" cy="200" r="6" class="d-fill-accent"/><text x="186" y="184" text-anchor="middle" class="d-t" style="font-size:14px">Turing test</text><line x1="253" y1="192" x2="253" y2="164" class="d-dash"/><circle data-node="s1956" cx="253" cy="200" r="6" class="d-fill-accent"/><text x="253" y="159" text-anchor="middle" class="d-t" style="font-size:14px">Dartmouth · Logic Theorist</text><line x1="275" y1="192" x2="275" y2="189" class="d-dash"/><circle data-node="s1958" cx="275" cy="200" r="6" class="d-fill-accent"/><text x="275" y="184" text-anchor="middle" class="d-t" style="font-size:14px">LISP</text><line x1="358" y1="192" x2="358" y2="139" class="d-dash"/><line x1="353" y1="192" x2="364" y2="192" class="d-dash"/><circle data-node="s1965" cx="353" cy="200" r="6" class="d-fill-accent"/><circle data-node="s1966" cx="364" cy="200" r="6" class="d-fill-accent"/><text x="358" y="134" text-anchor="middle" class="d-t" style="font-size:14px">resolution · ELIZA</text><line x1="430" y1="192" x2="430" y2="189" class="d-dash"/><circle data-node="s1972" cx="430" cy="200" r="6" class="d-fill-accent"/><text x="430" y="184" text-anchor="middle" class="d-t" style="font-size:14px">Prolog</text><line x1="475" y1="192" x2="475" y2="164" class="d-dash"/><circle data-node="s1976" cx="475" cy="200" r="6" class="d-fill-accent"/><text x="475" y="159" text-anchor="middle" class="d-t" style="font-size:14px">MYCIN</text><line x1="541" y1="192" x2="541" y2="139" class="d-dash"/><circle data-node="s1982" cx="541" cy="200" r="6" class="d-fill-accent"/><text x="541" y="134" text-anchor="middle" class="d-t" style="font-size:14px">expert systems boom</text><line x1="707" y1="192" x2="707" y2="189" class="d-dash"/><circle data-node="s1997" cx="707" cy="200" r="6" class="d-fill-accent"/><text x="707" y="184" text-anchor="middle" class="d-t" style="font-size:14px">Deep Blue</text><line x1="918" y1="192" x2="918" y2="189" class="d-dash"/><rect data-node="h2016" x="912" y="194" width="12" height="12" transform="rotate(45 918 200)" class="d-fill-ink"/><text x="918" y="184" text-anchor="middle" class="d-t" style="font-size:14px;font-weight:600">AlphaGo</text><line x1="1007" y1="192" x2="1007" y2="164" class="d-dash"/><rect data-node="h2024" x="1001" y="194" width="12" height="12" transform="rotate(45 1007 200)" class="d-fill-ink"/><text x="998" y="159" text-anchor="middle" class="d-t" style="font-size:14px;font-weight:600">AlphaProof</text><line x1="109" y1="234" x2="109" y2="240" class="d-dash"/><circle data-node="n1943" cx="109" cy="226" r="6" class="d-fill-warm"/><text x="109" y="254" text-anchor="middle" class="d-t" style="font-size:14px">McCulloch–Pitts neuron</text><line x1="264" y1="234" x2="264" y2="240" class="d-dash"/><circle data-node="n1957" cx="264" cy="226" r="6" class="d-fill-warm"/><text x="264" y="254" text-anchor="middle" class="d-t" style="font-size:14px">perceptron</text><line x1="397" y1="234" x2="397" y2="240" class="d-dash"/><circle data-node="n1969" cx="397" cy="226" r="6" class="d-fill-warm"/><text x="397" y="254" text-anchor="middle" class="d-t" style="font-size:14px">Perceptrons (the book)</text><line x1="602" y1="234" x2="602" y2="240" class="d-dash"/><line x1="585" y1="234" x2="619" y2="234" class="d-dash"/><circle data-node="n1986" cx="585" cy="226" r="6" class="d-fill-warm"/><circle data-node="n1989" cx="619" cy="226" r="6" class="d-fill-warm"/><text x="602" y="254" text-anchor="middle" class="d-t" style="font-size:14px">backprop · LeNet</text><line x1="707" y1="234" x2="707" y2="240" class="d-dash"/><circle data-node="n1997" cx="707" cy="226" r="6" class="d-fill-warm"/><text x="707" y="254" text-anchor="middle" class="d-t" style="font-size:14px">LSTM</text><line x1="874" y1="234" x2="874" y2="240" class="d-dash"/><circle data-node="n2012" cx="874" cy="226" r="6" class="d-fill-warm"/><text x="874" y="254" text-anchor="middle" class="d-t" style="font-size:14px">AlexNet</text><line x1="929" y1="234" x2="929" y2="265" class="d-dash"/><circle data-node="n2017" cx="929" cy="226" r="6" class="d-fill-warm"/><text x="929" y="279" text-anchor="middle" class="d-t" style="font-size:14px">Transformer</text><line x1="985" y1="234" x2="985" y2="240" class="d-dash"/><circle data-node="n2022" cx="985" cy="226" r="6" class="d-fill-warm"/><text x="985" y="254" text-anchor="middle" class="d-t" style="font-size:14px">ChatGPT</text><text x="20" y="85" class="d-t-accent">● symbolic: knowledge written down</text><text x="350" y="85" class="d-t-m" style="font-size:14px">◆ hybrid: a network proposes, search or a proof checker disposes</text><text x="20" y="326" class="d-t-warm">● subsymbolic: knowledge learned from data</text></svg></figure>
+  <p class="note">Two traditions, one axis. Shaded: the "AI winters", when promises outran results and funding stopped. The diamonds are the recent hybrids: a network proposes, a symbolic search or a proof checker disposes.</p>
+
+  <div class="popup side fragment fade-in-then-out" data-node="s1936">
+    <p class="idx">1936 · THE TURING MACHINE</p>
+    <h3>A tape, a head, a table of rules</h3>
+    <p>The head reads a symbol, writes one, moves left or right, and changes state according to a finite table. That is all — and it is enough to compute anything that can be computed.</p>
+    <p>A <strong>universal</strong> machine reads another machine's table from its tape and imitates it: the idea of a <strong>program as data</strong>, and of an interpreter.</p>
+  </div>
+  <div class="popup side warm fragment fade-in-then-out" data-node="n1943">
+    <p class="idx">1943 · McCULLOCH AND PITTS</p>
+    <h3>The first neuron was a logic gate</h3>
+    <p>A unit fires when enough of its inputs fire: a threshold. With the right thresholds, one unit computes AND, another OR, and networks of them compute any logical formula.</p>
+    <p>The two traditions start from the same place: the first neural network was a piece of <strong>logic</strong>.</p>
+  </div>
+  <div class="popup side warm fragment fade-in-then-out" data-node="n1957">
+    <p class="idx">1957 · THE PERCEPTRON</p>
+    <h3>A machine that learns its weights</h3>
+    <p>Rosenblatt's perceptron adjusts its weights from examples until it separates two classes. It was built in hardware, the Mark I, with a camera of 400 photocells.</p>
+    <p>The press went further: the New York Times reported that the Navy expected it to "walk, talk, see, write, reproduce itself and be conscious of its existence".</p>
+  </div>
+  <div class="popup side fragment fade-in-then-out" data-node="s1966">
+    <p class="idx">1966 · ELIZA</p>
+    <h3>A chatbot made of pattern matching</h3>
+    <div>
+      <pre><code class="language-text" data-trim>
+&gt; Men are all alike.
+IN WHAT WAY?
+&gt; They're always bugging us about something.
+CAN YOU THINK OF A SPECIFIC EXAMPLE?
+&gt; Well, my boyfriend made me come here.
+YOUR BOYFRIEND MADE YOU COME HERE?
+      </code></pre>
+      <div>
+        <p>Joseph Weizenbaum, MIT. The DOCTOR script plays a psychotherapist with rules like <code>my X made me Y</code> → <code>YOUR X MADE YOU Y?</code> No understanding at all.</p>
+        <p>People confided in it anyway: Weizenbaum's secretary asked him to leave the room. The <strong>ELIZA effect</strong> is older than every LLM.</p>
+      </div>
+    </div>
+  </div>
+  <div class="popup side fragment fade-in-then-out" data-node="s1997">
+    <p class="idx">1997 · DEEP BLUE</p>
+    <h3>A world champion loses to search</h3>
+    <p>IBM's Deep Blue beats Garry Kasparov over six games. It learns nothing: it explores about 200 million positions per second and scores them with rules written by chess experts.</p>
+    <p>Symbolic AI at its peak — brute force plus human knowledge.</p>
+  </div>
+  <div class="popup side warm fragment fade-in-then-out" data-node="n2012">
+    <p class="idx">2012 · ALEXNET</p>
+    <h3>The error rate drops by ten points</h3>
+    <p>A convolutional network with 60 million parameters, trained on two gaming GPUs, recognises ImageNet photos with a top-5 error of 15.3% — the runner-up had 26.2%.</p>
+    <p>Within two years almost every entry in the competition is a deep network.</p>
+  </div>
+  <div class="popup side fragment fade-in-then-out" data-node="h2016" style="border-top-color:var(--ink)">
+    <p class="idx">2016 · ALPHAGO</p>
+    <h3>A network proposes, a search disposes</h3>
+    <p>Go has far too many positions to search blindly. AlphaGo uses neural networks to suggest good moves and judge positions, and a tree search to check them. It beats Lee Sedol 4 to 1.</p>
+    <p>Move 37 of game 2 looked like a mistake to every expert watching. It was not.</p>
+  </div>
+  <div class="popup side fragment fade-in-then-out" data-node="h2024" style="border-top-color:var(--ink)">
+    <p class="idx">2024 · ALPHAPROOF</p>
+    <h3>Proofs a machine can check</h3>
+    <p>A language model proposes proofs of olympiad problems in <strong>Lean</strong>; Lean's checker accepts or rejects each step. Together with AlphaGeometry, it reaches silver-medal level at the International Mathematical Olympiad.</p>
+    <p>The generator can be wrong. The checker cannot.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Turing: what a machine can compute, and whether it can think</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">1936 · ON COMPUTABLE NUMBERS</p><p>A machine with a tape, a head and a finite table of rules defines what it means to <strong>compute</strong> — and shows that some problems no machine can solve.</p></div>
+    <div class="card warm"><p class="idx">1950 · COMPUTING MACHINERY AND INTELLIGENCE</p><p>Replaces "can machines think?" with a game you can actually play: can a machine's written answers be told apart from a person's? The <strong>imitation game</strong>, later the Turing test.</p></div>
+  </div>
+  <blockquote style="margin-top:22px"><p>I propose to consider the question, "Can machines think?"</p></blockquote>
+  <p class="cite">A. M. Turing, Mind, 1950</p>
+</section>
+
+<section>
+  <h2>Dartmouth, summer 1956</h2>
+  <div class="split">
+    <div>
+      <p class="lead">A two-month workshop at Dartmouth College, funded by the Rockefeller Foundation.</p>
+      <p>The proposal, written in 1955 by <strong>John McCarthy</strong>, <strong>Marvin Minsky</strong>, <strong>Nathaniel Rochester</strong> (IBM) and <strong>Claude Shannon</strong> (Bell Labs), is where the words <strong>"artificial intelligence"</strong> first appear.</p>
+      <p>Allen Newell and Herbert Simon arrive with the one program that actually runs: the <strong>Logic Theorist</strong>.</p>
+    </div>
+    <div class="cards" style="--n:1">
+      <div class="card"><p class="idx">WHAT THEY WANTED TO STUDY</p><p>automatic computers · <strong>how a computer can be programmed to use a language</strong> · neuron nets · the size of a calculation · self-improvement · abstraction · randomness and creativity</p></div>
+      <div class="card warm"><p class="idx">THE OPTIMISM</p><p>"a significant advance can be made in one or more of these problems if a carefully selected group of scientists work on it together for a summer."</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>1956: the name, and the first program</h2>
+  <div class="split">
+    <div>
+      <blockquote style="font-size:1em"><p>…every aspect of learning or any other feature of intelligence can in principle be so precisely described that a machine can be made to simulate it.</p></blockquote>
+      <p class="cite">McCarthy, Minsky, Rochester, Shannon — Dartmouth proposal, 1955</p>
+    </div>
+    <div class="cards" style="--n:1">
+      <div class="card"><p class="idx">LOGIC THEORIST · 1956</p><p>Newell, Simon and Shaw. Proves theorems of propositional logic; reproduces proofs from <em>Principia Mathematica</em>. Often called the first AI program.</p></div>
+      <div class="card"><p class="idx">GENERAL PROBLEM SOLVER · 1957–59</p><p>A universal method: search through a space of states. Impractical at scale, but the origin of heuristic search and planning.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Intelligence as symbols: the first AI summer</h2>
+  <div class="split flip">
+    <div>
+      <p class="lead">Research focused on <strong>knowledge representation</strong>, heuristics and automated theorem proving.</p>
+      <p>Intelligent behaviour was framed as <strong>heuristic search</strong> through structured problem spaces, governed by production rules.</p>
+    </div>
+    <p class="punch" style="font-size:1.35em">Symbol systems promised transparency, compositionality and explainability.</p>
+  </div>
+</section>
+
+<section>
+  <h2>A language for AI: LISP, 1958</h2>
+  <div class="split flip">
+    <div>
+    <pre><code class="language-lisp" data-trim>
+(defun ancestor-p (x y)
+  (or (parent-p x y)
+      (some (lambda (z)
+              (and (parent-p x z)
+                   (ancestor-p z y)))
+            (people))))
+    </code></pre>
+    <p class="cite">written in today's Common Lisp</p>
+    </div>
+    <div>
+      <p>John McCarthy designs a language whose data are <strong>symbolic expressions</strong> — and whose programs are symbolic expressions too.</p>
+      <p>His 1960 paper defines <code>eval</code>: an interpreter for LISP, written in LISP.</p>
+      <p class="punch">The first famous interpreter is also the first program in this course's spirit.</p>
+    </div>
+  </div>
+</section>
+
+<section class="statement" style="align-items:center; text-align:center">
+  <p class="formula" style="font-size:2.1em; margin:0">\( \forall X, Y, Z.\;\; \mathit{parent}(X, Z) \wedge \mathit{ancestor}(Z, Y) \;\rightarrow\; \mathit{ancestor}(X, Y) \)</p>
+  <p class="cite" style="margin-top:1.4em">a Horn clause</p>
+</section>
+
+<section>
+  <h2>A logic that runs: Prolog, 1972</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-prolog" data-trim>
+parent(ada, bea).
+parent(bea, cid).
+
+ancestor(X, Y) :- parent(X, Y).
+ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+
+?- ancestor(ada, Who).
+Who = bea ;
+Who = cid.
+      </code></pre>
+    </div>
+    <div>
+      <p>Colmerauer and Roussel, Marseille; Kowalski gives Horn clauses a <strong>procedural reading</strong>. You state facts and rules; the machine searches for proofs.</p>
+      <p>The engine is Robinson's <strong>resolution</strong> (1965), and at its heart is <strong>unification</strong>: finding values that make two terms equal.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="split" style="grid-template-columns: 5fr 4fr; height:100%">
+    <div style="max-width:330px; margin:auto"><figure class="diagram"><svg viewBox="0 -80 350 512" role="img" aria-label="The Leaning Tower of Pisa, tilted by about four degrees from the vertical"><g transform="rotate(3.97 170 420)"><rect x="114.0" y="350" width="112" height="70" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.6"/><path d="M 121.0 416.0 L 121.0 371.4 A 7.4 7.4 0 0 1 135.8 371.4 L 135.8 416.0 Z" style="fill:var(--paper-2);fill-opacity:1;stroke:var(--ink);stroke-width:1"/><path d="M 141.8 416.0 L 141.8 371.4 A 7.4 7.4 0 0 1 156.6 371.4 L 156.6 416.0 Z" style="fill:var(--paper-2);fill-opacity:1;stroke:var(--ink);stroke-width:1"/><path d="M 162.6 416.0 L 162.6 371.4 A 7.4 7.4 0 0 1 177.4 371.4 L 177.4 416.0 Z" style="fill:var(--paper-2);fill-opacity:1;stroke:var(--ink);stroke-width:1"/><path d="M 183.4 416.0 L 183.4 371.4 A 7.4 7.4 0 0 1 198.2 371.4 L 198.2 416.0 Z" style="fill:var(--paper-2);fill-opacity:1;stroke:var(--ink);stroke-width:1"/><path d="M 204.2 416.0 L 204.2 371.4 A 7.4 7.4 0 0 1 219.0 371.4 L 219.0 416.0 Z" style="fill:var(--paper-2);fill-opacity:1;stroke:var(--ink);stroke-width:1"/><rect x="161" y="386" width="18" height="34" rx="9" style="fill:var(--ink)"/><rect x="110.0" y="345" width="120" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/><rect x="114.0" y="301" width="112" height="44" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.4"/><path d="M 119.0 343.0 L 119.0 313.7 A 4.7 4.7 0 0 1 128.4 313.7 L 128.4 343.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 134.4 343.0 L 134.4 313.7 A 4.7 4.7 0 0 1 143.9 313.7 L 143.9 343.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 149.9 343.0 L 149.9 313.7 A 4.7 4.7 0 0 1 159.3 313.7 L 159.3 343.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 165.3 343.0 L 165.3 313.7 A 4.7 4.7 0 0 1 174.7 313.7 L 174.7 343.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 180.7 343.0 L 180.7 313.7 A 4.7 4.7 0 0 1 190.1 313.7 L 190.1 343.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 196.1 343.0 L 196.1 313.7 A 4.7 4.7 0 0 1 205.6 313.7 L 205.6 343.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 211.6 343.0 L 211.6 313.7 A 4.7 4.7 0 0 1 221.0 313.7 L 221.0 343.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><rect x="110.0" y="296" width="120" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/><rect x="114.0" y="252" width="112" height="44" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.4"/><path d="M 119.0 294.0 L 119.0 264.7 A 4.7 4.7 0 0 1 128.4 264.7 L 128.4 294.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 134.4 294.0 L 134.4 264.7 A 4.7 4.7 0 0 1 143.9 264.7 L 143.9 294.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 149.9 294.0 L 149.9 264.7 A 4.7 4.7 0 0 1 159.3 264.7 L 159.3 294.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 165.3 294.0 L 165.3 264.7 A 4.7 4.7 0 0 1 174.7 264.7 L 174.7 294.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 180.7 294.0 L 180.7 264.7 A 4.7 4.7 0 0 1 190.1 264.7 L 190.1 294.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 196.1 294.0 L 196.1 264.7 A 4.7 4.7 0 0 1 205.6 264.7 L 205.6 294.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 211.6 294.0 L 211.6 264.7 A 4.7 4.7 0 0 1 221.0 264.7 L 221.0 294.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><rect x="110.0" y="247" width="120" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/><rect x="114.0" y="203" width="112" height="44" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.4"/><path d="M 119.0 245.0 L 119.0 215.7 A 4.7 4.7 0 0 1 128.4 215.7 L 128.4 245.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 134.4 245.0 L 134.4 215.7 A 4.7 4.7 0 0 1 143.9 215.7 L 143.9 245.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 149.9 245.0 L 149.9 215.7 A 4.7 4.7 0 0 1 159.3 215.7 L 159.3 245.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 165.3 245.0 L 165.3 215.7 A 4.7 4.7 0 0 1 174.7 215.7 L 174.7 245.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 180.7 245.0 L 180.7 215.7 A 4.7 4.7 0 0 1 190.1 215.7 L 190.1 245.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 196.1 245.0 L 196.1 215.7 A 4.7 4.7 0 0 1 205.6 215.7 L 205.6 245.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 211.6 245.0 L 211.6 215.7 A 4.7 4.7 0 0 1 221.0 215.7 L 221.0 245.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><rect x="110.0" y="198" width="120" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/><rect x="114.0" y="154" width="112" height="44" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.4"/><path d="M 119.0 196.0 L 119.0 166.7 A 4.7 4.7 0 0 1 128.4 166.7 L 128.4 196.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 134.4 196.0 L 134.4 166.7 A 4.7 4.7 0 0 1 143.9 166.7 L 143.9 196.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 149.9 196.0 L 149.9 166.7 A 4.7 4.7 0 0 1 159.3 166.7 L 159.3 196.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 165.3 196.0 L 165.3 166.7 A 4.7 4.7 0 0 1 174.7 166.7 L 174.7 196.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 180.7 196.0 L 180.7 166.7 A 4.7 4.7 0 0 1 190.1 166.7 L 190.1 196.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 196.1 196.0 L 196.1 166.7 A 4.7 4.7 0 0 1 205.6 166.7 L 205.6 196.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 211.6 196.0 L 211.6 166.7 A 4.7 4.7 0 0 1 221.0 166.7 L 221.0 196.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><rect x="110.0" y="149" width="120" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/><rect x="114.0" y="105" width="112" height="44" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.4"/><path d="M 119.0 147.0 L 119.0 117.7 A 4.7 4.7 0 0 1 128.4 117.7 L 128.4 147.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 134.4 147.0 L 134.4 117.7 A 4.7 4.7 0 0 1 143.9 117.7 L 143.9 147.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 149.9 147.0 L 149.9 117.7 A 4.7 4.7 0 0 1 159.3 117.7 L 159.3 147.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 165.3 147.0 L 165.3 117.7 A 4.7 4.7 0 0 1 174.7 117.7 L 174.7 147.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 180.7 147.0 L 180.7 117.7 A 4.7 4.7 0 0 1 190.1 117.7 L 190.1 147.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 196.1 147.0 L 196.1 117.7 A 4.7 4.7 0 0 1 205.6 117.7 L 205.6 147.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 211.6 147.0 L 211.6 117.7 A 4.7 4.7 0 0 1 221.0 117.7 L 221.0 147.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><rect x="110.0" y="100" width="120" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/><rect x="114.0" y="56" width="112" height="44" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.4"/><path d="M 119.0 98.0 L 119.0 68.7 A 4.7 4.7 0 0 1 128.4 68.7 L 128.4 98.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 134.4 98.0 L 134.4 68.7 A 4.7 4.7 0 0 1 143.9 68.7 L 143.9 98.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 149.9 98.0 L 149.9 68.7 A 4.7 4.7 0 0 1 159.3 68.7 L 159.3 98.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 165.3 98.0 L 165.3 68.7 A 4.7 4.7 0 0 1 174.7 68.7 L 174.7 98.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 180.7 98.0 L 180.7 68.7 A 4.7 4.7 0 0 1 190.1 68.7 L 190.1 98.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 196.1 98.0 L 196.1 68.7 A 4.7 4.7 0 0 1 205.6 68.7 L 205.6 98.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 211.6 98.0 L 211.6 68.7 A 4.7 4.7 0 0 1 221.0 68.7 L 221.0 98.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><rect x="110.0" y="51" width="120" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/><rect x="130.0" y="11" width="80" height="40" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.4"/><path d="M 135.0 49.0 L 135.0 23.6 A 4.6 4.6 0 0 1 144.2 23.6 L 144.2 49.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 150.2 49.0 L 150.2 23.6 A 4.6 4.6 0 0 1 159.4 23.6 L 159.4 49.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 165.4 49.0 L 165.4 23.6 A 4.6 4.6 0 0 1 174.6 23.6 L 174.6 49.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 180.6 49.0 L 180.6 23.6 A 4.6 4.6 0 0 1 189.8 23.6 L 189.8 49.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><path d="M 195.8 49.0 L 195.8 23.6 A 4.6 4.6 0 0 1 205.0 23.6 L 205.0 49.0 Z" style="fill:#3a3f49;fill-opacity:0.62;stroke:var(--ink);stroke-width:1"/><rect x="126.0" y="6" width="88" height="5" style="fill:#fbfaf6;stroke:var(--ink);stroke-width:1.2"/></g><line x1="20" y1="420" x2="330" y2="420" class="d-thin"/><line x1="170" y1="-2" x2="170" y2="-56" style="stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 4"/><line x1="198.7" y1="7.0" x2="202.3" y2="-44.9" style="stroke:var(--warm);stroke-width:1.6;stroke-dasharray:5 4"/><path d="M 170 -40 A 460 460 0 0 1 201.8 -38.9" style="fill:none;stroke:var(--warm);stroke-width:2.2"/><text x="195.9" y="-52" class="d-t-warm" style="font-size:16px">≈ 4°</text><text x="162" y="-46" text-anchor="end" class="d-t-accent" style="font-size:13px">vertical</text></svg></figure></div>
+    <div>
+      <p class="cite">Meanwhile</p>
+      <p class="hero-name" style="font-size:64px">…in Pisa.</p>
+      <p class="lead" style="margin-top:.6em">A leaning tower, a university, and the oldest computer science department in Italy: the first Italian degree in computer science started here, in 1969.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Unification, from Pisa</h2>
+  <div class="split">
+    <figure><img src="../book/figures/00-why-a-language/martelli_montanari_unification.png" alt="First page of An Efficient Unification Algorithm, Martelli and Montanari"><figcaption>ACM TOPLAS 4(2), 1982</figcaption></figure>
+    <div>
+      <p class="lead">Alberto Martelli (CNR) and Ugo Montanari (University of Pisa): an efficient unification algorithm, still the textbook version.</p>
+      <p>Logic programming, type inference in functional languages, and many program analyses run on it.</p>
+      <p class="punch">Every time a compiler infers a type, as in ML or Haskell, unification is at work.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Expert systems: knowledge as rules, 1970s–80s</h2>
+  <div class="split">
+    <figure><img src="../book/figures/00-why-a-language/mycin_rule52.png" alt="MYCIN rule 52 in LISP and in English"><figcaption>MYCIN, rule 52: the same rule for the machine and for the doctor</figcaption></figure>
+    <div>
+      <p><strong>MYCIN</strong> (Shortliffe, Stanford) chose antibiotics from about 600 rules — and could <strong>show the rules behind each answer</strong>.</p>
+      <p>Expert systems had real commercial success in medicine, engineering and finance.</p>
+      <p class="note">Rule 52 is written twice: once for the interpreter, once for the doctor who has to trust it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why symbolic AI stalled</h2>
+  <div class="cards" style="--n:2">
+    <div class="card warm"><p class="idx">BRITTLENESS</p><p>Fails with incomplete knowledge. Poor handling of ambiguity. Limited to carefully designed domains.</p></div>
+    <div class="card warm"><p class="idx">KNOWLEDGE ACQUISITION BOTTLENECK</p><p>Encoding rules is slow and error-prone; capturing an expert's knowledge does not scale beyond narrow domains.</p></div>
+  </div>
+  <p class="punch" style="margin-top:22px">Result: AI winters, and a shift toward learning from data.</p>
+</section>
+
+<section class="statement">
+  <p class="big">And what if it could <strong>work</strong>?</p>
+  <p class="fragment lead" style="margin-top:.8em; max-width:48ch">The bottleneck was never the logic. It was <strong>us</strong>: writing the rules, and the long deductions, by hand.</p>
+  <p class="fragment punch" style="font-size:1.25em; max-width:44ch">Large language models may turn out to be better than we are at building complex symbolic deductions — as long as something checks every step.</p>
+</section>
+
+<section>
+  <h2>Meanwhile, the neurons</h2>
+  <div class="split">
+    <figure class="diagram"><svg viewBox="0 0 520 226" role="img" aria-label="A perceptron: inputs, weights, a weighted sum and a threshold; learning adjusts the weights"><defs><marker id="apc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wpc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="cpc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><circle cx="40" cy="40" r="22" class="d-box"/><text x="40" y="46" text-anchor="middle" class="d-t-m">x₁</text><line x1="64" y1="40" x2="196" y2="110" class="d-arrow" marker-end="url(#apc)"/><circle cx="40" cy="110" r="22" class="d-box"/><text x="40" y="116" text-anchor="middle" class="d-t-m">x₂</text><line x1="64" y1="110" x2="196" y2="110" class="d-arrow" marker-end="url(#apc)"/><circle cx="40" cy="180" r="22" class="d-box"/><text x="40" y="186" text-anchor="middle" class="d-t-m">x₃</text><line x1="64" y1="180" x2="196" y2="110" class="d-arrow" marker-end="url(#apc)"/><text x="120" y="52" class="d-t-warm">w₁</text><text x="120" y="102" class="d-t-warm">w₂</text><text x="120" y="166" class="d-t-warm">w₃</text><circle cx="230" cy="110" r="32" class="d-box-accent"/><text x="230" y="118" text-anchor="middle" class="d-t-big">Σ</text><line x1="264" y1="110" x2="330" y2="110" class="d-arrow" marker-end="url(#apc)"/><rect x="334" y="84" width="70" height="52" rx="6" class="d-box"/><polyline points="346,124 369,124 369,96 392,96" class="d-line"/><line x1="408" y1="110" x2="470" y2="110" class="d-arrow" marker-end="url(#apc)"/><text x="488" y="116" class="d-t-m">y</text><text x="230" y="176" text-anchor="middle" class="d-t-muted">weighted sum</text><text x="369" y="160" text-anchor="middle" class="d-t-muted">threshold</text><text x="120" y="216" text-anchor="middle" class="d-t-muted">learning = adjusting the w</text></svg></figure>
+    <div>
+      <table>
+        <tr><td>1943</td><td>McCulloch &amp; Pitts: a mathematical model of the neuron</td></tr>
+        <tr><td>1957</td><td>Rosenblatt: the perceptron</td></tr>
+        <tr><td>1969</td><td>Minsky &amp; Papert: what one layer cannot learn (XOR)</td></tr>
+        <tr><td>1986</td><td>Rumelhart, Hinton &amp; Williams: backpropagation</td></tr>
+        <tr><td>1989</td><td>LeCun: LeNet, a convolutional network that reads digits</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Deep learning: why 2012</h2>
+  <div class="stats" style="--n:3">
+    <div class="stat"><div class="big">data</div><div class="lbl">large labelled datasets — ImageNet</div></div>
+    <div class="stat"><div class="big">compute</div><div class="lbl">GPUs, then TPUs</div></div>
+    <div class="stat"><div class="big">ideas</div><div class="lbl">better training: activations, regularisation, architectures</div></div>
+  </div>
+  <p class="wide">In between, AI had diversified: Bayesian networks for reasoning under uncertainty, support vector machines, reinforcement learning, statistical language processing. Deep networks were layered on top.</p>
+  <p class="punch">2012: a deep convolutional network wins ImageNet by a wide margin. Foundation models follow.</p>
+</section>
+
+<section class="statement">
+  <p class="cite">A parenthesis</p>
+  <p class="big">How did we get from recognising cats in photos to a machine that <strong>writes programs</strong>?</p>
+  <p class="lead muted" style="margin-top:.6em">In about ten years. And it changed what computer science is.</p>
+</section>
+
+<section>
+  <h2>What is a foundation model?</h2>
+  <p class="lead wide">A model trained once, on broad data and at scale, that can then be <strong>adapted to a wide range of tasks</strong>.</p>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">TRAINED ON EVERYTHING</p><p>Text, code, images — far more than any single task needs.</p></div>
+    <div class="card"><p class="idx">SELF-SUPERVISED</p><p>No labels: the training signal is the data itself. For language, <strong>predict the next word</strong>, billions of times.</p></div>
+    <div class="card warm"><p class="idx">ADAPTED, NOT RETRAINED</p><p>One model, many uses: by prompting, by fine-tuning, by giving it tools.</p></div>
+  </div>
+  <p class="cite" style="margin-top:18px">Bommasani et al., On the Opportunities and Risks of Foundation Models, Stanford CRFM, 2021 — where the name comes from</p>
+</section>
+
+<section>
+  <h2>What is a frontier model?</h2>
+  <div class="split">
+    <div>
+      <p class="lead">The most capable general-purpose foundation models <strong>of the moment</strong> — at the edge of what is technically possible.</p>
+      <p>A moving target: last year's frontier is this year's baseline.</p>
+    </div>
+    <div class="cards" style="--n:1">
+      <div class="card"><p class="idx">FEW, AND EXPENSIVE</p><p>Built by a handful of labs; training costs grow with every generation.</p></div>
+      <div class="card warm"><p class="idx">WATCHED</p><p>Evaluated for dangerous capabilities before release. The term went public in 2023: the Frontier Model Forum, and the AI Safety Summit at Bletchley Park.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>From ImageNet to agents</h2>
+  <div class="acc">
+    <div>
+      <div class="acc-item"><span class="yr">2012</span>AlexNet: deep learning wins ImageNet<div class="acc-detail fragment fade-in-then-out">Eight layers, 60 million parameters, two GPUs. Overnight the field moves to deep networks.</div></div>
+      <div class="acc-item"><span class="yr">2013</span>word2vec: words become vectors<div class="acc-detail fragment fade-in-then-out">Words are points in a space where directions mean something: king − man + woman lands close to queen.</div></div>
+      <div class="acc-item"><span class="yr">2014</span>attention, for machine translation<div class="acc-detail fragment fade-in-then-out">The network learns where to look in the source sentence while it writes each word of the translation.</div></div>
+      <div class="acc-item"><span class="yr">2017</span>the Transformer: <em>Attention Is All You Need</em><div class="acc-detail fragment fade-in-then-out">Only attention, no recurrence: the whole sentence is processed at once, so training runs in parallel on GPUs — and can scale.</div></div>
+      <div class="acc-item"><span class="yr">2018</span>BERT, GPT: pre-train once, adapt many times<div class="acc-detail fragment fade-in-then-out">Train on huge amounts of unlabelled text, predicting missing or next words; then adapt the same model to many tasks.</div></div>
+      <div class="acc-item"><span class="yr">2020</span>GPT-3 and the scaling laws<div class="acc-detail fragment fade-in-then-out">175 billion parameters; it solves tasks from a few examples written in the prompt. The error falls predictably, as a power law, with size, data and compute.</div></div>
+    </div>
+    <div>
+      <div class="acc-item"><span class="yr">2021</span>Codex, Copilot; “foundation models”; Anthropic<div class="acc-detail fragment fade-in-then-out">A model trained on public code completes programs in the editor. Stanford names the whole category; Anthropic is founded to work on safe, steerable systems.</div></div>
+      <div class="acc-item"><span class="yr">2022</span>instruction tuning, RLHF, Constitutional AI; ChatGPT<div class="acc-detail fragment fade-in-then-out">People rank answers and the model learns their preferences; with Constitutional AI, a written list of principles replaces much of that feedback. ChatGPT reaches a hundred million users in about two months.</div></div>
+      <div class="acc-item"><span class="yr">2023</span>GPT-4, Claude, open-weight Llama<div class="acc-detail fragment fade-in-then-out">Models pass professional exams; the first Claude is released; open-weight models let anyone run and study a large model.</div></div>
+      <div class="acc-item"><span class="yr">2024</span>Claude 3; reasoning models; AlphaProof; tools; MCP<div class="acc-detail fragment fade-in-then-out">Models reason step by step before answering, use tools and even a computer; a common protocol, MCP, connects them to data and programs — a language for tools.</div></div>
+      <div class="acc-item"><span class="yr">2025</span>Claude Code: agents on a repository; Claude 4<div class="acc-detail fragment fade-in-then-out">The model reads a whole repository, edits files, runs the tests, and tries again: programming becomes directing and reviewing.</div></div>
+      <div class="acc-item"><span class="yr">2026</span>the Claude 5 family<div class="acc-detail fragment fade-in-then-out">The models that helped build these slides.</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What changed for computer science</h2>
+  <div class="cards" style="--n:4">
+    <div class="card"><p class="idx">2021</p><h3>Completion</h3><p>The model finishes the line you are writing.</p></div>
+    <div class="card"><p class="idx">2022</p><h3>Conversation</h3><p>You describe the program; it writes a draft.</p></div>
+    <div class="card"><p class="idx">2024</p><h3>Tools</h3><p>It runs code, reads the output, tries again.</p></div>
+    <div class="card warm"><p class="idx">2025</p><h3>Agents</h3><p>It works on a whole repository, for hours, and you review.</p></div>
+  </div>
+  <p class="punch" style="margin-top:22px; max-width:52ch">Writing code got cheap. Knowing what to write, and whether it is right, did not.</p>
+</section>
+
+<section class="statement">
+  <p class="cite">…and so we got to</p>
+  <p class="big">Claude — which helped build the slides you are looking at.</p>
+  <p class="lead" style="margin-top:.6em; max-width:52ch">Drafted, laid out and measured in a conversation with it; corrected, many times, by a person who knew what had to be said.</p>
+</section>
+
+<section>
+  <h2>What deep learning still does badly</h2>
+  <div class="carousel">
+    <div class="card warm"><p class="idx">BRITTLE</p><p>Spurious correlations; fails when the data shift.</p></div>
+    <div class="card warm"><p class="idx">OPAQUE</p><p>Explanations are added afterwards, not built in.</p></div>
+    <div class="card warm"><p class="idx">COSTLY TO MOVE</p><p>A new domain means new training.</p></div>
+    <div class="card warm"><p class="idx">CAUSALLY BLIND</p><p>Struggles with the effect of interventions.</p></div>
+  </div>
+  <span class="fragment carousel-step"></span><span class="fragment carousel-step"></span><span class="fragment carousel-step"></span><span class="fragment carousel-step"></span>
+  <p class="lead" style="margin-top:6px">Direction: <strong>learned perception</strong> + <strong>structured reasoning</strong>.</p>
+</section>
+
+<section>
+  <h2>The convergence</h2>
+  <div class="split">
+    <div>
+      <p class="cite" style="margin-bottom:.6em">Many voices, one thesis</p>
+      <div class="chips"><span>Newell, Simon: symbolic search</span><span>Hinton, LeCun, Bengio: learning</span><span>Marcus: the structural critique</span><span>Battaglia, Tenenbaum: inductive bias</span><span>Russell, Amodei: safety and alignment</span><span class="hot">logic</span></div>
+    </div>
+    <div>
+      <p class="punch" style="font-size:1.2em">The practical decision is rarely "symbolic versus neural", but how to sequence, couple and govern them.</p>
+      <p>Constraints, modularity, verifiable properties.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Theorem proving is back</h2>
+  <div class="split flip">
+    <figure><img src="../book/figures/00-why-a-language/lean_prover.jpg" alt="The Lean theorem prover"><figcaption>Lean: a programming language and a proof assistant</figcaption></figure>
+    <div>
+      <p class="lead">Proof assistants check every step of a proof mechanically.</p>
+      <p>They will be used more and more as <strong>LLM agents learn to use them</strong>: the model proposes, the checker disposes.</p>
+      <p class="punch">A generator you cannot trust, next to a checker you can.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Logic came first</h2>
+  <table style="font-size:.66em">
+    <tr><td>Antiquity → 19th c.</td><td>Aristotle's syllogisms → Frege's predicate logic</td><td>formal systems for reasoning</td></tr>
+    <tr><td>1854</td><td>Boole</td><td>logic as algebra: the basis of digital circuits</td></tr>
+    <tr><td>1930s–40s</td><td>Gödel, Turing, Church</td><td>the limits of logic, and models of computation</td></tr>
+    <tr><td>1956</td><td>Logic Theorist</td><td>the first program to prove theorems</td></tr>
+    <tr><td>1965</td><td>Robinson's resolution</td><td>efficient deduction</td></tr>
+    <tr><td>1972</td><td>Prolog</td><td>knowledge and inference in one language</td></tr>
+    <tr><td>1980s</td><td>description logics</td><td>ontologies, medical informatics, the semantic web</td></tr>
+    <tr><td>2010s–today</td><td>neuro-symbolic AI</td><td>statistical learning with logical reasoning</td></tr>
+  </table>
+</section>
+
+<section class="statement">
+  <p class="big">What are the <strong>languages</strong> of AI?</p>
+  <p class="lead" style="max-width:50ch; margin-top:.6em"><strong>This is not an AI course.</strong> It teaches the other half: how to design the language in which something can be written down, read, and checked.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">One real case, in five slides · how it works is lecture 11</p>
+  <h2>Drawing a tumour</h2>
+</section>
+
+<section>
+  <h2>Brain tumour delineation</h2>
+  <div class="split">
+    <figure><img src="../book/figures/00-why-a-language/tumour_flair_and_contour.jpg" alt="FLAIR slice and manual contour"><figcaption>A FLAIR slice, and the contour drawn on it.</figcaption></figure>
+    <div>
+      <p class="lead">Before radiotherapy, someone draws the tumour on the scan: which voxels are tumour, which are not.</p>
+      <p>A human does it, slice by slice. Slow, tiring, and <strong>different experts draw different boundaries</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Automated — in the literature</h2>
+  <div class="stats" style="--n:3">
+    <div class="stat"><div class="big">2012</div><div class="lbl">a yearly challenge since</div></div>
+    <div class="stat"><div class="big">~50</div><div class="lbl">papers in 2017, essentially all machine learning, some excellent</div></div>
+    <div class="stat"><div class="big" style="color:var(--warm); font-size:44px; line-height:1.45">Not used</div><div class="lbl">in clinical workflows. <strong>Why?</strong></div></div>
+  </div>
+  <div class="cards" style="--n:4">
+    <div class="card"><h3>Accountability</h3><p>Who is responsible when it is wrong?</p></div>
+    <div class="card"><h3>Compliance</h3><p>Guidelines are published. Does the program follow them?</p></div>
+    <div class="card"><h3>Quality assurance</h3><p>Can you certify a procedure you cannot read?</p></div>
+    <div class="card"><h3>Innovation</h3><p>A new idea has no training data behind it.</p></div>
+  </div>
+  <p class="punch" style="margin-top:20px; font-size:.95em; max-width:56ch">None of these is about accuracy. All are about <strong>a person reading the procedure</strong>.</p>
+</section>
+
+<section>
+  <h2>So we built a language</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+let brain        = !touch(flair &lt;. 0.1, border)
+let pflair       = percentiles(flair, brain, 0.5)
+let hyperIntense = flt(5.0, pflair >. 0.95)
+let veryIntense  = flt(2.0, pflair >. 0.86)
+let tumour       = grow(hyperIntense, veryIntense)
+      </code></pre>
+      <p class="cite">VoxLogicA — Belmonte, Ciancia, Latella, Massink, TACAS 2019</p>
+    </div>
+    <div>
+      <p class="small" style="font-family:var(--serif); font-style:italic; font-size:.8em">The brain is what does not touch the border. The tumour is the brightest 5%, grown into the brightest 14% around it.</p>
+      <p>A radiologist can read that — and <strong>disagree with it</strong>.</p>
+      <p class="punch">You cannot disagree with a weight matrix.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Look at the vocabulary</h2>
+  <p>Not</p>
+  <div class="chips"><span style="text-decoration:line-through; color:var(--muted)">for</span><span style="text-decoration:line-through; color:var(--muted)">while</span><span style="text-decoration:line-through; color:var(--muted)">array</span></div>
+  <p>Instead:</p>
+  <div class="chips"><span class="hot">touch</span><span class="hot">grow</span><span class="hot">near</span><span class="hot">percentiles</span><span class="hot">distance from</span><span class="hot">largest connected component</span></div>
+  <div class="cols" style="margin-top:.6em">
+    <p><strong>The operations of the domain</strong>, promoted to primitives of the language. That is what makes it a domain-specific language rather than a library with a fancy name.</p>
+    <p class="punch">Choosing those words took years. Implementing them took much less.</p>
+  </div>
+</section>
+
+<section>
+  <h2>It worked</h2>
+  <figure><img src="../book/figures/00-why-a-language/tacas19_segmentation.jpg" alt="VoxLogicA vs manual segmentation" style="width:78%; max-height:none"><figcaption>Red: VoxLogicA. Blue: manual. Purple: where they agree. (TACAS 2019)</figcaption></figure>
+  <div class="stats" style="--n:3; margin-top:22px">
+    <div class="stat"><div class="big">210</div><div class="lbl">BraTS 2017 high-grade gliomas: accuracy <strong>in line with the state of the art</strong>, machine learning included</div></div>
+    <div class="stat"><div class="big">5–10<small>s</small></div><div class="lbl">per 3D image, about nine million voxels, on a desktop</div></div>
+    <div class="stat"><div class="big">~12</div><div class="lbl">the whole procedure is <strong>a dozen readable lines</strong></div></div>
+  </div>
+</section>
+
+<section class="part">
+  <p class="kicker">Now</p>
+  <h2>Working with an AI, <em>inside</em> a language</h2>
+</section>
+
+<section>
+  <h2>An experiment that is still running</h2>
+  <div class="split">
+    <div>
+      <p class="lead">Take a task that everyone attacks with machine learning — delineating a brain tumour — and attack it with a <strong>readable specification only</strong>.</p>
+      <p>No training, no fitted weights. Only the words of the domain, composed in the language.</p>
+    </div>
+    <div class="cards" style="--n:1">
+      <div class="card"><p class="idx">UNPUBLISHED</p><p>So you get no numbers today. You get the <strong>idea</strong> and the <strong>working method</strong> — the parts you can copy.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>First question: can the vocabulary say it?</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">01 · EXPRESSIVENESS</p><p>For each image, let the parameters be chosen knowing the right answer. That is not a method: it measures whether the language <strong>can express</strong> a good delineation at all.</p></div>
+    <div class="card"><p class="idx">02 · FAILURES</p><p>Where it cannot, look at the images that fail and ask which <strong>word</strong> is missing from the language. Add it. Measure again.</p></div>
+    <div class="card warm"><p class="idx">03 · CALIBRATION</p><p>Only then the harder question: choosing the parameters <strong>without</strong> the answer. That is the next step.</p></div>
+  </div>
+  <p class="punch" style="margin-top:22px">Designing the language comes first. Using it comes second.</p>
+</section>
+
+<section>
+  <h2>How the loop runs</h2>
+  <div style="max-width:820px; margin:10px auto 0"><figure class="diagram"><svg viewBox="0 0 600 250" role="img" aria-label="The working loop: a prose specification, a program written by the agent in the DSL, saved results, failures read by a person who revises the specification"><defs><marker id="awl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wwl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="cwl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><rect x="10" y="16" width="220" height="68" rx="8" class="d-box-warm"/><text x="120" y="46" text-anchor="middle" class="d-t-b">specification</text><text x="120" y="70" text-anchor="middle" class="d-t-muted">prose: goal, measure, rules</text><rect x="360" y="16" width="220" height="68" rx="8" class="d-box-accent"/><text x="470" y="46" text-anchor="middle" class="d-t-b">program</text><text x="470" y="70" text-anchor="middle" class="d-t-muted">written by the agent, in the DSL</text><rect x="360" y="166" width="220" height="68" rx="8" class="d-box"/><text x="470" y="196" text-anchor="middle" class="d-t-b">results</text><text x="470" y="220" text-anchor="middle" class="d-t-muted">images and numbers, saved</text><rect x="10" y="166" width="220" height="68" rx="8" class="d-box-soft"/><text x="120" y="196" text-anchor="middle" class="d-t-b">failures</text><text x="120" y="220" text-anchor="middle" class="d-t-muted">read case by case, by a person</text><path d="M 232 50 L 356 50" class="d-arrow" marker-end="url(#awl)"/><path d="M 470 86 L 470 164" class="d-arrow" marker-end="url(#awl)"/><path d="M 358 200 L 234 200" class="d-arrow" marker-end="url(#awl)"/><path d="M 120 164 L 120 86" class="d-arrow" marker-end="url(#awl)"/><text x="294" y="40" text-anchor="middle" class="d-t-m">agent writes</text><text x="482" y="130" class="d-t-m">engine runs</text><text x="296" y="190" text-anchor="middle" class="d-t-m">person reads</text><text x="108" y="130" text-anchor="end" class="d-t-m">person revises</text></svg></figure></div>
+</section>
+
+<section>
+  <h2>Who does what</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">THE PERSON</p><h3>Direction and invariants</h3><p>What must never happen. Which failure matters. When a number is suspicious. What the domain — the guidelines, the anatomy — requires.</p></div>
+    <div class="card warm"><p class="idx">THE AGENT</p><h3>Mechanism and measurement</h3><p>Writes the programs in the language, runs the sweeps, tabulates, renders the images, proposes the next step.</p></div>
+  </div>
+  <p class="lead" style="margin-top:22px">The agent never writes arbitrary code into the result: it writes <strong>expressions in a small language</strong> whose primitives a person chose, and whose output a person can look at.</p>
+</section>
+
+<section>
+  <h2>The engine was built the same way</h2>
+  <div class="split">
+    <div>
+      <p class="lead">The parallel engine and its cache — the interpreter that runs VoxLogicA 2 — were designed in a dialogue with an AI coding agent.</p>
+      <p>The person kept stating invariants: memory must stay bounded; every node goes through <em>one</em> code path; weigh a cached result by what it cost to compute, not by its size; if the working set is too large, the <strong>scheduler</strong> is the bug, not the cache.</p>
+    </div>
+    <p class="punch" style="font-size:1.3em">The architecture is the fixed point of that loop.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Why the language is the part that makes the loop possible</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">WITHOUT A LANGUAGE</p><p>An idea costs a training run: hours, a new model, and a result nobody can read.</p></div>
+    <div class="card warm"><p class="idx">WITH A LANGUAGE</p><p>An idea costs <strong>two lines</strong>. You add an operator, re-run, look at the picture. When hypotheses are cheap, you try the strange ones.</p></div>
+  </div>
+  <p class="punch" style="margin-top:22px">The language is not an implementation detail of the method. It is the method.</p>
+</section>
+
+<section>
+  <h2>The return of symbolic (and hybrid) AI</h2>
+  <figure class="diagram"><svg viewBox="0 0 894 124" role="img" aria-label="The return of symbolic and hybrid AI: an intention in natural language, an LLM, a program in a DSL, a neuro-symbolic engine, a verifiable result"><defs><marker id="ass" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wss" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="css" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><rect x="0" y="10" width="150" height="70" rx="8" class="d-box-soft"/><text x="75" y="42" text-anchor="middle" class="d-t-b" style="font-weight:600">intention</text><text x="75" y="64" text-anchor="middle" class="d-t-muted" style="font-size:13px">natural language</text><line x1="154" y1="45" x2="180" y2="45" class="d-arrow" marker-end="url(#ass)"/><rect x="186" y="10" width="150" height="70" rx="8" class="d-box-ink"/><text x="261" y="42" text-anchor="middle" class="d-t-paper" style="font-weight:600">LLM</text><text x="261" y="64" text-anchor="middle" class="d-t-paper" style="font-size:13px">foundation model</text><line x1="340" y1="45" x2="366" y2="45" class="d-arrow" marker-end="url(#ass)"/><rect x="372" y="10" width="150" height="70" rx="8" class="d-box-accent"/><text x="447" y="42" text-anchor="middle" class="d-t-b" style="font-weight:600">DSL program</text><text x="447" y="64" text-anchor="middle" class="d-t-muted" style="font-size:13px">explicit, readable</text><line x1="526" y1="45" x2="552" y2="45" class="d-arrow" marker-end="url(#ass)"/><rect x="558" y="10" width="150" height="70" rx="8" class="d-box"/><text x="633" y="42" text-anchor="middle" class="d-t-b" style="font-weight:600">engine</text><text x="633" y="64" text-anchor="middle" class="d-t-muted" style="font-size:13px">neuro-symbolic</text><line x1="712" y1="45" x2="738" y2="45" class="d-arrow" marker-end="url(#ass)"/><rect x="744" y="10" width="150" height="70" rx="8" class="d-box-warm"/><text x="819" y="42" text-anchor="middle" class="d-t-b" style="font-weight:600">result</text><text x="819" y="64" text-anchor="middle" class="d-t-muted" style="font-size:13px">inspectable, verifiable</text><line x1="372" y1="96" x2="522" y2="96" class="d-arrow-warm"/><text x="447" y="118" text-anchor="middle" class="d-t-warm">the part a person checks</text></svg></figure>
+  <blockquote style="max-width:62ch; margin-top:18px; font-size:.95em"><p>A computational paradigm in which foundation models translate human intentions into domain-specific neuro-symbolic programs whose execution remains explicit, inspectable, and verifiable.</p></blockquote>
+</section>
+
+<section>
+  <h2>Three levels</h2>
+  <div class="cards" style="--n:3; margin-top:14px">
+    <div class="card"><p class="idx">SYMBOLIC</p><p>reasons with symbols and rules</p></div>
+    <div class="card"><p class="idx">NEURO-SYMBOLIC</p><p>combines learning and symbolic reasoning</p></div>
+    <div class="card warm"><p class="idx">THE RETURN</p><p style="font-size:.9em">generative models <strong>build, compose and modify</strong> the neuro-symbolic programs: the level above, the one that programs them</p></div>
+  </div>
+  <div class="hero" style="margin-top:26px">
+    <p class="cite">Supported by</p>
+    <p class="hero-name">Anthropic's AI for Science program</p>
+  </div>
+  <p class="note">V. Ciancia, position paper in preparation.</p>
+</section>
+
+<section class="moral statement">
+  <h2>The moral</h2>
+  <p style="font-size:44px; max-width:30ch">A domain-specific language is how a person keeps hold of an automatic system:</p>
+  <div class="qualities"><span>small</span><span>readable</span><span>inspectable</span><span>re-runnable</span></div>
+  <p style="font-size:44px">a vocabulary that someone <strong>designed on purpose</strong>.</p>
+</section>
+
+<section>
+  <h2>The uncomfortable half</h2>
+  <div class="split">
+    <div>
+      <p class="lead">An interpreter for a small language is, today, a couple of hours of work with an assistant.</p>
+      <p>Writing it is no longer the hard part — you are expected to use those tools.</p>
+    </div>
+    <div>
+      <p class="cite" style="margin-bottom:.8em">What does not get cheaper</p>
+      <div class="cards" style="--n:2">
+        <div class="card"><p>knowing <strong>which</strong> primitives belong in the language, and which do not;</p></div>
+        <div class="card"><p>knowing <strong>what each one means</strong>, exactly, including at the edges;</p></div>
+        <div class="card"><p>showing a case where your language earns its keep;</p></div>
+        <div class="card warm"><p>saying <strong>what it cannot do</strong>.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Three things to believe by the end</h2>
+  <div class="cards" style="--n:3; margin-top:18px">
+    <div class="card"><p class="idx">01</p><p style="font-size:.95em">A language is a way of <strong>keeping a human in control</strong> of an automatic system.</p></div>
+    <div class="card"><p class="idx">02</p><p style="font-size:.95em">Building one is now cheap. <strong>Deciding what goes in it is not.</strong></p></div>
+    <div class="card warm"><p class="idx">03</p><p style="font-size:.95em">That decision — what to make expressible, and what to leave out — is the actual content of this course.</p></div>
+  </div>
+  <p class="note" style="margin-top:2em">Part B: what a language is made of. Forty lines of Python.</p>
+</section>
+
+<section>
+  <h2>To read further: logic and symbolic AI</h2>
+  <div class="cols" style="font-size:.58em; line-height:1.45">
+    <div>
+      <p>A. M. Turing. On Computable Numbers, with an Application to the Entscheidungsproblem. <em>Proc. London Math. Soc.</em> 42, 1936.</p>
+      <p>A. M. Turing. Computing Machinery and Intelligence. <em>Mind</em> 59, 1950.</p>
+      <p>J. McCarthy, M. Minsky, N. Rochester, C. Shannon. A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence, 1955.</p>
+      <p>A. Newell, H. A. Simon. The Logic Theory Machine. <em>IRE Trans. Information Theory</em> 2(3), 1956.</p>
+      <p>J. McCarthy. Recursive Functions of Symbolic Expressions and Their Computation by Machine. <em>CACM</em> 3(4), 1960.</p>
+    </div>
+    <div>
+      <p>J. A. Robinson. A Machine-Oriented Logic Based on the Resolution Principle. <em>JACM</em> 12(1), 1965.</p>
+      <p>R. Kowalski. Predicate Logic as Programming Language. <em>IFIP Congress</em>, 1974.</p>
+      <p>A. Colmerauer, P. Roussel. The Birth of Prolog. <em>HOPL-II</em>, 1993.</p>
+      <p>E. H. Shortliffe. <em>Computer-Based Medical Consultations: MYCIN</em>. Elsevier, 1976.</p>
+      <p>A. Martelli, U. Montanari. An Efficient Unification Algorithm. <em>ACM TOPLAS</em> 4(2), 1982.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>To read further: learning, transformers, foundation models</h2>
+  <div class="cols" style="font-size:.55em; line-height:1.42">
+    <div>
+      <p>W. McCulloch, W. Pitts. A Logical Calculus of the Ideas Immanent in Nervous Activity. <em>Bull. Math. Biophysics</em> 5, 1943.</p>
+      <p>F. Rosenblatt. The Perceptron. <em>Psychological Review</em> 65(6), 1958.</p>
+      <p>M. Minsky, S. Papert. <em>Perceptrons</em>. MIT Press, 1969.</p>
+      <p>D. Rumelhart, G. Hinton, R. Williams. Learning Representations by Back-Propagating Errors. <em>Nature</em> 323, 1986.</p>
+      <p>S. Hochreiter, J. Schmidhuber. Long Short-Term Memory. <em>Neural Computation</em> 9(8), 1997.</p>
+      <p>A. Krizhevsky, I. Sutskever, G. Hinton. ImageNet Classification with Deep Convolutional Neural Networks. <em>NeurIPS</em>, 2012.</p>
+      <p>T. Mikolov et al. Efficient Estimation of Word Representations in Vector Space. arXiv:1301.3781, 2013.</p>
+      <p>D. Bahdanau, K. Cho, Y. Bengio. Neural Machine Translation by Jointly Learning to Align and Translate. <em>ICLR</em>, 2015.</p>
+    </div>
+    <div>
+      <p><strong>A. Vaswani et al. Attention Is All You Need. <em>NeurIPS</em>, 2017.</strong></p>
+      <p>J. Devlin et al. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. <em>NAACL</em>, 2019.</p>
+      <p>T. Brown et al. Language Models are Few-Shot Learners. <em>NeurIPS</em>, 2020.</p>
+      <p>J. Kaplan et al. Scaling Laws for Neural Language Models. arXiv:2001.08361, 2020.</p>
+      <p>R. Bommasani et al. On the Opportunities and Risks of Foundation Models. arXiv:2108.07258, 2021.</p>
+      <p>L. Ouyang et al. Training Language Models to Follow Instructions with Human Feedback. <em>NeurIPS</em>, 2022.</p>
+      <p>Y. Bai et al. Constitutional AI: Harmlessness from AI Feedback. arXiv:2212.08073, 2022.</p>
+      <p>D. Silver et al. Mastering the Game of Go with Deep Neural Networks and Tree Search. <em>Nature</em> 529, 2016.</p>
+      <p>G. Marcus. The Next Decade in AI. arXiv:2002.06177, 2020.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>To read further: our work</h2>
+  <div class="cards" style="--n:1; max-width:1040px">
+    <div class="card"><p class="idx">THE LANGUAGE · TACAS 2019</p><p>G. Belmonte, V. Ciancia, D. Latella, M. Massink. VoxLogicA: A Spatial Model Checker for Declarative Image Analysis. <em>TACAS</em>, LNCS 11427, 2019.</p></div>
+    <div class="card warm"><p class="idx">SYMBOLIC AND HYBRID · ARTIFICIAL INTELLIGENCE IN MEDICINE 2025</p><p>G. Belmonte, V. Ciancia, M. Massink. Symbolic and Hybrid AI for Brain Tissue Segmentation Using Spatial Model Checking. <em>Artificial Intelligence in Medicine</em> 167, 103154, 2025.</p></div>
+    <div class="card"><p class="idx">VOXLOGICA 2 · AISOLA 2025</p><p>G. Belmonte, V. Ciancia, M. Imbriani. Two Hybrid-AI Case Studies for VoxLogicA 2. Presented at <em>AISoLA</em> 2025, to appear.</p></div>
+  </div>
+  <p class="note">The whole story of the language is lecture 11.</p>
+</section>
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>

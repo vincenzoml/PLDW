@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What a language is made of</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+<section class="title">
+  <h1>What a language is made of</h1>
+  <p class="sub">Lecture 1, part A. From here on, everything is in the exam programme.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<section class="question">
+  <p class="cite">"Programming languages?"</p>
+  <h2>You know what a programming language is!</h2>
+  <p class="answer fragment">Do you know?</p>
+  <p class="answer fragment">Do you <em>actually</em> know?</p>
+  <p class="fragment lead" style="margin-top:.6em">Then what is a "programming language"?</p>
+</section>
+
+<section>
+  <h2>A lot of things, actually</h2>
+  <div class="cards" style="--n:2; max-width:900px">
+    <div class="card"><p class="idx">01</p><h3 style="font-size:36px">Syntax</h3><p>which strings are programs, and what they are made of</p></div>
+    <div class="card"><p class="idx">02</p><h3 style="font-size:36px">Semantics</h3><p>what those programs mean</p></div>
+    <div class="card warm"><p class="idx">03</p><h3 style="font-size:36px">Interpreter</h3><p>a program that runs programs</p></div>
+    <div class="card warm"><p class="idx">04</p><h3 style="font-size:36px">Compiler</h3><p>a program that translates programs</p></div>
+  </div>
+  <p class="note">Four words. Each one is a field.</p>
+</section>
+
+<section>
+  <h2>"Syntax"</h2>
+  <p class="lead">Syntax can be a lot of things (maybe), but for our purposes:</p>
+  <div class="cards" style="--n:2; max-width:960px">
+    <div class="card"><h3>context-free grammars</h3><p>which strings are programs;</p></div>
+    <div class="card"><h3>syntax trees</h3><p>what those strings are made of.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>"Semantics"</h2>
+  <p class="lead">Semantics can be a lot of things (for sure), among which:</p>
+  <div class="chips">
+    <span class="hot">operational</span><span class="hot">denotational</span><span>logical</span>
+    <span>transition systems</span><span>rewrite rules</span><span>term or graph rewriting</span>
+    <span>fixed points</span><span>category theory</span><span>equivalences</span>
+    <span>coalgebras</span><span>dialgebras</span><span>bialgebras</span>
+    <span>bisimilarity</span><span>simulation</span><span>many other things…</span>
+  </div>
+  <p class="punch" style="max-width:56ch">The theory module takes some of these seriously. Here we take one, and run it.</p>
+</section>
+
+<section>
+  <h2>"Interpreter"</h2>
+  <div class="split">
+    <div>
+      <p class="lead">Executes a program, written in a formal language.</p>
+      <p>The classic shape is the <strong>REPL</strong>: Read → Eval → Print → Loop.</p>
+    </div>
+    <figure class="diagram"><svg viewBox="0 0 560 240" role="img" aria-label="The read, eval, print loop; eval is the step this course studies"><defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="cr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><rect x="114" y="8" width="112" height="44" rx="22" class="d-box"/><text x="170" y="36" text-anchor="middle" class="d-t-b">Read</text><rect x="254" y="98" width="112" height="44" rx="22" class="d-box-accent"/><text x="310" y="126" text-anchor="middle" class="d-t-b">Eval</text><rect x="114" y="188" width="112" height="44" rx="22" class="d-box"/><text x="170" y="216" text-anchor="middle" class="d-t-b">Print</text><rect x="-26" y="98" width="112" height="44" rx="22" class="d-box"/><text x="30" y="126" text-anchor="middle" class="d-t-b">Loop</text><path d="M 230 36 Q 300 44 316 94" class="d-arrow" marker-end="url(#ar1)"/><path d="M 316 146 Q 300 200 230 206" class="d-arrow" marker-end="url(#ar1)"/><path d="M 110 206 Q 40 200 30 146" class="d-arrow" marker-end="url(#ar1)"/><path d="M 30 94 Q 40 44 110 36" class="d-arrow" marker-end="url(#ar1)"/><text x="408" y="126" class="d-t-muted">the only step</text><text x="408" y="146" class="d-t-muted">this course studies</text></svg></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise: how many interpreters can you name?</h2>
+  <div class="fragment">
+    <div class="chips" style="font-size:1.25em">
+      <span>LISP</span><span>Python</span><span>Bash</span><span>Matlab</span><span>Octave</span>
+      <span>R</span><span>MS-DOS</span><span>JavaScript</span><span>BASIC</span>
+      <span class="odd">Excel</span><span class="odd">Office</span><span class="odd">Chrome</span><span class="odd">Photoshop</span>
+      <span class="odd">Apache</span><span class="odd">sshd</span><span class="odd">PDF</span><span class="odd">PostScript</span>
+      <span class="odd">SVG</span><span class="odd">Bitwig Studio</span><span class="odd">ComfyUI</span>
+    </div>
+    <p class="punch" style="font-size:1.3em">… this is getting weird.</p>
+  </div>
+</section>
+
+<section>
+  <h2>"Compiler"</h2>
+  <p class="lead wide">Translates a program from a <strong>source</strong> language to a <strong>target</strong> language. The result runs <strong>later</strong>.</p>
+  <figure class="diagram"><svg viewBox="0 0 860 190" role="img" aria-label="An interpreter turns a program into a result; a compiler turns it into another program that runs later"><defs><marker id="ac2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wc2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="cc2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><rect x="0" y="30" width="103" height="46" rx="6" class="d-box"/><text x="51.5" y="59" text-anchor="middle" class="d-t-m">program</text><line x1="107" y1="53" x2="143" y2="53" class="d-arrow" marker-end="url(#ac2)"/><rect x="151" y="30" width="139" height="46" rx="6" class="d-box-accent"/><text x="220.5" y="59" text-anchor="middle" class="d-t-m">interpreter</text><line x1="294" y1="53" x2="330" y2="53" class="d-arrow" marker-end="url(#ac2)"/><rect x="338" y="30" width="94" height="46" rx="6" class="d-box-warm"/><text x="385.0" y="59" text-anchor="middle" class="d-t-m">result</text><text x="0" y="18" class="d-t-mono-s">interpreter: runs it now</text><rect x="0" y="140" width="103" height="46" rx="6" class="d-box"/><text x="51.5" y="169" text-anchor="middle" class="d-t-m">program</text><line x1="107" y1="163" x2="143" y2="163" class="d-arrow" marker-end="url(#ac2)"/><rect x="151" y="140" width="112" height="46" rx="6" class="d-box-accent"/><text x="207.0" y="169" text-anchor="middle" class="d-t-m">compiler</text><line x1="267" y1="163" x2="303" y2="163" class="d-arrow" marker-end="url(#ac2)"/><rect x="311" y="140" width="112" height="46" rx="6" class="d-box"/><text x="367.0" y="169" text-anchor="middle" class="d-t-m">program′</text><line x1="427" y1="163" x2="463" y2="163" class="d-arrow" marker-end="url(#ac2)"/><rect x="471" y="140" width="130" height="46" rx="6" class="d-box-soft"/><text x="536.0" y="169" text-anchor="middle" class="d-t-m">later: run</text><line x1="605" y1="163" x2="641" y2="163" class="d-arrow" marker-end="url(#ac2)"/><rect x="649" y="140" width="94" height="46" rx="6" class="d-box-warm"/><text x="696.0" y="169" text-anchor="middle" class="d-t-m">result</text><text x="0" y="128" class="d-t-mono-s">compiler: translates it, the result runs later</text></svg></figure>
+</section>
+
+<section>
+  <h2>Let us name a few compilers</h2>
+  <div class="cards" style="--n:2; margin-top:20px">
+    <div class="card fragment"><p>C · C++ · Fortran · Pascal · assembler — too far back in time?</p></div>
+    <div class="card fragment"><p>Java · C# · F# · LaTeX</p></div>
+    <div class="card fragment"><p>Transpilers: Fable (F# to JavaScript), Emscripten (C to WebAssembly)…</p></div>
+    <div class="card fragment warm"><p>The compiler inside your graphics driver, compiling shaders while the game starts.</p></div>
+  </div>
+</section>
+
+<section class="question">
+  <h2>Which is faster, an interpreter or a compiler?</h2>
+  <p class="answer fragment">That's a silly question.</p>
+</section>
+
+<section>
+  <h2>Faster at what?</h2>
+  <div style="margin-top:.6em">
+    <figure class="diagram"><svg viewBox="0 0 720 156" role="img" aria-label="Interpreters and compilers are two ends of a spectrum: tree walkers, bytecode machines, JIT compilers, ahead-of-time compilers"><defs><marker id="asp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wsp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="csp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><line x1="20" y1="50" x2="700" y2="50" class="d-arrow" marker-end="url(#asp)" marker-start="url(#asp)"/><circle cx="40" cy="50" r="7" class="d-fill-accent"/><text x="40" y="84" text-anchor="middle" class="d-t">tree-walking</text><text x="40" y="104" text-anchor="middle" class="d-t">interpreter</text><circle cx="250" cy="50" r="7" class="d-fill-accent"/><text x="250" y="84" text-anchor="middle" class="d-t">bytecode +</text><text x="250" y="104" text-anchor="middle" class="d-t">virtual machine</text><circle cx="460" cy="50" r="7" class="d-fill-accent"/><text x="460" y="84" text-anchor="middle" class="d-t">JIT compiler</text><circle cx="660" cy="50" r="7" class="d-fill-accent"/><text x="660" y="84" text-anchor="middle" class="d-t">ahead-of-time</text><text x="660" y="104" text-anchor="middle" class="d-t">compiler</text><text x="20" y="24" class="d-t-mono-s">starts fast</text><text x="700" y="24" text-anchor="end" class="d-t-mono-s">runs fast</text><text x="250" y="148" text-anchor="middle" class="d-t-warm">Python lives here</text><text x="460" y="148" text-anchor="middle" class="d-t-warm">VoxLogicA lives here</text></svg></figure>
+    <p class="lead" style="margin-top:1em; max-width:52ch">Faster at what — starting, or running for a day?</p>
+    <p>And most real systems are both: Python compiles to bytecode and interprets it; a JIT compiles while it interprets.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The characters are not the program</h2>
+  <div class="split flip">
+    <figure class="diagram"><svg viewBox="0 0 640 310" role="img" aria-label="Three different strings parse to the same abstract syntax tree"><defs><marker id="as1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="ws1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="cs1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><rect x="0" y="40" width="230" height="60" rx="6" class="d-box-soft"/><text x="18" y="75" class="d-t-m" style="white-space:pre">2 + (x * 3)</text><path d="M 238 70 C 300 70, 300 150, 352 150" class="d-arrow" marker-end="url(#as1)"/><rect x="0" y="120" width="230" height="60" rx="6" class="d-box-soft"/><text x="18" y="155" class="d-t-m" style="white-space:pre">2+(x*3)</text><path d="M 238 150 C 300 150, 300 150, 352 150" class="d-arrow" marker-end="url(#as1)"/><rect x="0" y="200" width="230" height="60" rx="6" class="d-box-soft"/><text x="18" y="225" class="d-t-m" style="white-space:pre">2 +</text><text x="18" y="245" class="d-t-m" style="white-space:pre">   (x * 3)</text><path d="M 238 230 C 300 230, 300 150, 352 150" class="d-arrow" marker-end="url(#as1)"/><text x="296" y="30" text-anchor="middle" class="d-t-mono-s">parse</text><line x1="517.0" y1="167.0" x2="478.0" y2="209.0" class="d-line"/><line x1="517.0" y1="167.0" x2="556.0" y2="209.0" class="d-line"/><line x1="458.5" y1="91.0" x2="400.0" y2="133.0" class="d-line"/><line x1="458.5" y1="91.0" x2="517.0" y2="133.0" class="d-line"/><rect x="379.4" y="133.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="400.0" y="155.0" text-anchor="middle" class="d-t-m">2</text><rect x="457.4" y="209.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="478.0" y="231.0" text-anchor="middle" class="d-t-m">x</text><rect x="535.4" y="209.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="556.0" y="231.0" text-anchor="middle" class="d-t-m">3</text><rect x="496.4" y="133.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="517.0" y="155.0" text-anchor="middle" class="d-t-m">*</text><rect x="437.9" y="57.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="458.5" y="79.0" text-anchor="middle" class="d-t-m">+</text><text x="478" y="300" text-anchor="middle" class="d-t-mono-s">one tree</text></svg><figcaption>Three strings, one tree. Spaces, line breaks and brackets are gone; the shape stays.</figcaption></figure>
+    <div>
+      <p>Same program, three times. What stays fixed is a <strong>tree</strong>: an addition whose right operand is a multiplication.</p>
+      <p>The parentheses are not in the tree. They only told the reader <em>which</em> tree: <code>2 + x * 3</code> could have been <code>(2 + x) * 3</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Abstract and concrete</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">ABSTRACT SYNTAX TREE</p><p>The tree is the <strong>abstract syntax tree</strong> (AST): it has forgotten spaces, brackets, line breaks — everything that does not affect meaning.</p></div>
+    <div class="card"><p class="idx">CONCRETE SYNTAX</p><p>The characters are the <strong>concrete syntax</strong>: one of many ways to write the tree down.</p></div>
+    <div class="card warm"><p class="idx">PARSER</p><p>Characters → tree is the job of a <strong>parser</strong> (Chapter 3). Until then, we write the trees by hand.</p></div>
+  </div>
+</section>
+
+<section class="part">
+  <p class="kicker">Half one</p>
+  <h2>Syntax: which trees <em>exist</em></h2>
+</section>
+
+<section>
+  <h2>The syntax, in Python</h2>
+  <div class="split flip">
+    <pre style="font-size:.52em"><code class="language-python" data-trim>
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Number:
+    value: float
+
+@dataclass(frozen=True)
+class Variable:
+    name: str
+
+@dataclass(frozen=True)
+class BinaryOp:
+    left: Expr
+    operator: str
+    right: Expr
+
+type Expr = Number | Variable | BinaryOp
+    </code></pre>
+    <div>
+      <p class="cite">Read the last line as a definition</p>
+      <p class="punch" style="font-size:1.25em">An expression is a number, or a variable, or a binary operation — and nothing else.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The tree for <code>2 + (x * 3)</code></h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+example = BinaryOp(
+    left=Number(2.0),
+    operator="+",
+    right=BinaryOp(left=Variable("x"), operator="*", right=Number(3.0)),
+)
+      </code></pre>
+      <p class="small">A <code>BinaryOp</code> contains two further expressions: the definition is <strong>recursive</strong>, so trees of any depth exist.</p>
+      <p class="small"><code>frozen=True</code>: a tree never changes after it is built. (Chapter 2 says why.)</p>
+    </div>
+    <figure class="diagram"><svg viewBox="0 0 420 234" role="img" aria-label="The tree for 2 + (x * 3) built from Number, Variable and BinaryOp nodes"><line x1="285.0" y1="119.0" x2="210.0" y2="163.0" class="d-line"/><line x1="285.0" y1="119.0" x2="360.0" y2="163.0" class="d-line"/><line x1="172.5" y1="41.0" x2="60.0" y2="85.0" class="d-line"/><line x1="172.5" y1="41.0" x2="285.0" y2="85.0" class="d-line"/><rect x="7.2" y="85.0" width="105.6" height="34" rx="17.0" class="d-box"/><text x="60.0" y="107.0" text-anchor="middle" class="d-t-m">Number 2</text><rect x="148.0" y="163.0" width="124.0" height="34" rx="17.0" class="d-box"/><text x="210.0" y="185.0" text-anchor="middle" class="d-t-m">Variable x</text><rect x="307.2" y="163.0" width="105.6" height="34" rx="17.0" class="d-box"/><text x="360.0" y="185.0" text-anchor="middle" class="d-t-m">Number 3</text><rect x="223.0" y="85.0" width="124.0" height="34" rx="17.0" class="d-box-accent"/><text x="285.0" y="107.0" text-anchor="middle" class="d-t-m">BinaryOp *</text><rect x="110.5" y="7.0" width="124.0" height="34" rx="17.0" class="d-box-accent"/><text x="172.5" y="29.0" text-anchor="middle" class="d-t-m">BinaryOp +</text></svg></figure>
+  </div>
+</section>
+
+<section>
+  <h2>The same thing, as a mathematician writes it</h2>
+  <p class="formula" style="font-size:1.7em; margin:.4em 0 .6em">\( e ::= n \;\mid\; x \;\mid\; e \; \mathit{op} \; e \)</p>
+  <p class="lead" style="font-family:var(--serif); font-style:italic; max-width:48ch">"An expression is a numeral, or a name, or an expression, an operator and an expression."</p>
+  <div class="cols" style="margin-top:.6em">
+    <p>This is a <strong>grammar</strong>, in the notation Chomsky's work led to. The Python and the grammar say the same thing. The grammar is shorter; the Python runs.</p>
+    <p class="punch">Moving between the two is a skill this course teaches.</p>
+  </div>
+</section>
+
+<section>
+  <h2>A grammar, with production rules</h2>
+  <div class="split even">
+    <div>
+      <p class="cite" style="margin-bottom:.4em">Production rules</p>
+      <pre><code class="language-text" data-trim>
+Expr  ::= Var | Int | Expr + Expr
+        | let Var = Expr | ( Expr )
+Var   ::= x | y | z | …
+Int   ::= Digit | Digit Int
+Digit ::= 0 | 1 | … | 9
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite" style="margin-bottom:.4em">A derivation</p>
+      <pre style="font-size:.52em"><code class="language-text" data-trim>
+Expr
+→ let Var = Expr
+→ let z = Expr
+→ let z = ( Expr )
+→ let z = ( Expr + Expr )
+→ let z = ( Var + Expr )
+→ let z = ( x + Expr )
+→ let z = ( x + Int )
+→ let z = ( x + Digit Int )
+→ let z = ( x + 4 Int )
+→ let z = ( x + 4 2 )
+      </code></pre>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Derivation and parsing</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">DERIVATION · grammar → string</p><p style="font-size:.9em"><strong>Derivation</strong> generates a string: repeatedly replace a <em>non-terminal</em> symbol using a <em>production rule</em>, until all symbols are terminal.</p></div>
+    <div class="card warm"><p class="idx">PARSING · string → rules</p><p style="font-size:.9em"><strong>Parsing</strong> goes the other way: given a string, find a set of rule choices that derives it.</p></div>
+  </div>
+  <p class="note">We will not study parsing algorithms. From Chapter 3 on, a parser generator does it for us, from the grammar.</p>
+</section>
+
+<section>
+  <h2>Parse tree vs abstract syntax tree</h2>
+  <div class="split even" style="align-items:stretch">
+    <div style="display:flex; flex-direction:column; justify-content:space-between">
+      <div style="max-width:470px"><figure class="diagram"><svg viewBox="0 0 428 384" role="img" aria-label="The parse tree of let z = 10: every grammar rule used, fourteen nodes"><line x1="132.0" y1="105.0" x2="132.0" y2="135.0" class="d-line"/><line x1="296.0" y1="233.0" x2="296.0" y2="263.0" class="d-line"/><line x1="378.0" y1="297.0" x2="378.0" y2="327.0" class="d-line"/><line x1="378.0" y1="233.0" x2="378.0" y2="263.0" class="d-line"/><line x1="337.0" y1="169.0" x2="296.0" y2="199.0" class="d-line"/><line x1="337.0" y1="169.0" x2="378.0" y2="199.0" class="d-line"/><line x1="337.0" y1="105.0" x2="337.0" y2="135.0" class="d-line"/><line x1="183.2" y1="41.0" x2="50.0" y2="71.0" class="d-line"/><line x1="183.2" y1="41.0" x2="132.0" y2="71.0" class="d-line"/><line x1="183.2" y1="41.0" x2="214.0" y2="71.0" class="d-line"/><line x1="183.2" y1="41.0" x2="337.0" y2="71.0" class="d-line"/><rect x="20.2" y="71.0" width="59.6" height="34" rx="17.0" class="d-box"/><text x="50.0" y="93.0" text-anchor="middle" class="d-t-m">let</text><rect x="111.4" y="135.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="132.0" y="157.0" text-anchor="middle" class="d-t-m">z</text><rect x="102.2" y="71.0" width="59.6" height="34" rx="17.0" class="d-box-soft"/><text x="132.0" y="93.0" text-anchor="middle" class="d-t-m">Var</text><rect x="193.4" y="71.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="214.0" y="93.0" text-anchor="middle" class="d-t-m">=</text><rect x="275.4" y="263.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="296.0" y="285.0" text-anchor="middle" class="d-t-m">1</text><rect x="257.0" y="199.0" width="78.0" height="34" rx="17.0" class="d-box-soft"/><text x="296.0" y="221.0" text-anchor="middle" class="d-t-m">Digit</text><rect x="357.4" y="327.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="378.0" y="349.0" text-anchor="middle" class="d-t-m">0</text><rect x="339.0" y="263.0" width="78.0" height="34" rx="17.0" class="d-box-soft"/><text x="378.0" y="285.0" text-anchor="middle" class="d-t-m">Digit</text><rect x="348.2" y="199.0" width="59.6" height="34" rx="17.0" class="d-box-soft"/><text x="378.0" y="221.0" text-anchor="middle" class="d-t-m">Int</text><rect x="307.2" y="135.0" width="59.6" height="34" rx="17.0" class="d-box-soft"/><text x="337.0" y="157.0" text-anchor="middle" class="d-t-m">Int</text><rect x="302.6" y="71.0" width="68.8" height="34" rx="17.0" class="d-box-accent"/><text x="337.0" y="93.0" text-anchor="middle" class="d-t-m">Expr</text><rect x="148.8" y="7.0" width="68.8" height="34" rx="17.0" class="d-box-accent"/><text x="183.2" y="29.0" text-anchor="middle" class="d-t-m">Expr</text></svg></figure></div>
+      <p class="small" style="margin-top:12px"><strong>Parse tree</strong> of <code>let z = 10</code>: every rule used.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; justify-content:space-between; border-left:1px dashed var(--rule); padding-left:40px">
+      <div style="flex:1; display:flex; align-items:center; justify-content:center"><div style="width:260px"><figure class="diagram"><svg viewBox="0 0 190 140" role="img" aria-label="The abstract syntax tree of let z = 10: three nodes"><line x1="95.0" y1="41.0" x2="50.0" y2="77.0" class="d-line"/><line x1="95.0" y1="41.0" x2="140.0" y2="77.0" class="d-line"/><rect x="29.4" y="77.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="50.0" y="99.0" text-anchor="middle" class="d-t-m">z</text><rect x="114.8" y="77.0" width="50.4" height="34" rx="17.0" class="d-box"/><text x="140.0" y="99.0" text-anchor="middle" class="d-t-m">10</text><rect x="65.2" y="7.0" width="59.6" height="34" rx="17.0" class="d-box-accent"/><text x="95.0" y="29.0" text-anchor="middle" class="d-t-m">let</text></svg></figure></div></div>
+      <p class="small" style="margin-top:12px"><strong>Abstract syntax tree</strong>: only what matters for meaning.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Abstract syntax</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">WHY</p><p>Avoids most complications of infix and prefix operators, precedence, parentheses, digits.</p></div>
+    <div class="card"><p class="idx">FORMALLY</p><p>It is an <strong>initial algebra</strong>. Not a topic in this course: we just assume we have an <strong>in-language representation</strong> of the AST.</p></div>
+    <div class="card warm"><p class="idx">HERE</p><p>In Python, that representation is the dataclasses you just saw.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>What syntax does not say</h2>
+  <div class="split">
+    <div style="max-width:460px; margin:auto"><figure class="diagram"><svg viewBox="0 0 400 236" role="img" aria-label="The tree for an ice cream divided by zero: a division node, an ice cream on the left, zero on the right"><line x1="200" y1="62" x2="110" y2="138" class="d-line"/><line x1="200" y1="62" x2="290" y2="138" class="d-line"/><circle cx="200" cy="44" r="28" class="d-box-accent"/><text x="200" y="54" text-anchor="middle" class="d-t-big" style="font-size:30px">÷</text><circle cx="110" cy="176" r="52" class="d-box"/><polygon points="93,182 127,182 110,218" style="fill:#e0b27a;stroke:#9a6a35;stroke-width:1.5"/><line x1="101" y1="188" x2="115" y2="204" style="stroke:#9a6a35;stroke-width:1"/><line x1="119" y1="188" x2="105" y2="204" style="stroke:#9a6a35;stroke-width:1"/><circle cx="101" cy="176" r="12" style="fill:#f7c6d6;stroke:#c9738f;stroke-width:1.5"/><circle cx="119" cy="176" r="12" style="fill:#fff3d6;stroke:#c9a86a;stroke-width:1.5"/><circle cx="110" cy="162" r="12" style="fill:#8b5a3c;stroke:#5d3a26;stroke-width:1.5"/><circle cx="112" cy="148" r="4" style="fill:#d23b3b"/><circle cx="290" cy="176" r="40" class="d-box"/><text x="290" y="190" text-anchor="middle" class="d-t-big" style="font-size:38px">0</text></svg></figure></div>
+    <div>
+      <p class="lead">An ice cream, divided by zero. A perfectly good <strong>tree</strong>.</p>
+      <p class="cite" style="margin-bottom:.4em">Syntax does not say</p>
+      <div class="cards" style="--n:1">
+        <div class="card"><p>that an ice cream can be divided at all,</p></div>
+        <div class="card"><p>that division by zero is forbidden,</p></div>
+        <div class="card"><p>or that <code>÷</code> divides.</p></div>
+      </div>
+    </div>
+  </div>
+  <p class="punch" style="margin-top:14px; max-width:none">Syntax says which trees exist. It is deliberately silent about what they mean.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Half two</p>
+  <h2>Semantics: what a tree <em>means</em></h2>
+</section>
+
+<section>
+  <h2>After parsing, execution</h2>
+  <p class="lead">How is that done? <strong>Depends on the language!</strong></p>
+  <p>We will use <strong>formal semantics</strong>, and implement its mathematical definition directly in Python.</p>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">−</p><p>not going to be super efficient;</p></div>
+    <div class="card"><p class="idx">+</p><p>going to be <strong>very clear</strong>;</p></div>
+    <div class="card"><p class="idx">+</p><p>good for prototyping, easy to refine for efficiency later.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The meaning of an expression</h2>
+  <div class="split">
+    <div>
+      <p class="lead">…is a number — once we know the value of every variable.</p>
+      <p>So the meaning of a tree is a function from an <strong>environment</strong> (a table from names to values) to a number.</p>
+    </div>
+    <pre><code class="language-python" data-trim>
+type Env = dict[str, float]
+
+def evaluate(expr: Expr, env: Env) -> float:
+    ...
+    </code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>One case per kind of node</h2>
+  <pre style="font-size:.56em"><code class="language-python" data-trim>
+def evaluate(expr: Expr, env: Env) -> float:
+    match expr:
+        case Number(value):
+            return value
+        case Variable(name):
+            if name not in env:
+                raise NameError(f"variable '{name}' is not defined")
+            return env[name]
+        case BinaryOp(left, operator, right):
+            lv = evaluate(left, env)
+            rv = evaluate(right, env)
+            match operator:
+                case "+": return lv + rv
+                case "-": return lv - rv
+                case "*": return lv * rv
+                case "/": return lv / rv
+                case _: raise ValueError(f"unknown operator '{operator}'")
+  </code></pre>
+</section>
+
+<section>
+  <h2>It runs</h2>
+  <div class="split">
+    <div>
+      <pre style="font-size:.8em"><code class="language-python" data-trim>
+>>> evaluate(example, {"x": 4.0})
+14.0
+      </code></pre>
+    </div>
+    <figure class="diagram"><svg viewBox="0 0 312 240" role="img" aria-label="Evaluating 2 + (x * 3) with x = 4: values flow from the leaves up to 14"><line x1="204.0" y1="121.0" x2="156.0" y2="167.0" class="d-line"/><line x1="204.0" y1="121.0" x2="252.0" y2="167.0" class="d-line"/><line x1="132.0" y1="41.0" x2="60.0" y2="87.0" class="d-line"/><line x1="132.0" y1="41.0" x2="204.0" y2="87.0" class="d-line"/><rect x="39.4" y="87.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="60.0" y="109.0" text-anchor="middle" class="d-t-m">2</text><text x="88.6" y="109.0" class="d-t-warm" style="font-weight:600">2</text><rect x="135.4" y="167.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="156.0" y="189.0" text-anchor="middle" class="d-t-m">x</text><text x="184.6" y="189.0" class="d-t-warm" style="font-weight:600">4</text><rect x="231.4" y="167.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="252.0" y="189.0" text-anchor="middle" class="d-t-m">3</text><text x="280.6" y="189.0" class="d-t-warm" style="font-weight:600">3</text><rect x="183.4" y="87.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="204.0" y="109.0" text-anchor="middle" class="d-t-m">*</text><text x="232.6" y="109.0" class="d-t-warm" style="font-weight:600">12</text><rect x="111.4" y="7.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="132.0" y="29.0" text-anchor="middle" class="d-t-m">+</text><text x="160.6" y="29.0" class="d-t-warm" style="font-weight:600">14</text></svg><figcaption>Each subtree first, then the node: 4 × 3 = 12, then 2 + 12 = 14. With ρ = {x ↦ 4}.</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2><span class="warm mono" style="font-size:.5em">01</span><br>The shape of the function is the shape of the syntax</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p>One case per kind of node, nothing else. <code>match</code> takes the tree apart: <code>case BinaryOp(left, operator, right)</code> names the three children.</p></div>
+    <div class="card"><p>Add a kind of node to <code>Expr</code> → add a case to <code>evaluate</code>.</p></div>
+    <div class="card warm"><p>Not a coincidence of Python. This is what a definition of meaning looks like.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="warm mono" style="font-size:.5em">02</span><br>Recursive exactly where the syntax is</h2>
+  <p class="formula" style="font-size:1.6em">\( ⟦e_1 + e_2⟧\rho \;=\; ⟦e_1⟧\rho + ⟦e_2⟧\rho \)</p>
+  <p class="lead" style="font-family:var(--serif); font-style:italic; max-width:52ch">"The meaning of the tree <code>e₁ + e₂</code> in environment ρ is the sum of the meanings of the subtrees."</p>
+  <div class="cards" style="--n:3">
+    <div class="card"><p>The <code>+</code> on the left is a piece of <strong>syntax</strong>.</p></div>
+    <div class="card"><p>The <code>+</code> on the right is addition of <strong>numbers</strong>.</p></div>
+    <div class="card warm"><p>The equation and the line <code>case "+": return lv + rv</code> say the same thing.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="warm mono" style="font-size:.5em">03</span><br>The decisions are visible</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">MISSING VARIABLE</p><p>we raise. A spreadsheet returns 0. A computer algebra system leaves <code>x</code> in the answer.</p></div>
+    <div class="card"><p class="idx">1 / 0</p><p>right now, whatever Python does.</p></div>
+    <div class="card warm"><p class="idx">SO</p><p>None of these is forced by the syntax. Each is a decision about what the language <em>means</em>.</p></div>
+  </div>
+  <p class="punch" style="margin-top:20px">A designer who has not made them has not finished designing.</p>
+</section>
+
+<section>
+  <h2>Same characters, different trees</h2>
+  <div class="split flip">
+    <div>
+      <pre style="font-size:.5em"><code class="language-python" data-trim>
+left_first  = BinaryOp(BinaryOp(Number(2), "*", Number(3)), "+", Number(4))
+right_first = BinaryOp(Number(2), "*", BinaryOp(Number(3), "+", Number(4)))
+
+>>> evaluate(left_first, {}), evaluate(right_first, {})
+(10.0, 14.0)
+      </code></pre>
+      <p class="small"><code>evaluate</code> does not know about precedence and does not need to. Precedence is a rule about which tree a <em>string</em> stands for: it belongs to the parser.</p>
+      <p class="note">Keeping the two apart lets you change the surface of a language without touching its meaning — and the other way round.</p>
+    </div>
+    <figure class="diagram"><svg viewBox="0 0 596 238" role="img" aria-label="The same characters as two different trees evaluate to 10 and 14"><line x1="78.0" y1="111.0" x2="40.0" y2="147.0" class="d-line"/><line x1="78.0" y1="111.0" x2="116.0" y2="147.0" class="d-line"/><line x1="135.0" y1="41.0" x2="78.0" y2="77.0" class="d-line"/><line x1="135.0" y1="41.0" x2="192.0" y2="77.0" class="d-line"/><rect x="19.4" y="147.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="40.0" y="169.0" text-anchor="middle" class="d-t-m">2</text><rect x="95.4" y="147.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="116.0" y="169.0" text-anchor="middle" class="d-t-m">3</text><rect x="57.4" y="77.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="78.0" y="99.0" text-anchor="middle" class="d-t-m">*</text><rect x="171.4" y="77.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="192.0" y="99.0" text-anchor="middle" class="d-t-m">4</text><rect x="114.4" y="7.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="135.0" y="29.0" text-anchor="middle" class="d-t-m">+</text><text x="163.6" y="29.0" class="d-t-warm" style="font-weight:600">10</text><g transform="translate(338,0)"><line x1="114.0" y1="111.0" x2="76.0" y2="147.0" class="d-line"/><line x1="114.0" y1="111.0" x2="152.0" y2="147.0" class="d-line"/><line x1="57.0" y1="41.0" x2="0.0" y2="77.0" class="d-line"/><line x1="57.0" y1="41.0" x2="114.0" y2="77.0" class="d-line"/><rect x="-20.6" y="77.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="0.0" y="99.0" text-anchor="middle" class="d-t-m">2</text><rect x="55.4" y="147.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="76.0" y="169.0" text-anchor="middle" class="d-t-m">3</text><rect x="131.4" y="147.0" width="41.2" height="34" rx="17.0" class="d-box"/><text x="152.0" y="169.0" text-anchor="middle" class="d-t-m">4</text><rect x="93.4" y="77.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="114.0" y="99.0" text-anchor="middle" class="d-t-m">+</text><rect x="36.4" y="7.0" width="41.2" height="34" rx="17.0" class="d-box-accent"/><text x="57.0" y="29.0" text-anchor="middle" class="d-t-m">*</text><text x="85.6" y="29.0" class="d-t-warm" style="font-weight:600">14</text></g><text x="40" y="228" class="d-t-m">(2 * 3) + 4</text><text x="338" y="228" class="d-t-m">2 * (3 + 4)</text></svg><figcaption>The number beside a node is its value. Same characters, different trees, different numbers.</figcaption></figure>
+  </div>
+</section>
+
+<section class="part">
+  <p class="kicker">Beyond calculators</p>
+  <h2>Why semantics, <em>in practice</em></h2>
+</section>
+
+<section>
+  <h2>Example: variable assignment</h2>
+  <div class="split">
+    <div>
+      <p class="lead">C-like syntax: <code>x = 3</code>. What does it do? <strong>Modify the memory!</strong></p>
+      <p>How do we formalise it?</p>
+      <p class="fragment punch">Memory is a partial function from variables to values.*</p>
+      <p class="fragment note">* this is not even precise — we will study it in detail.</p>
+    </div>
+    <div class="fragment"><figure class="diagram"><svg viewBox="0 0 470 170" role="img" aria-label="Memory update: the new memory maps x to 3 and agrees with the old one everywhere else"><defs><marker id="am1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wm1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="cm1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><text x="0" y="18" class="d-t-mono-s">mem</text><rect x="0" y="30" width="70" height="40" class="d-box-soft"/><text x="35" y="56" text-anchor="middle" class="d-t-m">x</text><rect x="70" y="30" width="90" height="40" class="d-box"/><text x="115" y="56" text-anchor="middle" class="d-t-m">1</text><rect x="0" y="74" width="70" height="40" class="d-box-soft"/><text x="35" y="100" text-anchor="middle" class="d-t-m">y</text><rect x="70" y="74" width="90" height="40" class="d-box"/><text x="115" y="100" text-anchor="middle" class="d-t-m">7</text><rect x="0" y="118" width="70" height="40" class="d-box-soft"/><text x="35" y="144" text-anchor="middle" class="d-t-m">z</text><rect x="70" y="118" width="90" height="40" class="d-box"/><text x="115" y="144" text-anchor="middle" class="d-t-m">2</text><text x="300" y="18" class="d-t-mono-s">mem′ = update(mem, x, 3)</text><rect x="300" y="30" width="70" height="40" class="d-box-soft"/><text x="335" y="56" text-anchor="middle" class="d-t-m">x</text><rect x="370" y="30" width="90" height="40" class="d-box-warm"/><text x="415" y="56" text-anchor="middle" class="d-t-m">3</text><rect x="300" y="74" width="70" height="40" class="d-box-soft"/><text x="335" y="100" text-anchor="middle" class="d-t-m">y</text><rect x="370" y="74" width="90" height="40" class="d-box"/><text x="415" y="100" text-anchor="middle" class="d-t-m">7</text><rect x="300" y="118" width="70" height="40" class="d-box-soft"/><text x="335" y="144" text-anchor="middle" class="d-t-m">z</text><rect x="370" y="118" width="90" height="40" class="d-box"/><text x="415" y="144" text-anchor="middle" class="d-t-m">2</text><line x1="176" y1="96" x2="286" y2="96" class="d-arrow" marker-end="url(#am1)"/><text x="231" y="86" text-anchor="middle" class="d-t-m">x = 3</text></svg></figure></div>
+  </div>
+</section>
+
+<section>
+  <h2>What is memory update, formally?</h2>
+  <p><code>x = k</code> is interpreted as \( \mathit{update}(\mathit{mem}, x, k) = \mathit{mem}' \) where</p>
+  <div class="cards" style="--n:2; max-width:960px">
+    <div class="card"><p class="formula" style="margin:0">\( \mathit{mem}'(x) = k \)</p></div>
+    <div class="card"><p class="formula" style="margin:0">\( \mathit{mem}'(y) = \mathit{mem}(y) \text{ if } y \neq x \)</p></div>
+  </div>
+  <p class="punch fragment" style="margin-top:22px">Q: mathematically, to which set do <em>mem</em> and <em>mem′</em> belong?</p>
+  <p class="fragment lead">\( \mathit{Var} \rightharpoonup \mathit{Val} \): the partial functions from variables to values.</p>
+</section>
+
+<section>
+  <h2>Why am I mentioning all this?</h2>
+  <div class="cols">
+    <p>In hardware, memory update changes one cell. Access time stays <strong>constant</strong>.</p>
+    <p>Now implement memory as a chain of function updates, as on the previous slide: each lookup asks the newest function, which asks the previous one, which…</p>
+  </div>
+  <figure class="diagram"><svg viewBox="0 0 700 132" role="img" aria-label="Looking up y in a chain of updates visits every update before the original memory"><defs><marker id="au1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wu1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="cu1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><rect x="0" y="30" width="140" height="64" rx="8" class="d-box"/><text x="70" y="56" text-anchor="middle" class="d-t-b">mem₃</text><text x="70" y="80" text-anchor="middle" class="d-t-m">x ↦ 5</text><line x1="144" y1="62" x2="176" y2="62" class="d-arrow-warm" marker-end="url(#wu1)"/><rect x="180" y="30" width="140" height="64" rx="8" class="d-box"/><text x="250" y="56" text-anchor="middle" class="d-t-b">mem₂</text><text x="250" y="80" text-anchor="middle" class="d-t-m">z ↦ 0</text><line x1="324" y1="62" x2="356" y2="62" class="d-arrow-warm" marker-end="url(#wu1)"/><rect x="360" y="30" width="140" height="64" rx="8" class="d-box"/><text x="430" y="56" text-anchor="middle" class="d-t-b">mem₁</text><text x="430" y="80" text-anchor="middle" class="d-t-m">x ↦ 3</text><line x1="504" y1="62" x2="536" y2="62" class="d-arrow-warm" marker-end="url(#wu1)"/><rect x="540" y="30" width="140" height="64" rx="8" class="d-box-accent"/><text x="610" y="56" text-anchor="middle" class="d-t-b">mem₀</text><text x="610" y="80" text-anchor="middle" class="d-t-m">y ↦ 7, …</text><text x="0" y="16" class="d-t-warm">lookup(y): not me, ask the previous one …</text><text x="610" y="124" text-anchor="middle" class="d-t-mono-s">found after 4 steps</text></svg></figure>
+  <p class="punch" style="margin-top:10px">Access time is linear in the number of previous updates. Crazy!</p>
+</section>
+
+<section>
+  <h2>Easy to fix?</h2>
+  <p class="lead">Just use arrays for memory, and array update in place of functional update.</p>
+  <div class="cards" style="--n:2">
+    <div class="card warm fragment"><p class="idx">BUT</p><p>then it is <strong>no longer formalised</strong>. Program semantics is the way to formalise arrays — so using arrays to formalise program semantics is <strong>circular</strong>.</p></div>
+    <div class="card fragment"><p class="idx">WAY OUT: ABSTRACTION</p><p>put memory operations in a module, class or library; define them inefficiently, to study the language; define them efficiently, at a second stage.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Interpreters are everywhere</h2>
+  <p class="lead">So are domain-specific languages. Unusual examples to think about:</p>
+  <div class="cards" style="--n:3">
+    <div class="card"><h3>Undo / redo</h3><p>clearly a sequence of "instructions".</p></div>
+    <div class="card"><h3>Filtering products</h3><p>on a shop's web site: an interpreter for filter expressions.</p></div>
+    <div class="card"><h3>Graph-based programming</h3><p>synthesisers, ComfyUI, LabVIEW, Scratch, After Effects, Max/MSP, PureData…</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Why study semantics from a practical perspective?</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><h3>Program analysis and verification</h3><p>abstract interpretation, model checking, type checking.</p></div>
+    <div class="card"><h3>System monitoring</h3><p>watch a system and check that it respects given properties.</p></div>
+    <div class="card"><h3>Program transformation</h3><p>simplification, instrumentation for performance or debugging.</p></div>
+    <div class="card"><h3>Testing</h3><p>run a program many times; find the corner cases that must be tested.</p></div>
+  </div>
+</section>
+
+<section class="question">
+  <p class="cite">Something to be tested, checked statically, or monitored</p>
+  <h2>What is a "property"?</h2>
+  <p class="answer fragment">What is your formal model?</p>
+  <p class="fragment" style="margin-top:.8em; max-width:52ch">Begging the question? <strong>No.</strong> How can you test properties of something, if you don't know what you can actually observe?</p>
+</section>
+
+<section>
+  <p class="big" style="font-family:var(--serif); font-weight:300; font-size:40px; line-height:1.18; max-width:34ch; margin-top:-10px">It is like watching a bicycle race and testing for how many goals have been scored.</p>
+  <div style="display:grid; grid-template-columns: 1.7fr 1fr; gap:40px; align-items:end; margin-top:6px">
+    <div><figure class="diagram"><svg viewBox="-314 48 705.5574890451344 174" role="img" aria-label="A bicycle; a point on its rear rim traces a cycloid as it rolls"><polyline points="-299.6,212.0 -299.6,212.0 -299.6,211.9 -299.6,211.8 -299.5,211.7 -299.5,211.5 -299.5,211.2 -299.5,211.0 -299.5,210.6 -299.4,210.3 -299.4,209.9 -299.3,209.4 -299.2,209.0 -299.2,208.4 -299.1,207.9 -298.9,207.3 -298.8,206.6 -298.7,206.0 -298.5,205.2 -298.3,204.5 -298.1,203.7 -297.9,202.9 -297.6,202.0 -297.3,201.1 -297.0,200.2 -296.7,199.2 -296.4,198.2 -296.0,197.1 -295.6,196.1 -295.2,195.0 -294.7,193.8 -294.2,192.7 -293.7,191.5 -293.1,190.3 -292.6,189.0 -291.9,187.7 -291.3,186.4 -290.6,185.1 -289.9,183.8 -289.1,182.4 -288.3,181.0 -287.5,179.6 -286.6,178.1 -285.7,176.7 -284.8,175.2 -283.8,173.7 -282.8,172.2 -281.7,170.7 -280.6,169.2 -279.5,167.6 -278.3,166.0 -277.1,164.5 -275.8,162.9 -274.5,161.3 -273.1,159.7 -271.8,158.1 -270.3,156.5 -268.8,154.9 -267.3,153.2 -265.8,151.6 -264.2,150.0 -262.5,148.4 -260.8,146.8 -259.1,145.1 -257.3,143.5 -255.5,141.9 -253.7,140.3 -251.8,138.7 -249.8,137.1 -247.8,135.5 -245.8,134.0 -243.8,132.4 -241.7,130.8 -239.5,129.3 -237.3,127.8 -235.1,126.3 -232.8,124.8 -230.5,123.3 -228.2,121.9 -225.8,120.4 -223.4,119.0 -220.9,117.6 -218.5,116.2 -215.9,114.9 -213.4,113.6 -210.8,112.3 -208.1,111.0 -205.5,109.7 -202.8,108.5 -200.1,107.3 -197.3,106.2 -194.5,105.0 -191.7,103.9 -188.9,102.9 -186.0,101.8 -183.1,100.8 -180.2,99.8 -177.2,98.9 -174.3,98.0 -171.3,97.1 -168.2,96.3 -165.2,95.5 -162.1,94.8 -159.1,94.0 -156.0,93.4 -152.9,92.7 -149.7,92.1 -146.6,91.6 -143.4,91.0 -140.2,90.6 -137.1,90.1 -133.9,89.7 -130.7,89.4 -127.4,89.0 -124.2,88.8 -121.0,88.5 -117.8,88.3 -114.5,88.2 -111.3,88.1 -108.0,88.0 -104.8,88.0 -101.5,88.0 -98.3,88.1 -95.0,88.2 -91.8,88.3 -88.6,88.5 -85.3,88.8 -82.1,89.0 -78.9,89.4 -75.7,89.7 -72.5,90.1 -69.3,90.6 -66.1,91.0 -63.0,91.6 -59.8,92.1 -56.7,92.7 -53.6,93.4 -50.5,94.0 -47.4,94.8 -44.4,95.5 -41.3,96.3 -38.3,97.1 -35.3,98.0 -32.3,98.9 -29.4,99.8 -26.5,100.8 -23.6,101.8 -20.7,102.9 -17.8,103.9 -15.0,105.0 -12.2,106.2 -9.5,107.3 -6.8,108.5 -4.1,109.7 -1.4,111.0 1.2,112.3 3.8,113.6 6.4,114.9 8.9,116.2 11.4,117.6 13.8,119.0 16.3,120.4 18.6,121.9 21.0,123.3 23.3,124.8 25.5,126.3 27.8,127.8 30.0,129.3 32.1,130.8 34.2,132.4 36.3,134.0 38.3,135.5 40.3,137.1 42.2,138.7 44.1,140.3 46.0,141.9 47.8,143.5 49.6,145.1 51.3,146.8 53.0,148.4 54.6,150.0 56.2,151.6 57.8,153.2 59.3,154.9 60.8,156.5 62.2,158.1 63.6,159.7 64.9,161.3 66.2,162.9 67.5,164.5 68.7,166.0 69.9,167.6 71.1,169.2 72.2,170.7 73.2,172.2 74.2,173.7 75.2,175.2 76.2,176.7 77.1,178.1 77.9,179.6 78.8,181.0 79.6,182.4 80.3,183.8 81.0,185.1 81.7,186.4 82.4,187.7 83.0,189.0 83.6,190.3 84.1,191.5 84.7,192.7 85.1,193.8 85.6,195.0 86.0,196.1 86.4,197.1 86.8,198.2 87.2,199.2 87.5,200.2 87.8,201.1 88.1,202.0 88.3,202.9 88.5,203.7 88.7,204.5 88.9,205.2 89.1,206.0 89.2,206.6 89.4,207.3 89.5,207.9 89.6,208.4 89.7,209.0 89.8,209.4 89.8,209.9 89.9,210.3 89.9,210.6 89.9,211.0 90.0,211.2 90.0,211.5 90.0,211.7 90.0,211.8 90.0,211.9 90.0,212.0 90.0,212.0" style="fill:none;stroke:var(--accent);stroke-width:2.2;stroke-dasharray:5 4"/><line x1="-310" y1="212" x2="382" y2="212" class="d-thin"/><line x1="95.0" y1="150.0" x2="142.6" y2="169.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="94.9" y1="151.0" x2="137.8" y2="179.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="94.6" y1="151.9" x2="131.3" y2="187.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="94.2" y1="152.8" x2="123.1" y2="195.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="93.5" y1="153.5" x2="113.6" y2="200.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="92.8" y1="154.2" x2="103.3" y2="204.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="91.9" y1="154.6" x2="92.4" y2="205.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="91.0" y1="154.9" x2="81.4" y2="205.3" style="stroke:var(--muted);stroke-width:.7"/><line x1="90.0" y1="155.0" x2="70.8" y2="202.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="89.0" y1="154.9" x2="60.9" y2="197.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="88.1" y1="154.6" x2="52.1" y2="191.3" style="stroke:var(--muted);stroke-width:.7"/><line x1="87.2" y1="154.2" x2="44.8" y2="183.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="86.5" y1="153.5" x2="39.2" y2="173.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="85.8" y1="152.8" x2="35.6" y2="163.3" style="stroke:var(--muted);stroke-width:.7"/><line x1="85.4" y1="151.9" x2="34.1" y2="152.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="85.1" y1="151.0" x2="34.7" y2="141.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="85.0" y1="150.0" x2="37.4" y2="130.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="85.1" y1="149.0" x2="42.2" y2="120.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="85.4" y1="148.1" x2="48.7" y2="112.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="85.8" y1="147.2" x2="56.9" y2="104.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="86.5" y1="146.5" x2="66.4" y2="99.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="87.2" y1="145.8" x2="76.7" y2="95.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="88.1" y1="145.4" x2="87.6" y2="94.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="89.0" y1="145.1" x2="98.6" y2="94.7" style="stroke:var(--muted);stroke-width:.7"/><line x1="90.0" y1="145.0" x2="109.2" y2="97.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="91.0" y1="145.1" x2="119.1" y2="102.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="91.9" y1="145.4" x2="127.9" y2="108.7" style="stroke:var(--muted);stroke-width:.7"/><line x1="92.8" y1="145.8" x2="135.2" y2="116.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="93.5" y1="146.5" x2="140.8" y2="126.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="94.2" y1="147.2" x2="144.4" y2="136.7" style="stroke:var(--muted);stroke-width:.7"/><line x1="94.6" y1="148.1" x2="145.9" y2="147.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="94.9" y1="149.0" x2="145.3" y2="158.6" style="stroke:var(--muted);stroke-width:.7"/><circle cx="90" cy="150" r="62" style="fill:none;stroke:var(--ink);stroke-width:6"/><circle cx="90" cy="150" r="56" style="fill:none;stroke:var(--ink);stroke-width:1.2"/><circle cx="90" cy="150" r="5" class="d-fill-ink"/><line x1="305.0" y1="150.0" x2="352.6" y2="169.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="304.9" y1="151.0" x2="347.8" y2="179.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="304.6" y1="151.9" x2="341.3" y2="187.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="304.2" y1="152.8" x2="333.1" y2="195.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="303.5" y1="153.5" x2="323.6" y2="200.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="302.8" y1="154.2" x2="313.3" y2="204.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="301.9" y1="154.6" x2="302.4" y2="205.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="301.0" y1="154.9" x2="291.4" y2="205.3" style="stroke:var(--muted);stroke-width:.7"/><line x1="300.0" y1="155.0" x2="280.8" y2="202.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="299.0" y1="154.9" x2="270.9" y2="197.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="298.1" y1="154.6" x2="262.1" y2="191.3" style="stroke:var(--muted);stroke-width:.7"/><line x1="297.2" y1="154.2" x2="254.8" y2="183.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="296.5" y1="153.5" x2="249.2" y2="173.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="295.8" y1="152.8" x2="245.6" y2="163.3" style="stroke:var(--muted);stroke-width:.7"/><line x1="295.4" y1="151.9" x2="244.1" y2="152.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="295.1" y1="151.0" x2="244.7" y2="141.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="295.0" y1="150.0" x2="247.4" y2="130.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="295.1" y1="149.0" x2="252.2" y2="120.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="295.4" y1="148.1" x2="258.7" y2="112.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="295.8" y1="147.2" x2="266.9" y2="104.8" style="stroke:var(--muted);stroke-width:.7"/><line x1="296.5" y1="146.5" x2="276.4" y2="99.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="297.2" y1="145.8" x2="286.7" y2="95.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="298.1" y1="145.4" x2="297.6" y2="94.1" style="stroke:var(--muted);stroke-width:.7"/><line x1="299.0" y1="145.1" x2="308.6" y2="94.7" style="stroke:var(--muted);stroke-width:.7"/><line x1="300.0" y1="145.0" x2="319.2" y2="97.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="301.0" y1="145.1" x2="329.1" y2="102.2" style="stroke:var(--muted);stroke-width:.7"/><line x1="301.9" y1="145.4" x2="337.9" y2="108.7" style="stroke:var(--muted);stroke-width:.7"/><line x1="302.8" y1="145.8" x2="345.2" y2="116.9" style="stroke:var(--muted);stroke-width:.7"/><line x1="303.5" y1="146.5" x2="350.8" y2="126.4" style="stroke:var(--muted);stroke-width:.7"/><line x1="304.2" y1="147.2" x2="354.4" y2="136.7" style="stroke:var(--muted);stroke-width:.7"/><line x1="304.6" y1="148.1" x2="355.9" y2="147.6" style="stroke:var(--muted);stroke-width:.7"/><line x1="304.9" y1="149.0" x2="355.3" y2="158.6" style="stroke:var(--muted);stroke-width:.7"/><circle cx="300" cy="150" r="62" style="fill:none;stroke:var(--ink);stroke-width:6"/><circle cx="300" cy="150" r="56" style="fill:none;stroke:var(--ink);stroke-width:1.2"/><circle cx="300" cy="150" r="5" class="d-fill-ink"/><line x1="90" y1="150" x2="180" y2="160" style="stroke:var(--warm);stroke-width:5;stroke-linecap:round"/><line x1="90" y1="150" x2="160" y2="70" style="stroke:var(--warm);stroke-width:5;stroke-linecap:round"/><line x1="180" y1="160" x2="160" y2="70" style="stroke:var(--warm);stroke-width:5;stroke-linecap:round"/><line x1="180" y1="160" x2="272" y2="78" style="stroke:var(--warm);stroke-width:5;stroke-linecap:round"/><line x1="166" y1="78" x2="270" y2="82" style="stroke:var(--warm);stroke-width:5;stroke-linecap:round"/><line x1="272" y1="78" x2="300" y2="150" style="stroke:var(--warm);stroke-width:5;stroke-linecap:round"/><line x1="160" y1="70" x2="154" y2="52" style="stroke:var(--ink);stroke-width:4"/><path d="M 134 48 L 174 50" style="stroke:var(--ink);stroke-width:7;stroke-linecap:round"/><line x1="272" y1="78" x2="266" y2="56" style="stroke:var(--ink);stroke-width:4"/><path d="M 252 52 Q 282 48 286 66" style="fill:none;stroke:var(--ink);stroke-width:4;stroke-linecap:round"/><circle cx="180" cy="160" r="17" style="fill:none;stroke:var(--ink);stroke-width:2.5"/><line x1="180" y1="143" x2="90" y2="142" style="stroke:var(--ink);stroke-width:1.5"/><line x1="180" y1="177" x2="90" y2="158" style="stroke:var(--ink);stroke-width:1.5"/><line x1="180" y1="160" x2="194" y2="186" style="stroke:var(--ink);stroke-width:3"/><circle cx="90" cy="212" r="5" class="d-fill-warm"/><text x="-105" y="74" text-anchor="middle" class="d-t-accent">cycloid: x = r(t − sin t), y = r(1 − cos t)</text></svg></figure></div>
+    <div style="max-width:250px"><figure class="diagram"><svg viewBox="0 0 240 285" role="img" aria-label="A football: a truncated icosahedron, twelve pentagons and twenty hexagons"><polygon points="29.9,133.3 30.0,152.6 30.1,126.7 30.1,91.4 30.0,95.5" style="fill:rgb(38,40,46);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="209.9,148.6 210.0,144.5 210.1,106.7 210.0,87.4 209.9,113.3" style="fill:rgb(37,39,45);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="30.1,91.4 30.0,95.5 50.3,71.1 70.7,42.6 70.8,38.5 50.5,62.9" style="fill:rgb(219,219,213);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="70.8,38.5 70.7,42.6 103.5,38.4 136.5,30.2 136.6,26.1 103.8,30.3" style="fill:rgb(220,220,214);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="169.3,47.9 189.7,54.7 169.5,41.2 136.6,26.1 136.5,30.2" style="fill:rgb(36,38,44);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="50.3,185.3 70.5,198.8 70.4,179.5 50.1,146.7 29.9,133.3 30.0,152.6" style="fill:rgb(228,228,222);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="189.5,106.5 209.9,113.3 210.0,87.4 189.7,54.7 169.3,47.9 169.2,73.8" style="fill:rgb(232,232,226);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="70.5,198.8 103.4,213.9 136.2,209.7 136.1,190.4 103.2,175.3 70.4,179.5" style="fill:rgb(235,235,229);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="169.1,170.3 189.5,177.1 209.9,148.6 209.9,113.3 189.5,106.5 169.1,135.0" style="fill:rgb(238,238,232);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="136.1,190.4 136.2,209.7 169.2,201.5 189.5,177.1 169.1,170.3" style="fill:rgb(29,31,37);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="29.9,133.3 50.1,146.7 70.4,122.3 70.5,84.5 50.3,71.1 30.0,95.5" style="fill:rgb(239,239,233);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="103.4,64.3 136.2,82.0 169.2,73.8 169.3,47.9 136.5,30.2 103.5,38.4" style="fill:rgb(241,241,235);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="50.3,71.1 70.5,84.5 103.4,64.3 103.5,38.4 70.7,42.6" style="fill:rgb(27,29,35);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="103.2,175.3 136.1,190.4 169.1,170.3 169.1,135.0 136.1,119.8 103.2,140.0" style="fill:rgb(251,251,245);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="70.4,122.3 103.2,140.0 136.1,119.8 136.2,82.0 103.4,64.3 70.5,84.5" style="fill:rgb(253,253,247);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="70.4,179.5 103.2,175.3 103.2,140.0 70.4,122.3 50.1,146.7" style="fill:rgb(23,25,31);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><polygon points="136.1,119.8 169.1,135.0 189.5,106.5 169.2,73.8 136.2,82.0" style="fill:rgb(22,24,30);stroke:#2a2e37;stroke-width:1.4;stroke-linejoin:round"/><circle cx="120" cy="120" r="95.8" style="fill:none;stroke:#2a2e37;stroke-width:2"/><text x="120" y="270" text-anchor="middle" class="d-t-mono-s">12 pentagons · 20 hexagons</text></svg></figure></div>
+  </div>
+  <p class="muted" style="margin:6px 0 0">Think about it.</p>
+  <p class="fragment lead" style="margin-top:.3em; max-width:none">To ask the right question you need a <strong>domain of discourse</strong>. We shall call such domains <strong>semantic domains</strong>.</p>
+</section>
+
+<section>
+  <h2>Observing a system</h2>
+  <div class="split">
+    <div>
+      <p>Consider a system — not even "programmed", any system in the universe. How do we analyse its behaviour? <strong>Via observations.</strong> Quite obvious.</p>
+      <p>When the system is a programming language, the observations <strong>are</strong> the semantics:</p>
+      <p class="formula">\( \mathit{SEM} : \mathit{PROG} \to D \)</p>
+      <p class="punch">Q: what is D? The semantic domain.</p>
+    </div>
+    <figure class="diagram"><svg viewBox="0 0 740 240" role="img" aria-label="The semantics maps programs to observations; 2 + 2 and 4 map to the same observation"><defs><marker id="asm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker><marker id="wsm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker><marker id="csm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs><ellipse cx="130" cy="120" rx="120" ry="100" class="d-box-soft"/><ellipse cx="600" cy="120" rx="130" ry="100" class="d-box-accent"/><text x="130" y="36" text-anchor="middle" class="d-t-mono-s">PROG</text><text x="600" y="36" text-anchor="middle" class="d-t-mono-s">D — what we can observe</text><text x="90" y="90" text-anchor="middle" class="d-t-m">2 + 2</text><text x="120" y="140" text-anchor="middle" class="d-t-m">4</text><text x="150" y="190" text-anchor="middle" class="d-t-m">x := 1; y := x</text><text x="580" y="110" text-anchor="middle" class="d-t-m" style="font-weight:500">4</text><text x="600" y="175" text-anchor="middle" class="d-t-m" style="font-weight:500">{x ↦ 1, y ↦ 1}</text><path d="M 140 85 C 360 85, 420 105, 546 105" class="d-arrow-accent" marker-end="url(#csm)"/><path d="M 170 135 C 360 135, 420 105, 546 105" class="d-arrow-accent" marker-end="url(#csm)"/><path d="M 200 185 C 360 185, 420 170, 566 170" class="d-arrow-accent" marker-end="url(#csm)"/><text x="365" y="228" text-anchor="middle" class="d-t-m">SEM</text></svg></figure>
+  </div>
+</section>
+
+<section class="statement">
+  <p class="cite">Operational or denotational?</p>
+  <blockquote style="max-width:40ch; font-size:1.3em"><p>It is all very well to aim for a more 'abstract' and a 'cleaner' approach to semantics, but if the plan is to be any good, the operational aspects cannot be completely ignored.</p></blockquote>
+  <p class="cite">Dana S. Scott, <em>Outline of a Mathematical Theory of Computation</em>, Oxford PRG-2, 1970</p>
+</section>
+
+<section>
+  <h2>What matters is <em>what</em></h2>
+  <p class="lead">Not <em>how</em> a program computes, but <strong>the result</strong> — still stating the obvious. But the "result" could be:</p>
+  <div class="cards" style="--n:4">
+    <div class="card"><p class="idx">01</p><p>just a value;</p></div>
+    <div class="card"><p class="idx">02</p><p>the execution trace leading to that value;</p></div>
+    <div class="card"><p class="idx">03</p><p>the tree of possible choices leading to many possible values, depending on user interaction;</p></div>
+    <div class="card"><p class="idx">04</p><p>…</p></div>
+  </div>
+  <p class="note">Transition systems, non-determinism, bisimilarity, coalgebras, categorical models: that is where this road goes.</p>
+</section>
+
+<section class="question">
+  <h2>So, what are we? Programming language designers?</h2>
+  <p class="answer fragment">The short answer: <strong>yes</strong>.</p>
+  <p class="fragment muted">The long answer: the rest of this course.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Practical matters</p>
+  <h2>How this course works</h2>
+</section>
+
+<section>
+  <h2>What you build</h2>
+  <p class="lead wide">You pick an <strong>application domain</strong> — images, music, geometry, graphs, sound, text, 3D models, or one you propose — and design a domain-specific language for it:</p>
+  <div class="cards" style="--n:4">
+    <div class="card"><p class="idx">01</p><p>analyse the domain and choose its <strong>primitives</strong>;</p></div>
+    <div class="card"><p class="idx">02</p><p>decide their <strong>semantics</strong>;</p></div>
+    <div class="card"><p class="idx">03</p><p>build an <strong>interpreter</strong>, and make the results <strong>visible</strong>;</p></div>
+    <div class="card"><p class="idx">04</p><p>write examples that show the language is good for something.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Tools and rules</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">TOOLS</p><p>Python 3.12+; <code>lark</code> from Chapter 3 on.</p></div>
+    <div class="card"><p class="idx">AI</p><p>AI assistants are <strong>allowed and expected</strong>. Not hidden, not confessed.</p></div>
+    <div class="card warm"><p class="idx">OWNERSHIP</p><p>What you must own: every primitive, every example, every design decision.</p></div>
+  </div>
+  <p class="punch" style="margin-top:20px">A language you cannot explain is not your language, whoever typed it.</p>
+  <p class="note">Prerequisites: functions, lists, dictionaries, recursion. Rusty? Part B of this lecture.</p>
+</section>
+
+<section>
+  <h2>What we will not do</h2>
+  <div class="cards" style="--n:2; max-width:1000px">
+    <div class="card"><p>parsing theory, lexing, automata — a parser generator does it for us;</p></div>
+    <div class="card"><p>efficient implementations;</p></div>
+    <div class="card"><p>proper input and output;</p></div>
+    <div class="card"><p>compilers — but you will understand the basics of compilers after this course.</p></div>
+  </div>
+</section>
+
+<section class="question">
+  <h2>Q: Shall we stop here?</h2>
+  <p class="answer fragment">A: Yes.</p>
+</section>
+
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>

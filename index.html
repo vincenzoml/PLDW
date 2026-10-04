@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programming Languages Lab</title>
+<meta name="description" content="Slides and code of the Programming Languages Lab, University of Pisa: writing interpreters for small languages.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ink: #111318; --muted: #6b7079; --rule: #d8d4c8;
+  --paper: #f7f5ef; --paper-2: #efece3;
+  --accent: #3b3fcf; --warm: #d9541f;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #ecebe6; --muted: #9a9ea6; --rule: #33373f;
+          --paper: #121418; --paper-2: #1a1d23; --accent: #9ea2ff; --warm: #ff8a57;
+          color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 18px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased; }
+main { max-width: 820px; margin: 0 auto; padding: 72px 24px 64px; }
+.kicker { font: 500 13px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 18px; }
+.kicker::before { content: ""; display: inline-block; width: 22px; height: 2px;
+  background: var(--warm); vertical-align: middle; margin-right: 10px; }
+h1 { font-size: clamp(36px, 7vw, 56px); line-height: 1.05; letter-spacing: -.02em; margin: 0 0 18px; font-weight: 600; }
+.lead { font-size: 21px; color: var(--ink); margin: 0 0 14px; max-width: 40em; }
+.who { color: var(--muted); font-size: 16px; margin: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h2 { font: 500 13px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin: 64px 0 16px; padding-top: 16px; border-top: 1px solid var(--rule); }
+ol.lectures { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+ol.lectures a { display: grid; grid-template-columns: 9.5em 1fr auto; align-items: baseline; gap: 16px;
+  padding: 18px 20px; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 6px;
+  color: var(--ink); text-decoration: none; }
+ol.lectures a:hover { border-color: var(--accent); }
+ol.lectures .num { font: 500 13px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+ol.lectures .title { font-size: 19px; font-weight: 500; }
+ol.lectures .go { font: 400 14px var(--mono); color: var(--muted); }
+ol.lectures a:hover .go { color: var(--accent); }
+.note { color: var(--muted); font-size: 15px; margin: 14px 0 0; }
+p.body { max-width: 40em; margin: 0 0 12px; }
+footer { margin-top: 72px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 14px; }
+@media (max-width: 560px) {
+  main { padding: 48px 16px 48px; }
+  ol.lectures a { grid-template-columns: 1fr; gap: 4px; }
+  ol.lectures .go { display: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">University of Pisa · Linguaggi di Programmazione</p>
+  <h1>Programming Languages Lab</h1>
+  <p class="lead">Why anyone would build a language instead of a program, and how: syntax, semantics and interpreters, in Python.</p>
+  <p class="who">Vincenzo Ciancia, CNR-ISTI · <a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a></p>
+
+  <h2>Slides</h2>
+  <ol class="lectures">
+    <li><a href="slides/lesson-00.html"><span class="num">Lecture 0</span><span class="title">Why build a language?</span><span class="go">open →</span></a></li>
+    <li><a href="slides/lesson-01a.html"><span class="num">Lecture 1 · A</span><span class="title">What a language is made of</span><span class="go">open →</span></a></li>
+    <li><a href="slides/lesson-01b.html"><span class="num">Lecture 1 · B</span><span class="title">Python, with VS Code</span><span class="go">open →</span></a></li>
+  </ol>
+  <p class="note">New lectures appear here as they are taught. In the slides: arrow keys to move, <code>F</code> for full screen.</p>
+
+  <h2>The course</h2>
+  <p class="body">You build a domain-specific language for a domain of your choice — images, music, geometry, graphs, text — with a parser, an interpreter, and examples that show it is good for something.</p>
+  <p class="body">Code and slides are on <a href="https://github.com/vincenzoml/PLDW">GitHub</a>.</p>
+
+  <footer>Text and figures: CC BY-SA 4.0 · Code: Apache 2.0</footer>
+</main>
+</body>
+</html>

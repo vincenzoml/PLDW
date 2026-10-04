@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python, with VS Code</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>Python, with VS Code</h1>
+  <p class="sub">Lecture 1, part B — the tools, and the Python this course needs.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<section class="statement">
+  <p class="big">This course is about languages. To talk about them, we need one we can all <strong>run</strong>.</p>
+  <p class="lead muted" style="margin-top:.6em">Install it, open an editor, see the parts of Python the course uses. Then you practise.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Before any code</p>
+  <h2>Setting up</h2>
+</section>
+
+<section>
+  <h2>What you need</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">PYTHON 3.12 OR LATER</p><p>The language. Older versions lack features we use.</p></div>
+    <div class="card"><p class="idx">VS CODE</p><p>The editor: free, on every system, with a debugger built in.</p></div>
+    <div class="card warm"><p class="idx">GIT</p><p>To download the course repository.</p></div>
+  </div>
+  <p class="lead" style="margin-top:24px">Check what you have, in a terminal:</p>
+  <pre><code class="language-bash" data-trim>
+python3 --version      # Windows: py --version
+git --version
+  </code></pre>
+</section>
+
+<section>
+  <h2>Installing Python on Windows</h2>
+  <div class="split flip">
+    <pre><code class="language-bash" data-trim>
+winget install Python.Python.3.12
+
+py --version
+    </code></pre>
+    <div>
+      <p class="lead">Either the installer from <strong>python.org/downloads</strong>, or <code>winget</code> in a terminal.</p>
+      <p>With the installer, tick <strong>“Add python.exe to PATH”</strong> on the first screen.</p>
+      <p class="note">On Windows the command is <code>py</code> (or <code>python</code>), not <code>python3</code>. If typing <code>python</code> opens the Microsoft Store, Python is not installed yet.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Installing Python on macOS</h2>
+  <div class="split flip">
+    <pre><code class="language-bash" data-trim>
+brew install python
+
+python3 --version
+    </code></pre>
+    <div>
+      <p class="lead">Either the installer from <strong>python.org/downloads</strong>, or <strong>Homebrew</strong> (<code>brew.sh</code>) in a terminal.</p>
+      <p class="punch">Careful: macOS may already have a <code>python3</code>, installed with Apple's developer tools. It is 3.9: too old.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Installing Python on Linux</h2>
+  <div class="split flip">
+    <pre><code class="language-bash" data-trim>
+# Ubuntu, Debian
+sudo apt install python3 python3-venv python3-pip
+# Fedora
+sudo dnf install python3
+# Arch
+sudo pacman -S python
+    </code></pre>
+    <div>
+      <p class="lead">Python is almost always there already. Use the package manager of your distribution.</p>
+      <p class="note">Ubuntu 24.04 and later ships 3.12. On an older system, use <strong>uv</strong>: next slide.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Or: uv, one tool on every system</h2>
+  <div class="split flip">
+    <pre><code class="language-bash" data-trim>
+uv python install 3.12
+uv venv
+uv pip install -r requirements.txt
+uv run hello.py
+    </code></pre>
+    <div>
+      <p class="lead"><strong>uv</strong> installs Python, makes the virtual environment and installs packages, with the same commands on Windows, macOS and Linux.</p>
+      <p>Install it once, from <strong>docs.astral.sh/uv</strong>. It does not touch the Python of your system.</p>
+      <p class="note">An alternative to the last three slides, not an extra step. VS Code finds the <code>.venv</code> it creates.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>VS Code</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">01 · INSTALL</p><p>From <strong>code.visualstudio.com</strong>, for your system.</p></div>
+    <div class="card"><p class="idx">02 · EXTENSION</p><p>Extensions panel → <strong>Python</strong>, by Microsoft. It brings type checking as you type and the debugger.</p></div>
+    <div class="card warm"><p class="idx">03 · COMMAND PALETTE</p><p><code>Ctrl+Shift+P</code> (<code>Cmd+Shift+P</code> on a Mac): every command, by name. The one key to remember.</p></div>
+  </div>
+  <p class="note" style="margin-top:20px">Any editor is fine for the exam. In class we use this one, so that we all see the same thing.</p>
+</section>
+
+<section>
+  <h2>The course repository</h2>
+  <div class="split flip">
+    <pre><code class="language-bash" data-trim>
+git clone https://github.com/vincenzoml/PLDW
+cd PLDW
+code .
+    </code></pre>
+    <div>
+      <p class="lead">All the code of the course is there: one folder per lecture.</p>
+      <p>From VS Code: Command Palette → <strong>Git: Clone</strong>, then paste the address.</p>
+      <p class="note">No git yet? On GitHub, <em>Code → Download ZIP</em> works too, but you will need git for the project.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A virtual environment</h2>
+  <div class="split flip">
+    <pre><code class="language-bash" data-trim>
+python3 -m venv .venv
+
+source .venv/bin/activate     # macOS, Linux
+.venv\Scripts\activate        # Windows
+
+pip install -r requirements.txt
+    </code></pre>
+    <div>
+      <p class="lead">A private copy of Python for one project, with its own packages.</p>
+      <p>In VS Code: Command Palette → <strong>Python: Create Environment</strong> does all three steps; <strong>Python: Select Interpreter</strong> picks <code>.venv</code>.</p>
+      <p class="note"><code>requirements.txt</code> lists what the course installs, such as <code>lark</code> for parsing, from lecture 3 on.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Run, and look inside</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">RUN</p><p>The ▶ button at the top right: <em>Run Python File</em>. The output appears in the terminal below.</p></div>
+    <div class="card"><p class="idx">TERMINAL</p><p><code>Ctrl+`</code> opens one inside VS Code, already in your folder: <code>python3 hello.py</code>.</p></div>
+    <div class="card warm"><p class="idx">DEBUG</p><p>Click left of a line number for a <strong>breakpoint</strong>, then <code>F5</code>. Step with <code>F10</code>, enter a call with <code>F11</code>, read every variable on the left.</p></div>
+  </div>
+  <p class="punch" style="margin-top:24px">The debugger shows the state of a running program. Much of this course is about what that state is.</p>
+</section>
+
+<section class="part">
+  <h2>The Python of this course</h2>
+</section>
+
+<section>
+  <h2>Values, names, and strings</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+print("Hello, world!")
+
+a = "Hello"
+b = "World"
+c = a + " " + b          # strings concatenate
+
+len(c)                   # 11
+c.split()                # ['Hello', 'World']
+
+n = 3                    # an int
+x = 4.5                  # a float
+ok = True                # a bool
+str(n)                   # '3', a string
+int("42")                # 42, a number
+
+print(f"{c}: {n} times {x} is {n * x}")
+    </code></pre>
+    <div>
+      <p class="lead">A name refers to a value. <code>=</code> binds it.</p>
+      <p>An <strong>f-string</strong> puts values inside text: <code>f"...{expression}..."</code>.</p>
+      <p class="note">Names and what they refer to are the subject of a whole lecture: binding and scope.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Types you can write down</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+a: int = 3
+c: str = "Hello"
+
+def add(x: int, y: int) -> int:
+    return x + y
+
+print(add(2, 3))         # 5
+print(add("2", "3"))     # 23 -- Python does not stop you
+    </code></pre>
+    <div>
+      <p class="lead">Annotations say what a name <em>should</em> hold.</p>
+      <p>Python does not check them while running. VS Code underlines the second call in red; <code>mypy file.py</code> reports it from the terminal.</p>
+      <p class="punch">A type is a claim about a program that can be checked without running it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Lists</h2>
+  <figure class="diagram"><svg viewBox="0 0 500 136" role="img" aria-label="List indices: 0 to 4 counting from the front, minus 5 to minus 1 counting from the back; the slice 1:3 takes the second and third"><rect x="10" y="34" width="90" height="46" rx="4" class="d-box"/><text x="55" y="63" text-anchor="middle" class="d-t-m">1</text><text x="55" y="22" text-anchor="middle" class="d-t-accent">0</text><text x="55" y="102" text-anchor="middle" class="d-t-warm">-5</text><rect x="106" y="34" width="90" height="46" rx="4" class="d-box"/><text x="151" y="63" text-anchor="middle" class="d-t-m">2</text><text x="151" y="22" text-anchor="middle" class="d-t-accent">1</text><text x="151" y="102" text-anchor="middle" class="d-t-warm">-4</text><rect x="202" y="34" width="90" height="46" rx="4" class="d-box"/><text x="247" y="63" text-anchor="middle" class="d-t-m">&quot;ciao&quot;</text><text x="247" y="22" text-anchor="middle" class="d-t-accent">2</text><text x="247" y="102" text-anchor="middle" class="d-t-warm">-3</text><rect x="298" y="34" width="90" height="46" rx="4" class="d-box"/><text x="343" y="63" text-anchor="middle" class="d-t-m">4</text><text x="343" y="22" text-anchor="middle" class="d-t-accent">3</text><text x="343" y="102" text-anchor="middle" class="d-t-warm">-2</text><rect x="394" y="34" width="90" height="46" rx="4" class="d-box"/><text x="439" y="63" text-anchor="middle" class="d-t-m">5</text><text x="439" y="22" text-anchor="middle" class="d-t-accent">4</text><text x="439" y="102" text-anchor="middle" class="d-t-warm">-1</text><rect x="103" y="28" width="192" height="58" rx="7" style="fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 4"/><text x="197" y="128" text-anchor="middle" class="d-t-m" style="font-size:13px">my_list[1:3]</text></svg></figure>
+  <pre><code class="language-python" data-trim>
+my_list = [1, 2, "ciao", 4, 5]
+my_list[0], my_list[-1], my_list[1:3]    # 1, 5, [2, 'ciao']
+my_list.append(6)                        # [1, 2, 'ciao', 4, 5, 6]
+len(my_list)                             # 6
+[0] + my_list                            # a new list: [0, 1, 2, ...]
+first, rest = my_list[0], my_list[1:]    # head and tail
+  </code></pre>
+</section>
+
+<section>
+  <h2>Loops, and the shorter way</h2>
+  <div class="split even">
+    <div>
+      <p class="cite" style="margin-bottom:.4em">A loop</p>
+      <pre><code class="language-python" data-trim>
+squares = []
+for x in [1, 2, 3, 4, 5]:
+    squares.append(x ** 2)
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite" style="margin-bottom:.4em">A comprehension</p>
+      <pre><code class="language-python" data-trim>
+squares = [x ** 2 for x in [1, 2, 3, 4, 5]]
+evens   = [x for x in range(20) if x % 2 == 0]
+      </code></pre>
+    </div>
+  </div>
+  <p class="punch">The same meaning, two syntaxes: the second is closer to the mathematician's { x² | x ∈ S }.</p>
+</section>
+
+<section>
+  <h2>Deciding and repeating</h2>
+  <div class="split even">
+    <pre><code class="language-python" data-trim>
+def sign(n: int) -> str:
+    if n > 0:
+        return "positive"
+    elif n < 0:
+        return "negative"
+    else:
+        return "zero"
+    </code></pre>
+    <pre><code class="language-python" data-trim>
+i = 0
+while i < 3:
+    print(i)
+    i += 1
+
+for word in ["a", "b"]:
+    print(word.upper())
+    </code></pre>
+  </div>
+  <p class="note">Indentation decides what is inside the <code>if</code> and the loops: in Python, white space is syntax.</p>
+</section>
+
+<section>
+  <h2>Dictionaries: names to values</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+env = {"x": 4.0, "y": 2.0}
+env["x"]              # 4.0
+env["z"] = 7.0        # add a name
+"w" in env            # False
+env["w"]              # KeyError: 'w'
+env.get("w", 0)       # 0: a default instead of an error
+
+for name, value in env.items():
+    print(name, value)
+    </code></pre>
+    <div>
+      <p class="lead">A table from keys to values.</p>
+      <p class="punch">You have seen one already: an environment, from variable names to numbers. Every interpreter of the course keeps one.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Recursion</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def factorial(n: int) -> int:
+    if n == 0:
+        return 1
+    return n * factorial(n - 1)
+
+def total(xs: list[int]) -> int:
+    if not xs:
+        return 0
+    return xs[0] + total(xs[1:])
+
+factorial(5)        # 120
+total([1, 2, 3])    # 6
+    </code></pre>
+    <div>
+      <p class="lead">A function that calls itself on a smaller piece of the problem.</p>
+      <p class="punch">Every interpreter in this course is a recursive function: one call per piece of the program.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Functions are values</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+from collections.abc import Callable
+import operator
+
+def twice(f: Callable[[int], int], x: int) -> int:
+    return f(f(x))
+
+twice(lambda n: n + 3, 10)     # 16
+
+def adder(k: int) -> Callable[[int], int]:
+    return lambda n: n + k     # a function, returned
+
+adder(3)(10)                   # 13
+
+ops: dict[str, Callable[[int, int], int]] = {
+    "+": operator.add,
+    "*": operator.mul,
+}
+ops["*"](6, 7)                 # 42
+    </code></pre>
+    <div>
+      <p class="lead">A function can be passed, returned, and stored in a dictionary.</p>
+      <p><code>lambda</code> writes a small one without a name. <code>Callable[[int], int]</code> is its type: takes an int, gives an int.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Data classes: a tree in a few lines</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Num:
+    value: int
+
+@dataclass(frozen=True)
+class Add:
+    left: "Expr"
+    right: "Expr"
+
+Expr = Num | Add
+
+e = Add(Num(2), Add(Num(3), Num(4)))    # 2 + (3 + 4)
+    </code></pre>
+    <div>
+      <p class="lead"><code>@dataclass</code> writes the boring parts of a class for you: constructor, printing, equality.</p>
+      <p><code>frozen=True</code>: once built, it cannot change.</p>
+      <p class="punch">This is how the course writes the syntax of a language: one class per kind of node.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>match</code>: one case per kind of node</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(e: Expr) -> int:
+    match e:
+        case Num(v):
+            return v
+        case Add(l, r):
+            return evaluate(l) + evaluate(r)
+
+evaluate(Add(Num(2), Add(Num(3), Num(4))))   # 9
+    </code></pre>
+    <div>
+      <p class="lead"><code>match</code> looks at the shape of a value and takes it apart.</p>
+      <p><code>case Add(l, r)</code>: if <code>e</code> is an <code>Add</code>, call its two children <code>l</code> and <code>r</code>.</p>
+      <p class="punch">Data classes plus <code>match</code> plus recursion: that is an interpreter. Lecture 2 is all about it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Reading and writing a file</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+with open("notes.txt", "w") as f:
+    f.write("first line\n")
+    f.write("second line\n")
+
+with open("notes.txt") as f:
+    for number, line in enumerate(f, start=1):
+        print(number, line.strip())
+    </code></pre>
+    <div>
+      <p class="lead"><code>open</code> gives a file; <code>with</code> closes it when the block ends, even after an error.</p>
+      <p class="note">Your programs will read other programs from files: this is how.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>When things go wrong</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def safe_divide(a: float, b: float) -> float | None:
+    try:
+        return a / b
+    except ZeroDivisionError:
+        print("division by zero")
+        return None
+
+safe_divide(1, 0)      # prints, returns None
+    </code></pre>
+    <div>
+      <p class="lead">An error is an <strong>exception</strong>: it stops the program unless someone catches it.</p>
+      <p>Each has a name: opening a missing file raises <code>FileNotFoundError</code>, <code>int("x")</code> raises <code>ValueError</code>. Raise one yourself with <code>raise ValueError("expected a number")</code>.</p>
+      <p class="punch">What 1 / 0 means is a decision. Python raises; you will decide for your own language.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A program in a file</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+# calc.py
+from dataclasses import dataclass   # standard library
+from lark import Lark               # installed with pip
+
+def main() -> None:
+    print("calc is running")
+
+if __name__ == "__main__":
+    main()
+    </code></pre>
+    <div>
+      <p class="lead"><code>import</code> takes code from elsewhere: Python's own library, a package installed with <code>pip</code>, or another file of yours.</p>
+      <p>The last two lines run <code>main</code> when the file is run, not when another file imports it.</p>
+    </div>
+  </div>
+</section>
+
+<section class="part">
+  <p class="kicker">In class, now</p>
+  <h2>Your turn</h2>
+</section>
+
+<section>
+  <h2>Exercise 1 · Names, strings, lists</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+names = ["Ada", "Alan", "Grace"]
+
+# expected output:
+# Hello, Ada! (3 letters)
+# Hello, Alan! (4 letters)
+# Hello, Grace! (5 letters)
+# [3, 4, 5]
+# Grace
+    </code></pre>
+    <div>
+      <p class="cite">Level 1 of 4</p>
+      <ol>
+        <li>A <code>for</code> loop and an f-string print the three greetings.</li>
+        <li>A comprehension builds the list of lengths.</li>
+        <li>A negative index gives the last name.</li>
+      </ol>
+      <p class="note">Run it three ways: with ▶, from the terminal, and with a breakpoint and <code>F5</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · Count the words</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+# poem.txt
+#   the cat and the hat
+#   the end
+
+# counts.txt, expected:
+#   the 3
+#   cat 1
+#   and 1
+#   hat 1
+#   end 1
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 4</p>
+      <ol>
+        <li>Read <code>poem.txt</code> line by line; <code>line.split()</code> gives the words.</li>
+        <li>Count them in a dictionary: <code>counts.get(w, 0) + 1</code>.</li>
+        <li>Write <code>counts.txt</code>, one word per line.</li>
+        <li>If <code>poem.txt</code> does not exist, catch the exception and print a message instead of crashing.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · Recursion and functions</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def fib(n: int) -> int: ...
+def reverse(xs: list[int]) -> list[int]: ...
+def compose(f: Callable[[int], int],
+            g: Callable[[int], int]) -> Callable[[int], int]: ...
+
+fib(10)                    # 55
+reverse([1, 2, 3])         # [3, 2, 1]
+add1 = lambda n: n + 1
+dbl = lambda n: n * 2
+compose(add1, dbl)(5)      # 11: first dbl, then add1
+    </code></pre>
+    <div>
+      <p class="cite">Level 3 of 4</p>
+      <ol>
+        <li><code>fib</code> and <code>reverse</code> without loops: recursion only.</li>
+        <li><code>compose</code> returns a new function: a <code>lambda</code>.</li>
+        <li>Run <code>mypy</code> on your file: no errors.</li>
+      </ol>
+      <p class="note"><code>...</code> marks the body you write.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · At home: a calculator</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def calc(text: str) -> int: ...
+
+calc("2 + 5 - 3")      # 4
+calc("10 - 4 - 3")     # 3: left to right
+calc("7")              # 7
+calc("2 + + 3")        # error: not well formed
+calc("2 + x")          # error
+    </code></pre>
+    <div>
+      <p class="cite">Level 4 of 4 · take home</p>
+      <ol>
+        <li>Integers, <code>+</code> and <code>-</code> only; no parentheses. Compute from left to right.</li>
+        <li>Start with spaces between numbers and operators: <code>text.split()</code> gives the pieces.</li>
+        <li>If the text is not well formed, raise a <code>ValueError</code> that says what is wrong.</li>
+      </ol>
+      <p class="note">Then make it work without spaces too: <code>"2+5-3"</code>.</p>
+    </div>
+  </div>
+</section>
+
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>
