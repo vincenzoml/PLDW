@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A mini interpreter</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+<style>
+  /* tokens as chips: the terminal name small, the matched text large */
+  .reveal .chips.tokens span { font-size: .8em; padding: .35em .9em; }
+  .reveal .chips.tokens span small { font-size: .62em; color: var(--muted); letter-spacing: .06em; margin-right: .5em; }
+  /* program output, set apart from the code that printed it */
+  .reveal pre.out code { background: var(--paper-2); color: var(--ink); border-left: 3px solid var(--warm); }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>A mini interpreter</h1>
+  <p class="sub">Lecture 3. Parsing with Lark, then evaluating.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<section>
+  <h2>The exercise reads <code>3 + 4 - 1</code>. What about <code>(1 + 2) * 3</code>?</h2>
+  <figure class="diagram"><svg viewBox="0 0 1000 300" role="img" aria-label="3 + 4 - 1 is read left to right with one running total; (1 + 2) * 3 needs a second total kept aside for the parentheses">
+    <text x="40" y="30" class="d-t-mono-s">3 + 4 - 1</text>
+    <rect x="40" y="44" width="54" height="46" rx="4" class="d-box"/><text x="67" y="73" text-anchor="middle" class="d-t-m">3</text>
+    <rect x="104" y="44" width="54" height="46" rx="4" class="d-box-soft"/><text x="131" y="73" text-anchor="middle" class="d-t-m">+</text>
+    <rect x="168" y="44" width="54" height="46" rx="4" class="d-box"/><text x="195" y="73" text-anchor="middle" class="d-t-m">4</text>
+    <rect x="232" y="44" width="54" height="46" rx="4" class="d-box-soft"/><text x="259" y="73" text-anchor="middle" class="d-t-m">-</text>
+    <rect x="296" y="44" width="54" height="46" rx="4" class="d-box"/><text x="323" y="73" text-anchor="middle" class="d-t-m">1</text>
+    <text x="67" y="116" text-anchor="middle" class="d-t-warm">3</text>
+    <text x="195" y="116" text-anchor="middle" class="d-t-warm">7</text>
+    <text x="323" y="116" text-anchor="middle" class="d-t-warm">6</text>
+    <text x="420" y="74" class="d-t-serif">one total, updated left to right</text>
+
+    <text x="40" y="170" class="d-t-mono-s">(1 + 2) * 3</text>
+    <rect x="30" y="178" width="332" height="66" rx="8" class="d-box-accent" style="fill:none;stroke-dasharray:6 5"/>
+    <rect x="40" y="188" width="54" height="46" rx="4" class="d-box-soft"/><text x="67" y="217" text-anchor="middle" class="d-t-m">(</text>
+    <rect x="104" y="188" width="54" height="46" rx="4" class="d-box"/><text x="131" y="217" text-anchor="middle" class="d-t-m">1</text>
+    <rect x="168" y="188" width="54" height="46" rx="4" class="d-box-soft"/><text x="195" y="217" text-anchor="middle" class="d-t-m">+</text>
+    <rect x="232" y="188" width="54" height="46" rx="4" class="d-box"/><text x="259" y="217" text-anchor="middle" class="d-t-m">2</text>
+    <rect x="296" y="188" width="54" height="46" rx="4" class="d-box-soft"/><text x="323" y="217" text-anchor="middle" class="d-t-m">)</text>
+    <rect x="376" y="188" width="54" height="46" rx="4" class="d-box-soft"/><text x="403" y="217" text-anchor="middle" class="d-t-m">*</text>
+    <rect x="440" y="188" width="54" height="46" rx="4" class="d-box"/><text x="467" y="217" text-anchor="middle" class="d-t-m">3</text>
+    <text x="196" y="270" text-anchor="middle" class="d-t-accent">a second total, set aside</text>
+    <text x="560" y="218" class="d-t-serif">parentheses nest, so we may need many</text>
+  </svg></figure>
+  <p class="punch">A loop with one running total cannot handle nested parentheses. Last lecture we used a tree instead. Today we build the tree from the text.</p>
+</section>
+
+<section class="statement">
+  <p class="big">Today we write a <strong>grammar</strong>, and a library builds the parser from it.</p>
+  <p class="lead muted" style="margin-top:.6em">The library is <strong>Lark</strong>. The AST and the evaluator are still ours.</p>
+</section>
+
+<section>
+  <h2>Four stages</h2>
+  <figure class="diagram" style="margin-top:30px"><svg viewBox="0 0 1120 240" role="img" aria-label="text to tokens (lexer), tokens to parse tree (parser), parse tree to AST (transform), AST to value (evaluate); Lark does the first two, we write the last two">
+    <defs><marker id="pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <rect x="0" y="50" width="168" height="96" rx="6" class="d-box"/>
+    <text x="84" y="80" text-anchor="middle" class="d-t-mono-s">text</text>
+    <text x="84" y="116" text-anchor="middle" class="d-t-m">"(1+2)-3"</text>
+    <rect x="238" y="50" width="168" height="96" rx="6" class="d-box-soft"/>
+    <text x="322" y="80" text-anchor="middle" class="d-t-mono-s">tokens</text>
+    <text x="322" y="116" text-anchor="middle" class="d-t-m">( 1 + 2 ) - 3</text>
+    <rect x="476" y="50" width="168" height="96" rx="6" class="d-box-soft"/>
+    <text x="560" y="80" text-anchor="middle" class="d-t-mono-s">parse tree</text>
+    <text x="560" y="116" text-anchor="middle" class="d-t">16 nodes</text>
+    <rect x="714" y="50" width="168" height="96" rx="6" class="d-box-accent"/>
+    <text x="798" y="80" text-anchor="middle" class="d-t-mono-s">AST</text>
+    <text x="798" y="116" text-anchor="middle" class="d-t">5 nodes</text>
+    <rect x="952" y="50" width="168" height="96" rx="6" class="d-box-warm"/>
+    <text x="1036" y="80" text-anchor="middle" class="d-t-mono-s">value</text>
+    <text x="1036" y="118" text-anchor="middle" class="d-t-big">0</text>
+    <path d="M 172 98 L 234 98" class="d-arrow" marker-end="url(#pa)"/><text x="203" y="36" text-anchor="middle" class="d-t-mono-s">lexer</text>
+    <path d="M 410 98 L 472 98" class="d-arrow" marker-end="url(#pa)"/><text x="441" y="36" text-anchor="middle" class="d-t-mono-s">parser</text>
+    <path d="M 648 98 L 710 98" class="d-arrow" marker-end="url(#pa)"/><text x="679" y="36" text-anchor="middle" class="d-t-mono-s">transform</text>
+    <path d="M 886 98 L 948 98" class="d-arrow" marker-end="url(#pa)"/><text x="917" y="36" text-anchor="middle" class="d-t-mono-s">evaluate</text>
+    <path d="M 84 176 L 84 188 L 552 188 L 552 176" class="d-thin"/>
+    <text x="318" y="218" text-anchor="middle" class="d-t-muted">Lark, built from our grammar</text>
+    <path d="M 568 176 L 568 188 L 1036 188 L 1036 176" style="fill:none;stroke:var(--accent);stroke-width:1.6"/>
+    <text x="802" y="218" text-anchor="middle" class="d-t-accent">written by us: two functions</text>
+  </svg></figure>
+  <p class="note">The code is in <code>code/03-a-mini-interpreter/</code>; the main file is <code>mini_interpreter.py</code>.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">What the language looks like</p>
+  <h2>The grammar</h2>
+</section>
+
+<section>
+  <h2>A grammar in Lark</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+from lark import Lark, Token, Tree
+
+grammar = r"""
+    expr: bin | mono
+    mono: ground | paren
+    paren: "(" expr ")"
+    bin: expr OP mono
+    ground: NUMBER
+
+    NUMBER: /[0-9]+/
+    OP: "+" | "-" | "*" | "/" | "%"
+
+    %import common.WS
+    %ignore WS
+"""
+
+parser = Lark(grammar, start="expr")
+    </code></pre>
+    <div>
+      <p class="lead">Lark uses a variant of EBNF.</p>
+      <p><strong>Terminals</strong> (upper case): the pieces of text, each defined by a regular expression or by strings.</p>
+      <p><strong>Rules</strong> (lower case): how terminals and rules combine.</p>
+      <p class="note"><code>%ignore WS</code> skips white space: <code>1+2</code> and <code>1 + 2</code> give the same result.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The rules, bottom up</h2>
+  <div style="max-width:900px">
+    <div class="acc-item"><span class="yr">01</span><code>ground: NUMBER</code>
+      <div class="acc-detail fragment fade-in-then-out">A number: one or more digits. No sign.</div></div>
+    <div class="acc-item"><span class="yr">02</span><code>paren: "(" expr ")"</code>
+      <div class="acc-detail fragment fade-in-then-out">An expression in parentheses. The rule refers back to <code>expr</code>, so expressions can nest.</div></div>
+    <div class="acc-item"><span class="yr">03</span><code>mono: ground | paren</code>
+      <div class="acc-detail fragment fade-in-then-out">A number or a parenthesized expression: no operator at the top level.</div></div>
+    <div class="acc-item"><span class="yr">04</span><code>bin: expr OP mono</code>
+      <div class="acc-detail fragment fade-in-then-out">An expression, an operator, and a <code>mono</code>. The two sides are different; the next slides show why.</div></div>
+    <div class="acc-item"><span class="yr">05</span><code>expr: bin | mono</code>
+      <div class="acc-detail fragment fade-in-then-out">Either a <code>bin</code> or a <code>mono</code>. It is the start symbol: <code>start="expr"</code>.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>What is <code>10-4-3</code>?</h2>
+  <figure class="diagram"><svg viewBox="0 0 760 290" role="img" aria-label="Two trees for 10-4-3: (10-4)-3 equals 3, 10-(4-3) equals 9">
+    <line x1="180" y1="57" x2="100" y2="103" class="d-line"/><line x1="180" y1="57" x2="260" y2="103" class="d-line"/>
+    <line x1="100" y1="137" x2="50" y2="183" class="d-line"/><line x1="100" y1="137" x2="150" y2="183" class="d-line"/>
+    <rect x="156" y="23" width="48" height="34" rx="17" class="d-box-accent"/><text x="180" y="45" text-anchor="middle" class="d-t-m">-</text>
+    <rect x="76" y="103" width="48" height="34" rx="17" class="d-box-accent"/><text x="100" y="125" text-anchor="middle" class="d-t-m">-</text>
+    <rect x="236" y="103" width="48" height="34" rx="17" class="d-box"/><text x="260" y="125" text-anchor="middle" class="d-t-m">3</text>
+    <rect x="26" y="183" width="48" height="34" rx="17" class="d-box"/><text x="50" y="205" text-anchor="middle" class="d-t-m">10</text>
+    <rect x="126" y="183" width="48" height="34" rx="17" class="d-box"/><text x="150" y="205" text-anchor="middle" class="d-t-m">4</text>
+    <text x="180" y="268" text-anchor="middle" class="d-t-accent" style="font-size:17px">(10 - 4) - 3 = 3</text>
+
+    <line x1="580" y1="57" x2="500" y2="103" class="d-line"/><line x1="580" y1="57" x2="660" y2="103" class="d-line"/>
+    <line x1="660" y1="137" x2="610" y2="183" class="d-line"/><line x1="660" y1="137" x2="710" y2="183" class="d-line"/>
+    <rect x="556" y="23" width="48" height="34" rx="17" class="d-box-warm"/><text x="580" y="45" text-anchor="middle" class="d-t-m">-</text>
+    <rect x="476" y="103" width="48" height="34" rx="17" class="d-box"/><text x="500" y="125" text-anchor="middle" class="d-t-m">10</text>
+    <rect x="636" y="103" width="48" height="34" rx="17" class="d-box-warm"/><text x="660" y="125" text-anchor="middle" class="d-t-m">-</text>
+    <rect x="586" y="183" width="48" height="34" rx="17" class="d-box"/><text x="610" y="205" text-anchor="middle" class="d-t-m">4</text>
+    <rect x="686" y="183" width="48" height="34" rx="17" class="d-box"/><text x="710" y="205" text-anchor="middle" class="d-t-m">3</text>
+    <text x="580" y="268" text-anchor="middle" class="d-t-warm" style="font-size:17px">10 - (4 - 3) = 9</text>
+  </svg></figure>
+  <p class="punch fragment">In the left tree, the right operand of each <code>-</code> is a <code>mono</code>. Our grammar only allows this tree.</p>
+</section>
+
+<section>
+  <h2>Associativity and the grammar</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">LEFT RECURSION</p><h3><code>bin: expr OP mono</code></h3><p>Only <code>(10-4)-3</code> = <strong>3</strong>. This is our grammar.</p></div>
+    <div class="card"><p class="idx">RIGHT RECURSION</p><h3><code>bin: mono OP expr</code></h3><p>Only <code>10-(4-3)</code> = <strong>9</strong>.</p></div>
+    <div class="card warm"><p class="idx">BOTH SIDES</p><h3><code>bin: expr OP expr</code></h3><p>Both trees are possible: the grammar is <strong>ambiguous</strong>. Lark accepts it anyway.</p></div>
+  </div>
+  <p class="note" style="margin-top:22px">The evaluator only sees the tree, so the grammar decides the result.</p>
+</section>
+
+<section>
+  <h2>An ambiguous grammar in practice</h2>
+  <pre><code class="language-python" data-trim>
+for algorithm in ["earley", "lalr"]:
+    p = Lark(grammar_ambiguous, start="expr", parser=algorithm)
+    tree = p.parse("10-4-3")
+    print(algorithm, evaluate(transform_parse_tree(tree)))  # 3 or 9
+  </code></pre>
+  <div class="split even" style="align-items:start">
+    <pre class="out"><code class="language-text" data-trim>
+$ PYTHONHASHSEED=1 python alternatives.py
+earley 9
+lalr 9
+$ PYTHONHASHSEED=2 python alternatives.py
+earley 3
+lalr 9
+    </code></pre>
+    <div>
+      <p><code>grammar_ambiguous</code> uses <code>bin: expr OP expr</code>. There is no error and no warning. Earley's choice depends on Python's string hashing, which changes between runs.</p>
+      <p class="punch">We want a grammar that gives exactly one tree for each input.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why not write the parser by hand?</h2>
+  <div class="split">
+    <figure class="diagram"><svg viewBox="0 0 520 280" role="img" aria-label="A hand-written parser for bin: expr OP mono calls parse expr, which tries bin, which calls parse expr again, without reading a character">
+      <defs><marker id="rd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker></defs>
+      <rect x="20" y="100" width="170" height="60" rx="6" class="d-box"/><text x="105" y="136" text-anchor="middle" class="d-t-m">parse expr</text>
+      <rect x="330" y="100" width="170" height="60" rx="6" class="d-box"/><text x="415" y="136" text-anchor="middle" class="d-t-m">parse bin</text>
+      <path d="M 105 96 C 105 30, 415 30, 415 96" class="d-arrow-warm" marker-end="url(#rd)"/>
+      <text x="260" y="38" text-anchor="middle" class="d-t-warm">try a bin first</text>
+      <path d="M 415 164 C 415 230, 105 230, 105 164" class="d-arrow-warm" marker-end="url(#rd)"/>
+      <text x="260" y="246" text-anchor="middle" class="d-t-warm">its left operand is an expr</text>
+      <text x="260" y="136" text-anchor="middle" class="d-t-serif">no input read</text>
+    </svg></figure>
+    <div>
+      <p class="lead">A hand-written parser usually has one function per rule: <strong>recursive descent</strong>.</p>
+      <p>With a left-recursive rule, <em>parse expr</em> calls itself before reading any input, and never terminates.</p>
+      <p class="note">The usual fix is to rewrite the grammar with a loop. Lark handles left recursion directly. Parsing algorithms are not part of this course.</p>
+    </div>
+  </div>
+</section>
+
+<section class="part">
+  <p class="kicker">Lark's output</p>
+  <h2>Tokens and parse trees</h2>
+</section>
+
+<section>
+  <h2>Tokens</h2>
+  <pre><code class="language-python" data-trim>
+print(list(parser.lex("(1 + 2) - 3")))
+  </code></pre>
+  <div class="chips tokens" style="margin-top:28px">
+    <span><small>LPAR</small>(</span><span class="hot"><small>NUMBER</small>1</span><span class="odd"><small>OP</small>+</span><span class="hot"><small>NUMBER</small>2</span><span><small>RPAR</small>)</span><span class="odd"><small>OP</small>-</span><span class="hot"><small>NUMBER</small>3</span>
+  </div>
+  <p style="margin-top:20px">Spaces are dropped. Each token has a <strong>type</strong> (the terminal) and a <strong>value</strong> (the matched text).</p>
+  <p class="note"><code>LPAR</code> and <code>RPAR</code> are the names Lark gives to the strings <code>"("</code> and <code>")"</code> in the grammar.</p>
+</section>
+
+<section>
+  <h2>The parse tree</h2>
+  <div class="split flip">
+    <figure class="diagram"><svg viewBox="0 0 480 520" style="height:450px;width:auto" role="img" aria-label="The parse tree of (1 + 2) - 3: sixteen nodes, of which two bin nodes and three ground nodes carry meaning">
+      <g class="d-line">
+        <line x1="260" y1="46" x2="260" y2="68"/>
+        <line x1="260" y1="98" x2="140" y2="120"/><line x1="260" y1="98" x2="280" y2="120"/><line x1="260" y1="98" x2="420" y2="120"/>
+        <line x1="420" y1="150" x2="420" y2="172"/>
+        <line x1="140" y1="150" x2="140" y2="172"/><line x1="140" y1="202" x2="140" y2="224"/><line x1="140" y1="254" x2="140" y2="276"/><line x1="140" y1="306" x2="140" y2="328"/>
+        <line x1="140" y1="358" x2="50" y2="380"/><line x1="140" y1="358" x2="150" y2="380"/><line x1="140" y1="358" x2="250" y2="380"/>
+        <line x1="250" y1="410" x2="250" y2="432"/><line x1="50" y1="410" x2="50" y2="432"/><line x1="50" y1="462" x2="50" y2="484"/>
+      </g>
+      <rect x="231" y="16" width="58" height="30" rx="15" class="d-box-soft"/><text x="260" y="36" text-anchor="middle" class="d-t-m">expr</text>
+      <rect x="235" y="68" width="50" height="30" rx="15" class="d-box-accent"/><text x="260" y="88" text-anchor="middle" class="d-t-m">bin</text>
+      <rect x="111" y="120" width="58" height="30" rx="15" class="d-box-soft"/><text x="140" y="140" text-anchor="middle" class="d-t-m">expr</text>
+      <rect x="265" y="120" width="30" height="30" rx="15" class="d-box"/><text x="280" y="140" text-anchor="middle" class="d-t-m">-</text>
+      <rect x="391" y="120" width="58" height="30" rx="15" class="d-box-soft"/><text x="420" y="140" text-anchor="middle" class="d-t-m">mono</text>
+      <rect x="372" y="172" width="96" height="30" rx="15" class="d-box-accent"/><text x="420" y="192" text-anchor="middle" class="d-t-m">ground 3</text>
+      <rect x="111" y="172" width="58" height="30" rx="15" class="d-box-soft"/><text x="140" y="192" text-anchor="middle" class="d-t-m">mono</text>
+      <rect x="106" y="224" width="68" height="30" rx="15" class="d-box-soft"/><text x="140" y="244" text-anchor="middle" class="d-t-m">paren</text>
+      <rect x="111" y="276" width="58" height="30" rx="15" class="d-box-soft"/><text x="140" y="296" text-anchor="middle" class="d-t-m">expr</text>
+      <rect x="115" y="328" width="50" height="30" rx="15" class="d-box-accent"/><text x="140" y="348" text-anchor="middle" class="d-t-m">bin</text>
+      <rect x="21" y="380" width="58" height="30" rx="15" class="d-box-soft"/><text x="50" y="400" text-anchor="middle" class="d-t-m">expr</text>
+      <rect x="135" y="380" width="30" height="30" rx="15" class="d-box"/><text x="150" y="400" text-anchor="middle" class="d-t-m">+</text>
+      <rect x="221" y="380" width="58" height="30" rx="15" class="d-box-soft"/><text x="250" y="400" text-anchor="middle" class="d-t-m">mono</text>
+      <rect x="202" y="432" width="96" height="30" rx="15" class="d-box-accent"/><text x="250" y="452" text-anchor="middle" class="d-t-m">ground 2</text>
+      <rect x="21" y="432" width="58" height="30" rx="15" class="d-box-soft"/><text x="50" y="452" text-anchor="middle" class="d-t-m">mono</text>
+      <rect x="2" y="484" width="96" height="30" rx="15" class="d-box-accent"/><text x="50" y="504" text-anchor="middle" class="d-t-m">ground 1</text>
+    </svg></figure>
+    <div>
+      <pre><code class="language-python" data-trim>
+parse_tree = parser.parse("(1 + 2) - 3")
+print(parse_tree.pretty())
+      </code></pre>
+      <p class="lead">One node per rule applied, one leaf per token.</p>
+      <p>16 nodes, of which only <span class="accent">5</span> matter: two operations and three numbers.</p>
+      <p class="note">The parenthesis tokens are not in the tree: the <code>paren</code> node and the nesting already record the grouping.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Syntax errors</h2>
+  <pre><code class="language-python" data-trim>
+for bad in ["1 +", "1 ++ 2", "-1"]:
+    try:
+        parser.parse(bad)
+    except Exception as e:
+        print(f"{bad!r}: {type(e).__name__}: {str(e).splitlines()[0]}")
+  </code></pre>
+  <pre class="out"><code class="language-text" data-trim>
+'1 +': UnexpectedEOF: Unexpected end-of-input. Expected one of:
+'1 ++ 2': UnexpectedCharacters: No terminal matches '+' in the current parser context, at line 1 col 4
+'-1': UnexpectedCharacters: No terminal matches '-' in the current parser context, at line 1 col 1
+  </code></pre>
+  <p class="punch fragment"><code>-1</code> is rejected: <code>NUMBER</code> is <code>/[0-9]+/</code>, digits only, so there are no negative literals.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Our part</p>
+  <h2>From parse tree to value</h2>
+</section>
+
+<section>
+  <h2>Why not evaluate the parse tree directly?</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">01 · EXTRA NODES</p><h3>11 of 16 nodes carry no information</h3><p><code>expr</code> around <code>bin</code>, <code>mono</code> around <code>ground</code>: they are there for the grammar. The evaluator has no use for them.</p></div>
+    <div class="card warm"><p class="idx">02 · A LIBRARY TYPE</p><h3>It is a Lark data structure</h3><p>Every later stage would match rule names as strings, and convert <code>'1'</code> to <code>1</code> each time. Renaming a rule, or changing library, would break all of them.</p></div>
+  </div>
+  <p class="punch" style="margin-top:26px">So we convert it to the <strong>AST</strong> of the last lecture.</p>
+</section>
+
+<section>
+  <h2>The AST</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+type Op = Literal["+", "-", "*", "/", "%"]
+
+
+@dataclass(frozen=True)
+class Number:
+    value: int
+
+
+@dataclass(frozen=True)
+class BinaryExpression:
+    op: Op
+    left: Expression
+    right: Expression
+
+
+type Expression = Number | BinaryExpression
+    </code></pre>
+    <div>
+      <p class="lead">Two node classes, where the grammar has five rules and two terminals.</p>
+      <p><code>Number</code> holds an <code>int</code>. <code>op</code> is one of five strings, checked by <code>mypy</code>.</p>
+      <p class="note">There is no <code>Variable</code> node, since the grammar has no names. Class names are longer than last lecture's (<code>BinaryExpression</code> for <code>BinaryOp</code>); we use these from now on.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>From parse tree to AST</h2>
+  <div class="split flip">
+    <pre style="font-size:.5em"><code class="language-python" data-trim>
+def transform_parse_tree(tree: Tree) -&gt; Expression:
+    match tree:
+        case Tree(data="expr", children=[subtree]):
+            return transform_parse_tree(subtree)
+        case Tree(data="mono", children=[subtree]):
+            return transform_parse_tree(subtree)
+        case Tree(data="paren", children=[subtree]):
+            return transform_parse_tree(subtree)
+        case Tree(data="ground",
+                  children=[Token(type="NUMBER", value=digits)]):
+            return Number(value=int(digits))
+        ...  # the bin case: next slide
+        case _:
+            raise ValueError(f"Unexpected parse tree node: {tree}")
+    </code></pre>
+    <div>
+      <p class="lead">Lark's <code>Tree</code> and <code>Token</code> are ordinary classes, so we can use class patterns.</p>
+      <p><code>expr</code>, <code>mono</code> and <code>paren</code> have one child: we transform the child. In <code>ground</code> the token is text, converted here to <code>int</code>.</p>
+      <p class="note">The last case should never run. It catches a mismatch between the grammar and this function.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The <code>bin</code> case</h2>
+  <pre style="font-size:.54em"><code class="language-python" data-trim>
+        case Tree(
+            data="bin",
+            children=[
+                left,
+                Token(type="OP", value="+" | "-" | "*" | "/" | "%" as op),
+                right,
+            ],
+        ):
+            return BinaryExpression(
+                op=op,
+                left=transform_parse_tree(left),
+                right=transform_parse_tree(right),
+            )
+  </code></pre>
+  <p class="note">This is the only case that builds a node with children. <code>"+" | … as op</code> checks that the token is an operator and binds it to <code>op</code>. The grammar already ensures this; the pattern also narrows <code>op</code> from <code>str</code> to <code>Op</code> for the type checker.</p>
+</section>
+
+<section>
+  <h2>The AST of <code>(1+2)-3</code></h2>
+  <div class="split">
+    <figure class="diagram"><svg viewBox="0 0 300 220" role="img" aria-label="The AST of (1+2)-3: a minus node whose left child is a plus of 1 and 2, and whose right child is 3">
+      <line x1="150" y1="47" x2="80" y2="93" class="d-line"/><line x1="150" y1="47" x2="220" y2="93" class="d-line"/>
+      <line x1="80" y1="127" x2="40" y2="173" class="d-line"/><line x1="80" y1="127" x2="120" y2="173" class="d-line"/>
+      <rect x="126" y="13" width="48" height="34" rx="17" class="d-box-accent"/><text x="150" y="35" text-anchor="middle" class="d-t-m">-</text>
+      <rect x="56" y="93" width="48" height="34" rx="17" class="d-box-accent"/><text x="80" y="115" text-anchor="middle" class="d-t-m">+</text>
+      <rect x="196" y="93" width="48" height="34" rx="17" class="d-box"/><text x="220" y="115" text-anchor="middle" class="d-t-m">3</text>
+      <rect x="16" y="173" width="48" height="34" rx="17" class="d-box"/><text x="40" y="195" text-anchor="middle" class="d-t-m">1</text>
+      <rect x="96" y="173" width="48" height="34" rx="17" class="d-box"/><text x="120" y="195" text-anchor="middle" class="d-t-m">2</text>
+    </svg><figcaption>Five nodes instead of sixteen.</figcaption></figure>
+    <div>
+      <pre><code class="language-python" data-trim>
+def parse_ast(expression: str) -&gt; Expression:
+    parse_tree = parser.parse(expression)
+    return transform_parse_tree(parse_tree)
+
+print(parse_ast("(1+2)-3"))
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+BinaryExpression(op='-',
+  left=BinaryExpression(op='+',
+    left=Number(value=1), right=Number(value=2)),
+  right=Number(value=3))
+      </code></pre>
+      <p class="note">Output re-indented; Python prints it on one line.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Alternative: Lark's <code>Transformer</code></h2>
+  <div class="split flip">
+    <pre style="font-size:.52em"><code class="language-python" data-trim>
+class ToAST(Transformer):
+    def ground(self, children):
+        return Number(int(children[0]))
+
+    def bin(self, children):
+        left, op, right = children
+        return BinaryExpression(str(op), left, right)
+
+    def mono(self, children):
+        return children[0]
+
+    def expr(self, children):
+        return children[0]
+
+    # no method for `paren`
+
+print(ToAST().transform(parser.parse("(1+2)-3")))
+    </code></pre>
+    <div>
+      <p class="lead">Lark's own mechanism: one method per rule, found by name.</p>
+      <pre class="out" style="font-size:.5em"><code class="language-text" data-trim>
+BinaryExpression(op='-',
+  left=Tree('paren', [BinaryExpression(...)]),
+  right=Number(value=3))
+      </code></pre>
+      <p class="punch">If a rule has no method, there is no error: its Lark <code>Tree</code> stays inside the AST.</p>
+      <p class="note">With <code>match</code>, the last case raises an error. Code in <code>alternatives.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The evaluator</h2>
+  <div class="split flip">
+    <pre style="font-size:.52em"><code class="language-python" data-trim>
+def evaluate(ast: Expression) -&gt; int:
+    match ast:
+        case Number(value):
+            return value
+        case BinaryExpression(op, left, right):
+            left_value = evaluate(left)
+            right_value = evaluate(right)
+            match op:
+                case "+":
+                    return left_value + right_value
+                ...  # "-" and "*" alike; "/", "%": next slide
+                case _:
+                    assert_never(op)
+        case _:
+            assert_never(ast)
+    </code></pre>
+    <div>
+      <p class="formula">\( ⟦n⟧ = n \)<br>\( ⟦e_1 \mathbin{op} e_2⟧ = ⟦e_1⟧ \mathbin{op} ⟦e_2⟧ \)</p>
+      <p>On the right, <em>op</em> is the operation on Python integers.</p>
+      <p class="note">One <code>assert_never</code> for the node types, one for the operators. If <code>Op</code> gets a sixth operator and this <code>match</code> does not, <code>mypy</code> reports an error.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What is <code>(0-7)/2</code>?</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+                case "/":
+                    if right_value == 0:
+                        raise ValueError("Division by zero")
+                    return left_value // right_value
+                case "%":
+                    if right_value == 0:
+                        raise ValueError("Division by zero")
+                    return left_value % right_value
+    </code></pre>
+    <div>
+      <p class="lead">Values are <code>int</code>, so the result cannot be <code>-3.5</code>. Which integer?</p>
+      <p class="fragment">Here <strong>-4</strong>: <code>//</code> rounds towards minus infinity. C and Java truncate, giving <strong>-3</strong>.</p>
+      <p class="note fragment">We use Python's <code>//</code> and <code>%</code>, for which \( a = (a / b) \cdot b + a \bmod b \) holds. With truncation, <code>%</code> would have to change too.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Three kinds of error</h2>
+  <figure class="diagram"><svg viewBox="0 0 1120 120" role="img" aria-label="Syntax errors are raised by Lark while lexing and parsing; a ValueError for division by zero is raised by our evaluator; the transform error should never appear">
+    <defs><marker id="ea" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <rect x="0" y="40" width="168" height="56" rx="6" class="d-box"/><text x="84" y="74" text-anchor="middle" class="d-t-mono-s">text</text>
+    <rect x="238" y="40" width="168" height="56" rx="6" class="d-box-soft"/><text x="322" y="74" text-anchor="middle" class="d-t-mono-s">tokens</text>
+    <rect x="476" y="40" width="168" height="56" rx="6" class="d-box-soft"/><text x="560" y="74" text-anchor="middle" class="d-t-mono-s">parse tree</text>
+    <rect x="714" y="40" width="168" height="56" rx="6" class="d-box-accent"/><text x="798" y="74" text-anchor="middle" class="d-t-mono-s">AST</text>
+    <rect x="952" y="40" width="168" height="56" rx="6" class="d-box-warm"/><text x="1036" y="74" text-anchor="middle" class="d-t-mono-s">value</text>
+    <path d="M 172 68 L 234 68" class="d-arrow" marker-end="url(#ea)"/>
+    <path d="M 410 68 L 472 68" class="d-arrow" marker-end="url(#ea)"/>
+    <path d="M 648 68 L 710 68" class="d-arrow" marker-end="url(#ea)"/>
+    <path d="M 886 68 L 948 68" class="d-arrow" marker-end="url(#ea)"/>
+    <circle cx="322" cy="18" r="10" class="d-fill-ink"/><text x="322" y="23" text-anchor="middle" class="d-t-paper" style="font-size:12px">1</text>
+    <circle cx="679" cy="18" r="10" class="d-fill-ink"/><text x="679" y="23" text-anchor="middle" class="d-t-paper" style="font-size:12px">2</text>
+    <circle cx="917" cy="18" r="10" class="d-fill-warm"/><text x="917" y="23" text-anchor="middle" class="d-t-paper" style="font-size:12px">3</text>
+  </svg></figure>
+  <div class="cards" style="--n:3; margin-top:18px">
+    <div class="card"><p class="idx">1 · SYNTAX ERROR</p><p>Raised by Lark before evaluation: <code>1 +</code> is not a program.</p></div>
+    <div class="card"><p class="idx">2 · INTERNAL ERROR</p><p><code>Unexpected parse tree node</code>: the grammar and the transform disagree. This is a bug in the interpreter.</p></div>
+    <div class="card warm"><p class="idx">3 · RUNTIME ERROR</p><p><code>1/(2-2)</code> is a valid program with no value. We raise a <code>ValueError</code>.</p></div>
+  </div>
+  <p class="note">Without the check, Python would raise <code>ZeroDivisionError</code>. We raise our own error so that the language defines it. Returning infinity or 0 would also be possible; the language has to pick one.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Another decision in the grammar</p>
+  <h2>Precedence</h2>
+</section>
+
+<section>
+  <h2>What is <code>1+2*3</code>?</h2>
+  <figure class="diagram"><svg viewBox="0 0 760 270" style="height:300px;width:auto;margin:0 auto" role="img" aria-label="The flat grammar reads 1+2*3 as (1+2)*3, which is 9; a grammar with one rule per level reads it as 1+(2*3), which is 7">
+    <line x1="180" y1="57" x2="100" y2="103" class="d-line"/><line x1="180" y1="57" x2="260" y2="103" class="d-line"/>
+    <line x1="100" y1="137" x2="50" y2="183" class="d-line"/><line x1="100" y1="137" x2="150" y2="183" class="d-line"/>
+    <rect x="156" y="23" width="48" height="34" rx="17" class="d-box-warm"/><text x="180" y="45" text-anchor="middle" class="d-t-m">*</text>
+    <rect x="76" y="103" width="48" height="34" rx="17" class="d-box-warm"/><text x="100" y="125" text-anchor="middle" class="d-t-m">+</text>
+    <rect x="236" y="103" width="48" height="34" rx="17" class="d-box"/><text x="260" y="125" text-anchor="middle" class="d-t-m">3</text>
+    <rect x="26" y="183" width="48" height="34" rx="17" class="d-box"/><text x="50" y="205" text-anchor="middle" class="d-t-m">1</text>
+    <rect x="126" y="183" width="48" height="34" rx="17" class="d-box"/><text x="150" y="205" text-anchor="middle" class="d-t-m">2</text>
+    <text x="180" y="256" text-anchor="middle" class="d-t-warm" style="font-size:16px">our grammar: (1+2)*3 = 9</text>
+    <g class="fragment">
+    <line x1="580" y1="57" x2="500" y2="103" class="d-line"/><line x1="580" y1="57" x2="660" y2="103" class="d-line"/>
+    <line x1="660" y1="137" x2="610" y2="183" class="d-line"/><line x1="660" y1="137" x2="710" y2="183" class="d-line"/>
+    <rect x="556" y="23" width="48" height="34" rx="17" class="d-box-accent"/><text x="580" y="45" text-anchor="middle" class="d-t-m">+</text>
+    <rect x="476" y="103" width="48" height="34" rx="17" class="d-box"/><text x="500" y="125" text-anchor="middle" class="d-t-m">1</text>
+    <rect x="636" y="103" width="48" height="34" rx="17" class="d-box-accent"/><text x="660" y="125" text-anchor="middle" class="d-t-m">*</text>
+    <rect x="586" y="183" width="48" height="34" rx="17" class="d-box"/><text x="610" y="205" text-anchor="middle" class="d-t-m">2</text>
+    <rect x="686" y="183" width="48" height="34" rx="17" class="d-box"/><text x="710" y="205" text-anchor="middle" class="d-t-m">3</text>
+    <text x="580" y="256" text-anchor="middle" class="d-t-accent" style="font-size:16px">usual: 1+(2*3) = 7</text>
+    </g>
+  </svg></figure>
+  <p class="punch">With a single <code>OP</code> and a single <code>bin</code> rule, all operators have the same priority. Like associativity, precedence is fixed by the grammar.</p>
+</section>
+
+<section>
+  <h2>One rule per level</h2>
+  <div class="split flip">
+    <pre style="font-size:.5em"><code class="language-python" data-trim>
+grammar_prec = r"""
+    ?expr: sum
+    ?sum: sum ADDOP prod   -&gt; bin
+        | prod
+    ?prod: prod MULOP mono -&gt; bin
+         | mono
+    ?mono: ground | paren
+    paren: "(" expr ")"
+    ground: NUMBER
+    NUMBER: /[0-9]+/
+    ADDOP: "+" | "-"
+    MULOP: "*" | "/" | "%"
+    %import common.WS
+    %ignore WS
+"""
+    </code></pre>
+    <figure class="diagram"><svg viewBox="0 0 460 330" style="height:300px;width:auto" role="img" aria-label="Nested levels: a sum contains products, a product contains monos; parentheses lead back to the outermost level">
+            <rect x="0" y="0" width="460" height="300" rx="10" class="d-box"/>
+      <text x="20" y="32" class="d-t-b">sum</text><text x="440" y="32" text-anchor="end" class="d-t-m">+  -</text>
+      <rect x="30" y="50" width="400" height="230" rx="10" class="d-box-soft"/>
+      <text x="50" y="82" class="d-t-b">prod</text><text x="410" y="82" text-anchor="end" class="d-t-m">*  /  %</text>
+      <rect x="60" y="100" width="340" height="160" rx="10" class="d-box-accent"/>
+      <text x="80" y="132" class="d-t-b">mono</text>
+      <text x="80" y="176" class="d-t-m">ground</text>
+      <text x="80" y="214" class="d-t-m">( expr )</text>
+      <text x="180" y="214" class="d-t-warm">back to expr</text>
+      <text x="230" y="322" text-anchor="middle" class="d-t-muted">outer levels bind less tightly</text>
+    </svg></figure>
+  </div>
+  <p class="note">No <code>+</code> inside a <code>prod</code> without parentheses: <code>1+2*3</code> is 7. <code>?</code> removes one-child nodes; <code>-&gt; bin</code> renames. <code>precedence.py</code> reuses the AST and <code>evaluate</code>.</p>
+</section>
+
+<section>
+  <h2>Alternative: LALR instead of Earley</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+earley = Lark(grammar, start="expr")  # the default
+lalr = Lark(grammar, start="expr", parser="lalr")
+text = "+".join(["1"] * 3000)
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+earley: 0.115 s
+lalr: 0.010 s
+      </code></pre>
+    </div>
+    <div class="cards" style="--n:1">
+      <div class="card"><p class="idx">EARLEY · THE DEFAULT</p><p>Accepts any context-free grammar, including ambiguous ones. Slower.</p></div>
+      <div class="card warm"><p class="idx">LALR</p><p>A single pass; about ten times faster here. It rejects some grammars with a <code>GrammarError</code>, and resolves the ambiguity of <code>expr OP expr</code> without warning.</p></div>
+    </div>
+  </div>
+  <p class="note">Our inputs are short and the grammar will change, so we keep the default. Timings from <code>alternatives.py</code> on one laptop.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">Using and extending the interpreter</p>
+  <h2>REPL and extensions</h2>
+</section>
+
+<section>
+  <h2>The REPL: read, evaluate, print, loop</h2>
+  <div class="split even">
+    <pre><code class="language-python" data-trim>
+def REPL() -&gt; None:
+    while True:
+        try:
+            expression = input("&gt; ")
+        except EOFError:
+            print()
+            return
+        if expression == "exit":
+            return
+        try:
+            print(evaluate_string(expression))
+        except Exception as e:
+            print(f"Error: {e}")
+    </code></pre>
+    <div>
+      <pre class="out"><code class="language-text" data-trim>
+&gt; 1+2
+3
+&gt; (10+20)*2
+60
+&gt; 100/0
+Error: Division by zero
+&gt; 1 +
+Error: Unexpected end-of-input. Expected one of:
+	* LPAR
+	* NUMBER
+&gt; exit
+      </code></pre>
+      <p class="note">Ctrl-D (end of input) exits cleanly. We catch every exception, so an error does not stop the loop.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Debugging: print each stage</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">01 · TOKENS</p><p><code>list(parser.lex(s))</code></p><p>Are the tokens the ones you expected? Look for a terminal that matches too much, or one that never matches.</p></div>
+    <div class="card"><p class="idx">02 · PARSE TREE</p><p><code>print(parser.parse(s).pretty())</code></p><p>Which tree was built? Precedence and associativity problems are visible here.</p></div>
+    <div class="card warm"><p class="idx">03 · AST</p><p><code>print(parse_ast(s))</code></p><p>Is the AST correct? If it is and the value is wrong, the bug is in <code>evaluate</code>.</p></div>
+  </div>
+  <p class="punch" style="margin-top:26px">The bug is in the stage after the last correct output.</p>
+</section>
+
+<section>
+  <h2>Adding comparisons</h2>
+  <div class="split flip">
+    <pre style="font-size:.54em"><code class="language-python" data-trim>
+grammar_cmp = r"""
+    ?expr: cmp
+    ?cmp: sum CMPOP sum    -&gt; compare
+        | sum
+    ?sum: sum ADDOP prod   -&gt; bin
+        | prod
+    ...
+    CMPOP: "&lt;" | "&lt;=" | "=="
+"""
+
+type CmpOp = Literal["&lt;", "&lt;=", "=="]
+@dataclass(frozen=True)
+class Comparison:
+    op: CmpOp
+    left: Expression
+    right: Expression
+
+type Expression = Number | BinaryExpression | Comparison
+    </code></pre>
+    <div>
+      <p class="lead">A new level, looser than <code>+</code>: <code>1+2 &lt;= 3</code> compares two sums.</p>
+      <p>The rule is <code>sum CMPOP sum</code>, so the level is <strong>non-associative</strong>: <code>1 &lt; 2 &lt; 3</code> is a syntax error.</p>
+      <p class="note">Python reads it as <code>1 &lt; 2 and 2 &lt; 3</code>, C as <code>(1 &lt; 2) &lt; 3</code>. We do not allow it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What is <code>1 &lt; 2</code>?</h2>
+  <div class="split flip">
+    <div>
+      <pre style="font-size:.54em"><code class="language-python" data-trim>
+        case Comparison(op, left, right):
+            a, b = evaluate(left), evaluate(right)
+            match op:
+                case "&lt;":
+                    return int(a &lt; b)
+                case "&lt;=":
+                    return int(a &lt;= b)
+                case "==":
+                    return int(a == b)
+                case _:
+                    assert_never(op)
+      </code></pre>
+      <pre style="font-size:.54em"><code class="language-python" data-trim>
+evaluate_cmp("1+2*3 &lt; 10")      # 1
+evaluate_cmp("(1&lt;2) + (2&lt;1)")   # 1
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead"><strong>1</strong>, as in C. All values are still <code>int</code>, and <code>evaluate</code> keeps its return type.</p>
+      <p>Returning <code>True</code> would mean values are <code>int</code> or <code>bool</code>, and we would have to define <code>(1&lt;2) + 1</code>.</p>
+      <p class="punch">Which values a language has is a separate topic, for a later lecture.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What the extension changed</h2>
+  <div class="cards" style="--n:4">
+    <div class="card"><p class="idx">GRAMMAR</p><h3>+1 level</h3><p>If missing: Lark rejects <code>1 &lt; 2</code>.</p></div>
+    <div class="card"><p class="idx">AST</p><h3>+1 node</h3><p><code>Comparison</code>, added to <code>Expression</code>.</p></div>
+    <div class="card warm"><p class="idx">TRANSFORM</p><h3>+1 case</h3><p>If missing: <code>Unexpected parse tree node</code>, at run time.</p></div>
+    <div class="card"><p class="idx">EVALUATE</p><h3>+1 case</h3><p>If missing: <code>mypy</code> reports it before running, because of <code>assert_never</code>.</p></div>
+  </div>
+  <p class="punch" style="margin-top:26px">Only the missing evaluator case is caught before running. The transform needs tests.</p>
+</section>
+
+<section class="part">
+  <p class="kicker">In class</p>
+  <h2>Your turn</h2>
+</section>
+
+<section>
+  <h2>Exercise 1 · Predict, then run</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+# mini_interpreter.py, flat grammar
+parse_ast("2*3-1")
+parse_ast("2-3*4")
+parse_ast("8/2/2")
+evaluate_string("2-3*4")
+
+# precedence.py
+evaluate(parse_ast_prec("2-3*4"))
+    </code></pre>
+    <div>
+      <p class="cite">Level 1 of 4</p>
+      <ol>
+        <li>For each input, draw the AST on paper and write its value, before running anything.</li>
+        <li>Run them. Where were you wrong, and which grammar rule decided it?</li>
+        <li>Print the parse tree of <code>2-3*4</code> with both grammars and count the nodes.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · A sixth operator</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+evaluate_string("2^3")       # 8
+evaluate_string("2^3^2")     # 64: left to right
+evaluate_string("2^(0-1)")   # ?
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 4</p>
+      <ol>
+        <li>Add <code>^</code>, power, to the flat grammar: <code>OP</code>, <code>Op</code>, the transform, the evaluator.</li>
+        <li>Run <code>mypy</code> before the evaluator has its case. What does it say?</li>
+        <li>In Python, <code>2 ** -1</code> is <code>0.5</code>, not an <code>int</code>. Decide what <code>2^(0-1)</code> should be and implement it.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · Unary minus</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+evaluate_string("-1")         # -1
+evaluate_string("-(2+3)")     # -5
+evaluate_string("2*-3")       # ?
+evaluate_string("--1")        # ?
+evaluate_string("1--2")       # ?
+    </code></pre>
+    <div>
+      <p class="cite">Level 3 of 4</p>
+      <ol>
+        <li>Write down what the three <code>?</code> should be, before you start.</li>
+        <li>A new rule, a new node, a new case in the transform, a new case in the evaluator.</li>
+        <li>Check the parse trees: does your grammar agree with what you wrote in step 1?</li>
+      </ol>
+      <p class="note">Hint: a minus followed by a <code>mono</code> is itself a <code>mono</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · At home: the calculator with Lark</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def calc(text: str) -&gt; int: ...
+
+calc("1+2*3")       # 7
+calc("2^3^2")       # 512: right to left
+calc("2*3^2")       # 18
+calc("(1+2")        # ValueError
+calc("7/(1-1)")     # ValueError
+    </code></pre>
+    <div>
+      <p class="cite">Level 4 of 4 · take home</p>
+      <ol>
+        <li>Rewrite the take-home calculator using <code>precedence.py</code>.</li>
+        <li>Add <code>^</code> as a new level, tighter than <code>*</code>, right-associative. Hint: a named terminal and a right-recursive rule.</li>
+        <li>All errors must be <code>ValueError</code>: convert Lark's exceptions.</li>
+        <li>Add a REPL.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>
