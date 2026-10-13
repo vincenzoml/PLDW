@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Types and pattern matching in Python</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>Types and pattern matching in Python</h1>
+  <p class="sub">Lecture 2: dataclasses, unions, <code>match</code> and a type checker.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<!-- ============ the problem ============ -->
+
+<section>
+  <h2>The exercise you took home</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def calc(text: str) -> int: ...
+
+calc("2 + 5 - 3")      # 4
+calc("10 - 4 - 3")     # 3: left to right
+calc("7")              # 7
+calc("2 + + 3")        # error: not well formed
+calc("2 + x")          # error
+    </code></pre>
+    <div>
+      <p class="cite">Lecture 1B, exercise 4</p>
+      <p class="lead">Input a string, output a number. Only <code>+</code> and <code>-</code>, no parentheses, evaluated left to right.</p>
+      <p>Malformed input raises <code>ValueError</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>One solution: a loop</h2>
+  <div class="split flip">
+    <div style="font-size:.93em"><pre><code class="language-python" data-trim>
+def calc(text: str) -> int:
+    total = 0
+    op = "+"
+    expect_number = True
+    for token in text.split():
+        if expect_number:
+            n = int(token)
+            if op == "+":
+                total = total + n
+            else:
+                total = total - n
+            expect_number = False
+        elif token == "+" or token == "-":
+            op = token
+            expect_number = True
+        else:
+            raise ValueError(f"expected + or -, got '{token}'")
+    if expect_number:
+        raise ValueError("expected a number at the end")
+    return total
+    </code></pre></div>
+    <div>
+      <p class="cite">One possible solution</p>
+      <p class="lead">A loop keeps a running total and updates it at each token.</p>
+      <p><code>expect_number</code> says what the next token must be: a number, or an operator.</p>
+      <p><code>calc("10 - 4 - 3")</code> gives <code>3</code>.</p>
+      <p>On bad input, <code>int("x")</code> already raises <code>ValueError</code>; the other errors are raised explicitly.</p>
+    </div>
+  </div>
+</section>
+
+<section class="question">
+  <p class="cite">Grow the language</p>
+  <h2>Now add <code>*</code>, which binds tighter. And parentheses.</h2>
+  <p class="answer fragment">This is hard to do with the loop.</p>
+  <p class="fragment lead muted" style="margin-top:.5em">It only keeps a number, the total so far, and not the expression.</p>
+</section>
+
+<section>
+  <h2>From a running total to a tree</h2>
+  <div class="split">
+    <figure class="diagram"><svg viewBox="0 0 470 380" role="img" aria-label="The loop turns 10 - 4 - 3 into the totals 10, 6, 3; the tree keeps two subtraction nodes and three numbers">
+      <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+      <text x="0" y="16" class="d-t-mono-s">the loop: a number at each step</text>
+      <rect x="0" y="32" width="80" height="44" rx="6" class="d-box-soft"/><text x="40" y="60" text-anchor="middle" class="d-t-m">10</text>
+      <line x1="86" y1="54" x2="140" y2="54" class="d-arrow" marker-end="url(#a4)"/><text x="113" y="44" text-anchor="middle" class="d-t-warm">− 4</text>
+      <rect x="146" y="32" width="80" height="44" rx="6" class="d-box-soft"/><text x="186" y="60" text-anchor="middle" class="d-t-m">6</text>
+      <line x1="232" y1="54" x2="286" y2="54" class="d-arrow" marker-end="url(#a4)"/><text x="259" y="44" text-anchor="middle" class="d-t-warm">− 3</text>
+      <rect x="292" y="32" width="80" height="44" rx="6" class="d-box-warm"/><text x="332" y="60" text-anchor="middle" class="d-t-m">3</text>
+      <text x="0" y="146" class="d-t-mono-s">the tree of 10 - 4 - 3</text>
+      <line x1="250" y1="196" x2="160" y2="262" class="d-line"/><line x1="250" y1="196" x2="340" y2="262" class="d-line"/>
+      <line x1="160" y1="296" x2="90" y2="342" class="d-line"/><line x1="160" y1="296" x2="230" y2="342" class="d-line"/>
+      <rect x="229" y="162" width="42" height="34" rx="17" class="d-box-accent"/><text x="250" y="184" text-anchor="middle" class="d-t-m">−</text>
+      <rect x="139" y="262" width="42" height="34" rx="17" class="d-box-accent"/><text x="160" y="284" text-anchor="middle" class="d-t-m">−</text>
+      <rect x="319" y="262" width="42" height="34" rx="17" class="d-box"/><text x="340" y="284" text-anchor="middle" class="d-t-m">3</text>
+      <rect x="66" y="342" width="48" height="34" rx="17" class="d-box"/><text x="90" y="364" text-anchor="middle" class="d-t-m">10</text>
+      <rect x="209" y="342" width="42" height="34" rx="17" class="d-box"/><text x="230" y="364" text-anchor="middle" class="d-t-m">4</text>
+    </svg></figure>
+    <div>
+      <p class="lead">A tree can be evaluated, and also printed, simplified, checked or translated.</p>
+      <p>Precedence and parentheses determine <em>which</em> tree we build. A running total has no structure.</p>
+      <p class="punch">In lecture 1A we wrote one case per kind of node, so we need nodes.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The same loop, building a tree</h2>
+  <div class="split flip">
+    <div style="font-size:.93em"><pre><code class="language-python" data-trim>
+def calc_tree(text: str) -> Expr:
+    tree: Expr | None = None
+    op = "+"
+    expect_number = True
+    for token in text.split():
+        if expect_number:
+            n = Number(float(token))
+            if tree is None:
+                tree = n
+            elif op == "+":
+                tree = BinaryOp(tree, "+", n)
+            else:
+                tree = BinaryOp(tree, "-", n)
+            expect_number = False
+        elif token == "+" or token == "-":
+            op = token
+            expect_number = True
+        ...  # errors: as in calc
+    return tree
+    </code></pre></div>
+    <div>
+      <p class="lead">The loop now builds nodes instead of numbers; <code>evaluate</code> does the arithmetic.</p>
+      <p><code>evaluate(calc_tree("10 - 4 - 3"), {})</code> gives <code>3.0</code>.</p>
+      <p>Each step puts the tree built so far on the <strong>left</strong>. This is how left-to-right evaluation appears in the tree.</p>
+      <p class="note">Still no <code>*</code>. Next lecture we parse strings properly, with a parser generator; today we focus on the tree.</p>
+    </div>
+  </div>
+</section>
+
+<section class="statement">
+  <p class="big">To extend the language we need a tree whose structure <strong>can be checked by a tool</strong>.</p>
+  <p class="lead muted" style="margin-top:.6em; max-width:46ch">Python does not check types when it runs. We can still write the types down, and a separate program can check them.</p>
+</section>
+
+<!-- ============ part 1: hints ============ -->
+
+<section class="part">
+  <p class="kicker">Type hints</p>
+  <h2>Type hints are <em>not checked</em> at run time</h2>
+</section>
+
+<section>
+  <h2>Who reads the type hints</h2>
+  <figure class="diagram" style="margin-top:10px"><svg viewBox="0 0 1000 300" role="img" aria-label="The same file goes to Python, which runs it and ignores the hints, and to a type checker, which reads the hints and runs nothing">
+    <defs><marker id="a9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <rect x="0" y="110" width="220" height="80" rx="8" class="d-box"/>
+    <text x="110" y="144" text-anchor="middle" class="d-t-m">calc.py</text>
+    <text x="110" y="168" text-anchor="middle" class="d-t-muted">with hints</text>
+    <path d="M 226 136 C 290 136, 300 60, 362 60" class="d-arrow" marker-end="url(#a9)"/>
+    <path d="M 226 164 C 290 164, 300 240, 362 240" class="d-arrow" marker-end="url(#a9)"/>
+    <rect x="370" y="22" width="260" height="76" rx="8" class="d-box-soft"/>
+    <text x="500" y="56" text-anchor="middle" class="d-t-b">Python</text>
+    <text x="500" y="80" text-anchor="middle" class="d-t-m">python3 calc.py</text>
+    <rect x="370" y="202" width="260" height="76" rx="8" class="d-box-accent"/>
+    <text x="500" y="236" text-anchor="middle" class="d-t-b">a type checker</text>
+    <text x="500" y="260" text-anchor="middle" class="d-t-m">Pylance · mypy · pyright</text>
+    <line x1="636" y1="60" x2="690" y2="60" class="d-arrow" marker-end="url(#a9)"/>
+    <line x1="636" y1="240" x2="690" y2="240" class="d-arrow" marker-end="url(#a9)"/>
+    <text x="700" y="54" class="d-t">runs it,</text>
+    <text x="700" y="78" class="d-t-serif">ignores the hints</text>
+    <text x="700" y="234" class="d-t">reads it, does not run it,</text>
+    <text x="700" y="258" class="d-t-serif">reports type errors</text>
+  </svg></figure>
+  <p class="punch" style="margin-top:14px; max-width:none">Recall that <code>add("2", "3")</code> returns <code>"23"</code>. Hints are ignored so that annotated and unannotated code can be mixed.</p>
+</section>
+
+<section>
+  <h2>Three ways to run a type checker</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">IN VS CODE</p><p>The Python extension includes <strong>Pylance</strong>, which is based on pyright. Errors are underlined in red as you edit.</p></div>
+    <div class="card"><p class="idx">MYPY</p><p><code>pip install mypy</code>, then<br><code>python3 -m mypy file.py</code></p></div>
+    <div class="card warm"><p class="idx">PYRIGHT</p><p>The checker used by VS Code, from the command line: <code>pyright file.py</code></p></div>
+  </div>
+  <p class="cite" style="margin-top:28px">mypy output, calling add with two strings</p>
+  <pre><code class="language-text" data-trim>
+checker_catches.py:19: error: Argument 1 to "add" has incompatible type "str"; expected "int"
+  </code></pre>
+</section>
+
+<section>
+  <h2>Why an interpreter needs a type checker</h2>
+  <figure class="diagram" style="margin-top:6px"><svg viewBox="0 0 1000 250" role="img" aria-label="A wrong tree is built in the parser and crashes two functions later, in evaluate; the checker reports it at the line that built it">
+    <defs>
+      <marker id="a11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker>
+      <marker id="c11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
+    </defs>
+    <rect x="0" y="70" width="250" height="74" rx="8" class="d-box"/>
+    <text x="125" y="100" text-anchor="middle" class="d-t-b">parse</text>
+    <text x="125" y="126" text-anchor="middle" class="d-t-m">BinaryOp(…, "^", …)</text>
+    <line x1="256" y1="107" x2="322" y2="107" class="d-arrow" marker-end="url(#a11)"/>
+    <rect x="330" y="70" width="190" height="74" rx="8" class="d-box"/>
+    <text x="425" y="113" text-anchor="middle" class="d-t-b">simplify</text>
+    <line x1="526" y1="107" x2="592" y2="107" class="d-arrow" marker-end="url(#a11)"/>
+    <rect x="600" y="70" width="190" height="74" rx="8" class="d-box"/>
+    <text x="695" y="113" text-anchor="middle" class="d-t-b">evaluate</text>
+    <line x1="796" y1="107" x2="840" y2="107" class="d-arrow" marker-end="url(#a11)"/>
+    <rect x="848" y="70" width="150" height="74" rx="8" class="d-box-warm"/>
+    <text x="923" y="102" text-anchor="middle" class="d-t-b">crash</text>
+    <text x="923" y="126" text-anchor="middle" class="d-t-muted">far from the bug</text>
+    <text x="0" y="40" class="d-t-mono-s">without a checker: an error at run time, only for some inputs</text>
+    <path d="M 923 152 C 923 230, 125 230, 125 152" class="d-arrow-accent" marker-end="url(#c11)"/>
+    <text x="524" y="244" text-anchor="middle" class="d-t-accent">with a checker: an error at the line that builds the tree</text>
+  </svg></figure>
+  <p class="punch" style="max-width:none; margin-top:22px">All functions of an interpreter take a tree as input. A malformed tree causes an error later, not where it is built.</p>
+</section>
+
+<!-- ============ part 2: nodes ============ -->
+
+<section class="part">
+  <p class="kicker">Dataclasses and unions</p>
+  <h2>Defining the <em>nodes</em> of the tree</h2>
+</section>
+
+<section>
+  <h2>How to represent a node</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">A DICTIONARY</p><p><code>{"kind": "num", "value": 2.0}</code></p><p>A typo in a key gives a <code>KeyError</code> at run time. The checker only knows that keys are strings.</p></div>
+    <div class="card"><p class="idx">A TUPLE</p><p><code>("num", 2.0)</code></p><p>Compact, but the meaning of each position is not written anywhere.</p></div>
+    <div class="card"><p class="idx">A CLASS WITH __init__</p><p>Works, but takes about ten lines per node, and an interpreter has many nodes.</p></div>
+    <div class="card warm fragment"><p class="idx">@dataclass</p><p>Generates those lines from the list of fields. Fields have names and types that the checker uses.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The expression tree as dataclasses</h2>
+  <div class="split flip">
+    <div style="font-size:.86em"><pre><code class="language-python" data-trim>
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Literal, assert_never
+
+type Op = Literal["+", "-", "*", "/"]
+
+@dataclass(frozen=True)
+class Number:
+    value: float
+
+@dataclass(frozen=True)
+class Variable:
+    name: str
+
+@dataclass(frozen=True)
+class BinaryOp:
+    left: Expr
+    operator: Op
+    right: Expr
+
+type Expr = Number | Variable | BinaryOp
+    </code></pre></div>
+    <div>
+      <p class="lead">The tree of lecture 1A, except that <code>operator</code> has type <code>Op</code> instead of <code>str</code>.</p>
+      <p class="small"><code>left: Expr</code> uses <code>Expr</code> before it is defined. The first line tells Python not to evaluate annotations; Python 3.14 does this by default.</p>
+      <p class="note">The next slides go through this code.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What <code>@dataclass</code> writes for you</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+# 2 + (x * 3)
+e = BinaryOp(Number(2.0), "+",
+             BinaryOp(Variable("x"), "*", Number(3.0)))
+
+print(Number(2.0))
+# Number(value=2.0)
+
+# Equality is structural
+print(Number(2.0) == Number(2.0))      # True
+print(e == BinaryOp(Number(2.0), "+",
+            BinaryOp(Variable("x"), "*", Number(3.0))))
+# True
+    </code></pre>
+    <div class="cards" style="--n:1; gap:14px">
+      <div class="card"><p class="idx">__init__</p><p>fields in order, or by name.</p></div>
+      <div class="card"><p class="idx">__repr__</p><p>a readable printout, useful to debug a parser.</p></div>
+      <div class="card warm"><p class="idx">__eq__</p><p>compares nodes field by field, so <code>parse("2 + x * 3") == e</code> is a complete test.</p></div>
+    </div>
+  </div>
+  <p class="note">Some calls are split over two lines here to fit; the file has them on one.</p>
+</section>
+
+<section>
+  <h2>Why <code>frozen=True</code></h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+e = BinaryOp(Number(2.0), "+", Variable("x"))
+try:
+    e.operator = "-"
+except AttributeError as err:
+    print("AttributeError:", err)
+# AttributeError: cannot assign to field 'operator'
+
+# Frozen nodes are hashable: set members, dict keys
+seen: set[Expr] = {Number(2.0), Number(2.0),
+                   Variable("x")}
+print(len(seen))  # 2
+    </code></pre>
+    <div>
+      <p class="lead">With mutable nodes, <code>evaluate</code> could modify the tree it visits, and two parts of a program sharing a node could change it under each other.</p>
+      <p>An interpreter does not need to change trees in place: each transformation builds a new tree.</p>
+      <p class="punch">Frozen nodes are also hashable, which is useful for caching.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A class hierarchy or a union</h2>
+  <figure class="diagram"><svg viewBox="0 0 1060 300" role="img" aria-label="A base class Expr with three subclasses can get a fourth from another file; a union lists exactly three alternatives">
+    <text x="0" y="18" class="d-t-mono-s">a base class, three subclasses</text>
+    <rect x="160" y="40" width="130" height="44" rx="6" class="d-box"/><text x="225" y="68" text-anchor="middle" class="d-t-m">Expr</text>
+    <line x1="225" y1="84" x2="70" y2="160" class="d-line"/><line x1="225" y1="84" x2="190" y2="160" class="d-line"/>
+    <line x1="225" y1="84" x2="310" y2="160" class="d-line"/><line x1="225" y1="84" x2="430" y2="160" class="d-dash"/>
+    <rect x="10" y="160" width="110" height="40" rx="6" class="d-box"/><text x="65" y="186" text-anchor="middle" class="d-t-m">Number</text>
+    <rect x="130" y="160" width="120" height="40" rx="6" class="d-box"/><text x="190" y="186" text-anchor="middle" class="d-t-m">Variable</text>
+    <rect x="260" y="160" width="110" height="40" rx="6" class="d-box"/><text x="315" y="186" text-anchor="middle" class="d-t-m">BinaryOp</text>
+    <rect x="380" y="160" width="100" height="40" rx="6" style="fill:none;stroke:var(--warm);stroke-width:1.6;stroke-dasharray:5 4"/><text x="430" y="186" text-anchor="middle" class="d-t-warm">???</text>
+    <text x="430" y="226" text-anchor="middle" class="d-t-muted">can be added</text>
+    <text x="430" y="246" text-anchor="middle" class="d-t-muted">from any file</text>
+    <line x1="540" y1="20" x2="540" y2="280" class="d-dash"/>
+    <text x="600" y="18" class="d-t-mono-s">a union</text>
+    <text x="600" y="72" class="d-t-m" style="font-size:20px">type Expr =</text>
+    <rect x="600" y="98" width="130" height="44" rx="6" class="d-box-accent"/><text x="665" y="126" text-anchor="middle" class="d-t-m">Number</text>
+    <text x="745" y="127" text-anchor="middle" class="d-t-b">|</text>
+    <rect x="760" y="98" width="130" height="44" rx="6" class="d-box-accent"/><text x="825" y="126" text-anchor="middle" class="d-t-m">Variable</text>
+    <text x="905" y="127" text-anchor="middle" class="d-t-b">|</text>
+    <rect x="920" y="98" width="130" height="44" rx="6" class="d-box-accent"/><text x="985" y="126" text-anchor="middle" class="d-t-m">BinaryOp</text>
+    <text x="600" y="190" class="d-t-serif">and no other types.</text>
+  </svg></figure>
+  <p class="punch" style="max-width:none">A union is a closed list, so the checker can report a <code>match</code> that misses a case. In this course every tree is a union of dataclasses.</p>
+</section>
+
+<section>
+  <h2>Product and sum</h2>
+  <div class="cards" style="--n:2; margin-top:.6em">
+    <div class="card"><p class="idx">PRODUCT · AND</p><p class="formula" style="font-size:.9em; margin:.5em 0 .7em">\( \mathit{BinaryOp} = \mathit{Expr} \times \mathit{Op} \times \mathit{Expr} \)</p><p>A dataclass: a <code>BinaryOp</code> holds a <code>left</code> <em>and</em> an <code>operator</code> <em>and</em> a <code>right</code>.</p></div>
+    <div class="card warm"><p class="idx">SUM · OR</p><p class="formula" style="font-size:.9em; margin:.5em 0 .7em">\( \mathit{Expr} = \mathit{Number} + \mathit{Variable} + \mathit{BinaryOp} \)</p><p>A union: an <code>Expr</code> is a <code>Number</code> <em>or</em> a <code>Variable</code> <em>or</em> a <code>BinaryOp</code>.</p></div>
+  </div>
+  <p class="note" style="margin-top:22px">OCaml, Haskell and Rust have a single construct for both. Python uses dataclasses for products and the <code>type</code> statement for unions.</p>
+</section>
+
+<section>
+  <h2>The <code>type</code> statement</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+type Expr = Number | Variable | BinaryOp
+type Env = dict[str, float]
+      </code></pre>
+      <p class="cite" style="margin-top:22px">In lecture 1B we wrote</p>
+      <p><code>Expr = Num | Add</code>, a plain assignment, evaluated immediately. For this reason <code>Add</code> had <code>left: "Expr"</code> in quotes.</p>
+    </div>
+    <div>
+      <p class="lead">The right-hand side of a <code>type</code> statement is evaluated lazily, only when needed.</p>
+      <p>So <code>Expr</code> and <code>BinaryOp</code> can refer to each other, in any order.</p>
+      <p class="note">With <code>=</code> or the older <code>Union[…]</code> the right-hand side is evaluated immediately, which causes problems with recursive types. <code>type</code> is also handy for names like <code>Env</code>, used in many signatures.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>Literal</code>: a union of constants</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+type Op = Literal["+", "-", "*", "/"]
+
+bad = BinaryOp(Number(2.0), "^", Number(3.0))
+print(bad)       # Python builds it
+      </code></pre>
+      <p class="cite" style="margin-top:20px">mypy</p>
+      <pre><code class="language-text" data-trim>
+checker_catches.py:33: error: Argument 2 to "BinaryOp"
+  has incompatible type "Literal['^']";
+  expected "Literal['+', '-', '*', '/']"
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">With <code>operator: str</code>, a tree containing <code>"^"</code> gives an error only when <code>evaluate</code> reaches it.</p>
+      <p>With <code>operator: Op</code>, the checker reports it at the line that <strong>builds</strong> the node.</p>
+      <p class="punch"><code>Op</code> is a union of four constants, as <code>Expr</code> is a union of three classes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ part 3: match ============ -->
+
+<section class="part">
+  <p class="kicker">Pattern matching</p>
+  <h2>Inspecting nodes with <em>match</em></h2>
+</section>
+
+<section>
+  <h2>Four kinds of pattern</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(expr: Expr, env: Env) -> float:
+    match expr:
+        case Number(value):
+            return value
+        ...
+        case BinaryOp(left, operator, right):
+            lv = evaluate(left, env)
+            rv = evaluate(right, env)
+            match operator:
+                case "+":
+                    return lv + rv
+                ...
+                case _:
+                    assert_never(operator)
+        case _:
+            assert_never(expr)
+    </code></pre>
+    <div class="cards" style="--n:1; gap:12px">
+      <div class="card fragment"><p class="idx">CLASS · Number(value)</p><p>checks that it is a <code>Number</code> and extracts its field.</p></div>
+      <div class="card fragment"><p class="idx">LITERAL · "+"</p><p>compares with <code>==</code>.</p></div>
+      <div class="card fragment"><p class="idx">CAPTURE · value, left</p><p>matches anything, binds the name.</p></div>
+      <div class="card warm fragment"><p class="idx">WILDCARD · _</p><p>matches anything, binds nothing.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>By position, or by keyword</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+print(BinaryOp.__match_args__)
+# ('left', 'operator', 'right')
+
+def is_sum(expr: Expr) -> bool:
+    match expr:
+        case BinaryOp(operator="+"):
+            return True
+        case _:
+            return False
+
+print(is_sum(e), is_sum(Number(1.0)))  # True False
+    </code></pre>
+    <div>
+      <p class="lead"><code>BinaryOp(left, operator, right)</code> works because <code>@dataclass</code> stores the order of the fields in <code>__match_args__</code>.</p>
+      <p>With keywords, only the named fields are checked. This is clearer for nodes with many fields. The two forms can be combined.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A common mistake: what does this print?</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+ZERO = 0.0
+
+def is_zero(expr: Expr) -> bool:
+    match expr:
+        case Number(ZERO):
+            return True
+        case _:
+            return False
+
+print(is_zero(Number(5.0)))
+    </code></pre>
+    <div>
+      <p class="answer fragment" style="font-family:var(--serif); font-size:44px; color:var(--warm); margin:0 0 .3em">True.</p>
+      <p class="fragment">A plain name in a pattern is always a <strong>capture</strong>: <code>ZERO</code> is bound to 5.0, not compared. Use a literal instead: <code>case Number(0.0)</code>.</p>
+      <p class="fragment note">Only dotted names, such as <code>math.pi</code>, are compared by value. Also, <code>case Number:</code> without parentheses captures <em>everything</em>; the parentheses are required.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Nested patterns: a simplifier</h2>
+  <pre><code class="language-python" data-trim>
+def simplify(expr: Expr) -> Expr:
+    match expr:
+        case BinaryOp(Number(0), "+", other) | BinaryOp(other, "+", Number(0)):
+            return simplify(other)
+        case BinaryOp(Number(1), "*", other) | BinaryOp(other, "*", Number(1)):
+            return simplify(other)
+        case BinaryOp(Number(0), "*", _) | BinaryOp(_, "*", Number(0)):
+            return Number(0.0)
+        case BinaryOp(Number(a), operator, Number(b)) if operator != "/" or b != 0:
+            return Number(evaluate(expr, {}))
+        case BinaryOp(left, operator, right):
+            return BinaryOp(simplify(left), operator, simplify(right))
+        case Number() | Variable():
+            return expr
+        case _:
+            assert_never(expr)
+  </code></pre>
+  <p class="punch" style="max-width:none">The first three cases implement the rules 0 + e = e, 1 · e = e, 0 · e = 0.</p>
+</section>
+
+<section>
+  <h2>New constructs in this example</h2>
+  <div class="cards" style="--n:3">
+    <div class="card"><p class="idx">OR-PATTERN · |</p><p><code>A(other) | B(other)</code></p><p>tries the alternatives in order. All must bind the same names, so <code>other</code> is defined whichever one matched.</p></div>
+    <div class="card"><p class="idx">GUARD · if</p><p><code>… if b != 0</code></p><p>a condition checked after the pattern matches, using the names it bound.</p></div>
+    <div class="card warm"><p class="idx">ORDER</p><p><code>case BinaryOp(left, …)</code></p><p>cases are tried from top to bottom. If the general case came first, the specific ones would never run.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><code>simplify</code>, example 1: <code>0 + (x * 1)</code></h2>
+  <div class="split">
+    <figure class="diagram"><svg viewBox="0 0 470 230" role="img" aria-label="simplify turns 0 + (x * 1) into x">
+      <defs><marker id="a28" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs>
+      <line x1="120" y1="64" x2="60" y2="104" class="d-line"/><line x1="120" y1="64" x2="190" y2="104" class="d-line"/>
+      <line x1="190" y1="138" x2="150" y2="172" class="d-line"/><line x1="190" y1="138" x2="230" y2="172" class="d-line"/>
+      <rect x="99" y="30" width="42" height="34" rx="17" class="d-box-accent"/><text x="120" y="52" text-anchor="middle" class="d-t-m">+</text>
+      <rect x="39" y="104" width="42" height="34" rx="17" class="d-box"/><text x="60" y="126" text-anchor="middle" class="d-t-m">0</text>
+      <rect x="169" y="104" width="42" height="34" rx="17" class="d-box-accent"/><text x="190" y="126" text-anchor="middle" class="d-t-m">*</text>
+      <rect x="129" y="172" width="42" height="34" rx="17" class="d-box-warm"/><text x="150" y="194" text-anchor="middle" class="d-t-m">x</text>
+      <rect x="209" y="172" width="42" height="34" rx="17" class="d-box"/><text x="230" y="194" text-anchor="middle" class="d-t-m">1</text>
+      <line x1="290" y1="118" x2="380" y2="118" class="d-arrow-accent" marker-end="url(#a28)"/>
+      <text x="335" y="106" text-anchor="middle" class="d-t-accent">simplify</text>
+      <rect x="400" y="101" width="42" height="34" rx="17" class="d-box-warm"/><text x="421" y="123" text-anchor="middle" class="d-t-m">x</text>
+    </svg></figure>
+    <div>
+      <p class="fragment"><strong>1.</strong> The root is <code>0 + …</code>. The first case matches, with <code>other</code> = <code>x * 1</code>. It calls <code>simplify(x * 1)</code>.</p>
+      <p class="fragment"><strong>2.</strong> <code>x * 1</code> matches the second case, with <code>other</code> = <code>x</code>. It calls <code>simplify(x)</code>.</p>
+      <p class="fragment"><strong>3.</strong> <code>x</code> is a <code>Variable</code>: the case <code>Number() | Variable()</code> returns it unchanged.</p>
+      <p class="fragment note">Two rules applied, one after the other, through the recursive calls.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>simplify</code>, example 2: <code>(2 + 3) * y</code></h2>
+  <div class="split">
+    <figure class="diagram"><svg viewBox="0 0 470 230" role="img" aria-label="simplify turns (2 + 3) * y into 5 * y">
+      <defs><marker id="a28b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs>
+      <line x1="120" y1="64" x2="70" y2="104" class="d-line"/><line x1="120" y1="64" x2="180" y2="104" class="d-line"/>
+      <line x1="70" y1="138" x2="30" y2="172" class="d-line"/><line x1="70" y1="138" x2="110" y2="172" class="d-line"/>
+      <rect x="99" y="30" width="42" height="34" rx="17" class="d-box-accent"/><text x="120" y="52" text-anchor="middle" class="d-t-m">*</text>
+      <rect x="49" y="104" width="42" height="34" rx="17" class="d-box-accent"/><text x="70" y="126" text-anchor="middle" class="d-t-m">+</text>
+      <rect x="159" y="104" width="42" height="34" rx="17" class="d-box"/><text x="180" y="126" text-anchor="middle" class="d-t-m">y</text>
+      <rect x="9" y="172" width="42" height="34" rx="17" class="d-box"/><text x="30" y="194" text-anchor="middle" class="d-t-m">2</text>
+      <rect x="89" y="172" width="42" height="34" rx="17" class="d-box"/><text x="110" y="194" text-anchor="middle" class="d-t-m">3</text>
+      <line x1="230" y1="118" x2="300" y2="118" class="d-arrow-accent" marker-end="url(#a28b)"/>
+      <text x="265" y="106" text-anchor="middle" class="d-t-accent">simplify</text>
+      <line x1="390" y1="64" x2="350" y2="104" class="d-line"/><line x1="390" y1="64" x2="430" y2="104" class="d-line"/>
+      <rect x="369" y="30" width="42" height="34" rx="17" class="d-box-accent"/><text x="390" y="52" text-anchor="middle" class="d-t-m">*</text>
+      <rect x="329" y="104" width="42" height="34" rx="17" class="d-box-warm"/><text x="350" y="126" text-anchor="middle" class="d-t-m">5</text>
+      <rect x="409" y="104" width="42" height="34" rx="17" class="d-box"/><text x="430" y="126" text-anchor="middle" class="d-t-m">y</text>
+    </svg></figure>
+    <div>
+      <p class="fragment"><strong>1.</strong> The root is <code>(2 + 3) * y</code>. No rule matches it: no 0 or 1, and the left child is not a number.</p>
+      <p class="fragment"><strong>2.</strong> So the general <code>BinaryOp(left, operator, right)</code> case runs. It rebuilds the node with <code>simplify(2 + 3)</code> and <code>simplify(y)</code>.</p>
+      <p class="fragment"><strong>3.</strong> <code>2 + 3</code> has two numbers: the fourth case computes it and returns <code>Number(5.0)</code>. <code>y</code> stays <code>y</code>.</p>
+      <p class="fragment note">One pass only: if a rule becomes applicable after the children are simplified, it is not tried again.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Without <code>match</code>: <code>isinstance</code></h2>
+  <div class="split even">
+    <div>
+      <p class="cite" style="margin-bottom:.4em">One rule, without match</p>
+      <pre><code class="language-python" data-trim>
+def drop_zero_plus(expr: Expr) -> Expr:
+    if (
+        isinstance(expr, BinaryOp)
+        and expr.operator == "+"
+        and isinstance(expr.left, Number)
+        and expr.left.value == 0
+    ):
+        return expr.right
+    return expr
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite" style="margin-bottom:.4em">The same rule, as a pattern</p>
+      <pre><code class="language-python" data-trim>
+case BinaryOp(Number(0), "+", other):
+    return simplify(other)
+      </code></pre>
+      <p class="punch" style="margin-top:24px">Both do the same test. With <code>isinstance</code> the shape is split over four conditions; the pattern writes it directly.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Sequence patterns: the shape of a list</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def describe(items: list[int]) -> str:
+    match items:
+        case []:
+            return "empty"
+        case [x]:
+            return f"just {x}"
+        case [first, *rest]:
+            return f"{first} then {len(rest)} more"
+        case _:
+            raise AssertionError("unreachable")
+
+describe([1, 2, 3])        # '1 then 2 more'
+
+match "10 - 4 - 3".split():
+    case [*init, op, last]:
+        print(init, op, last)  # ['10', '-', '4'] - 3
+    </code></pre>
+    <div>
+      <p class="lead">Lists are matched by length and position.</p>
+      <p><code>*rest</code> collects the remaining elements in a new list, possibly empty. A starred name can appear anywhere in the pattern, but only once.</p>
+      <p class="note">Why the last <code>case _</code>? The checker does not reason about list lengths, so without it, it reports a missing return.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ part 4: exhaustiveness ============ -->
+
+<section class="part">
+  <p class="kicker">Exhaustiveness</p>
+  <h2>Finding <em>missing cases</em> before running</h2>
+</section>
+
+<section>
+  <h2>A common bug: a missing case</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate_forgetful(expr: Expr, env: Env) -> float:
+    match expr:
+        case Number(value):
+            return value
+        case BinaryOp(left, _, right):
+            return (evaluate_forgetful(left, env)
+                    + evaluate_forgetful(right, env))
+        # no case for Variable
+
+evaluate_forgetful(
+    BinaryOp(Number(1.0), "+", Variable("x")),
+    {"x": 2.0})
+# TypeError: unsupported operand type(s) for +:
+#            'float' and 'NoneType'
+    </code></pre>
+    <div>
+      <p class="lead">When you add a kind of node, it is easy to forget to update a function. Python does not complain at the <code>match</code>.</p>
+      <p>No case matches, so the function returns <code>None</code>. The error appears later, in the addition, and does not mention the missing case.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Narrowing: how the checker follows the cases</h2>
+  <figure class="diagram" style="margin-top:4px"><svg viewBox="0 0 1000 340" role="img" aria-label="After each failed case the checker removes one alternative from the type of expr; a Variable reaches the end with no return">
+    <defs><marker id="a35" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <text x="0" y="16" class="d-t-mono-s">the type of expr, line by line</text>
+    <rect x="0" y="34" width="420" height="50" rx="6" class="d-box"/>
+    <text x="210" y="65" text-anchor="middle" class="d-t-m">Number | Variable | BinaryOp</text>
+    <line x1="210" y1="88" x2="210" y2="128" class="d-arrow" marker-end="url(#a35)"/>
+    <text x="230" y="114" class="d-t-muted">case Number(value) did not match</text>
+    <rect x="70" y="134" width="280" height="50" rx="6" class="d-box"/>
+    <text x="210" y="165" text-anchor="middle" class="d-t-m">Variable | BinaryOp</text>
+    <line x1="210" y1="188" x2="210" y2="228" class="d-arrow" marker-end="url(#a35)"/>
+    <text x="230" y="214" class="d-t-muted">case BinaryOp(…) did not match</text>
+    <rect x="130" y="234" width="160" height="50" rx="6" class="d-box-warm"/>
+    <text x="210" y="265" text-anchor="middle" class="d-t-m">Variable</text>
+    <line x1="296" y1="259" x2="520" y2="259" class="d-arrow" marker-end="url(#a35)"/>
+    <text x="408" y="248" text-anchor="middle" class="d-t-muted">end of function</text>
+    <rect x="528" y="226" width="472" height="66" rx="6" class="d-box-soft"/>
+    <text x="546" y="254" class="d-t-m">checker_catches.py:49: error:</text>
+    <text x="546" y="278" class="d-t-m">Missing return statement</text>
+    <text x="0" y="326" class="d-t-serif">With a class hierarchy the remaining type is just Expr: no error.</text>
+  </svg></figure>
+</section>
+
+<section>
+  <h2>Exhaustiveness with <code>assert_never</code></h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+from typing import assert_never
+
+def evaluate(expr: Expr, env: Env) -> float:
+    match expr:
+        ...
+        case _:
+            assert_never(expr)
+      </code></pre>
+      <p class="cite" style="margin-top:18px">mypy, with the Variable case deleted</p>
+      <pre><code class="language-text" data-trim>
+error: Argument 1 to "assert_never" has
+  incompatible type "Variable"; expected "Never"
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">Its parameter has type <code>Never</code>, the type with no values.</p>
+      <p>The call type-checks only if the cases above have removed every alternative. If it is reached at run time, it raises an error.</p>
+      <p class="punch">The <code>raise ValueError</code> of lecture 1A finds the same bug only at run time. With <code>assert_never</code> the checker reports it and names the missing case.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Choices that let the checker find mistakes</h2>
+  <div class="acc">
+    <div>
+      <div class="acc-item"><span class="yr">01</span>a union of dataclasses<div class="acc-detail fragment fade-in-then-out">Instead of a class hierarchy. The cases are a closed list, so the checker can find a match that misses one.</div></div>
+      <div class="acc-item"><span class="yr">02</span><code>frozen=True</code><div class="acc-detail fragment fade-in-then-out">Instead of mutable nodes. The checker reports any assignment to a field of a node.</div></div>
+    </div>
+    <div>
+      <div class="acc-item"><span class="yr">03</span><code>Literal</code> operators<div class="acc-detail fragment fade-in-then-out">Instead of <code>str</code>. A wrong operator is reported where the tree is built.</div></div>
+      <div class="acc-item"><span class="yr">04</span><code>assert_never</code><div class="acc-detail fragment fade-in-then-out">Instead of <code>raise ValueError</code>. The checker reports a missing case before running.</div></div>
+    </div>
+  </div>
+  <p class="punch" style="margin-top:28px; max-width:none">In practice: after adding a node to the union, run the checker; it lists the functions that need a new case.</p>
+</section>
+
+<!-- ============ your turn ============ -->
+
+<section class="part">
+  <p class="kicker">In class</p>
+  <h2>Exercises</h2>
+</section>
+
+<section>
+  <h2>Strings: what exercise 1 needs</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+a = "2.0"
+b = "x"
+
+print("(" + a + " + " + b + ")")   # (2.0 + x)
+print(f"({a} + {b})")               # (2.0 + x)
+
+v = 3.0
+print("v is " + str(v))             # v is 3.0
+print(f"v is {v}")                  # v is 3.0
+    </code></pre>
+    <div>
+      <p class="lead"><code>+</code> joins two strings. Both sides must be strings: <code>"v is " + v</code> is a <code>TypeError</code>.</p>
+      <p><code>str(v)</code> turns a number into its text.</p>
+      <p>An <strong>f-string</strong>, <code>f"..."</code>, does both: each <code>{expression}</code> is evaluated and its text inserted.</p>
+      <p class="note">A function can call itself on the children of a node, as <code>evaluate</code> does.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 1 · Print a tree</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def show(expr: Expr) -> str: ...
+
+show(e)
+# '(2.0 + (x * 3.0))'
+show(Number(7.0))
+# '7.0'
+show(left_first)    # 10 - 4 - 3
+# '((10.0 - 4.0) - 3.0)'
+    </code></pre>
+    <div>
+      <p class="cite">Level 1 of 3</p>
+      <ol>
+        <li>Write it in <code>code/lesson-02/exercises.py</code>: running it checks the examples of these slides.</li>
+        <li>One case per kind of node; an f-string for <code>BinaryOp</code>, with parentheses around every operation.</li>
+        <li>End with <code>case _: assert_never(expr)</code>, and run <code>mypy</code>: no errors.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · Adding a node</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class Negate:
+    operand: Expr
+
+type Expr = Number | Variable | BinaryOp | Negate
+
+evaluate(Negate(Variable("x")), {"x": 4.0})  # -4.0
+evaluate(Negate(Negate(Number(3.0))), {})    # 3.0
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 3</p>
+      <ol>
+        <li>Add <code>Negate</code> to the union. Run <code>mypy</code> <em>before</em> touching any function, and write down what it reports.</li>
+        <li>Fix each function it names, starting with <code>evaluate</code> and your <code>show</code>.</li>
+        <li>In Python, <code>-v</code> is the negation of <code>v</code>.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · Derivatives: the rules</h2>
+  <div class="split">
+    <pre><code class="language-text" data-trim>
+d/dx  c      =  0          a number
+d/dx  x      =  1
+d/dx  y      =  0          another variable
+d/dx  f + g  =  f' + g'
+d/dx  f - g  =  f' - g'
+d/dx  f * g  =  f' * g + f * g'
+    </code></pre>
+    <div>
+      <p class="lead">The derivative of an expression is another expression.</p>
+      <p>Each rule says what to do for one kind of node. The rules for <code>+</code>, <code>-</code> and <code>*</code> use the derivatives of the children <code>f</code> and <code>g</code>, written <code>f'</code> and <code>g'</code>: a recursive call, as in <code>evaluate</code>.</p>
+      <p class="note">The result is a tree, so it can be printed with <code>show</code> or evaluated.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · Derivatives: what to write</h2>
+  <p class="lead">Write <code>derive(expr: Expr, x: str) -&gt; Expr</code>. It computes no number: it builds a <strong>new tree</strong> by applying the rules. Printed with <code>show</code>:</p>
+  <table style="font-size:.8em; margin-top:10px">
+    <tr><th>expression</th><th>show(derive(expression, "x"))</th><th>rule used</th><th>in maths</th></tr>
+    <tr><td><code>x + 5</code></td><td><code>(1.0 + 0.0)</code></td><td>f' + g'</td><td>1</td></tr>
+    <tr><td><code>3 * x</code></td><td><code>((0.0 * x) + (3.0 * 1.0))</code></td><td>f' * g + f * g'</td><td>3</td></tr>
+    <tr><td><code>x * x</code></td><td><code>((1.0 * x) + (x * 1.0))</code></td><td>f' * g + f * g'</td><td>2x</td></tr>
+  </table>
+  <p class="cite" style="margin-top:14px">Level 3 of 3</p>
+  <p>One case per kind of node, one rule per case; for <code>BinaryOp</code>, a nested <code>match</code> on the operator. For <code>/</code>, raise a <code>ValueError</code>. End with <code>assert_never</code> and run <code>mypy</code>.</p>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>
