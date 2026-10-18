@@ -478,15 +478,33 @@ def parse_bin(tokens, i):
 </section>
 
 <section>
-  <h2>Tokens</h2>
+  <h2>Tokens: the same first step as the calculator</h2>
+  <p class="cite">The calculator: our <code>tokenize</code></p>
+  <pre><code class="language-python" data-trim>
+tokenize("(1 + 2) - 3")
+# ['(', '1', '+', '2', ')', '-', '3']
+  </code></pre>
+  <p class="cite" style="margin-top:24px">Lark: the lexer built from the grammar</p>
   <pre><code class="language-python" data-trim>
 print(list(parser.lex("(1 + 2) - 3")))
   </code></pre>
-  <div class="chips tokens" style="margin-top:28px">
+  <div class="chips tokens" style="margin-top:10px">
     <span><small>LPAR</small>(</span><span class="hot"><small>NUMBER</small>1</span><span class="odd"><small>OP</small>+</span><span class="hot"><small>NUMBER</small>2</span><span><small>RPAR</small>)</span><span class="odd"><small>OP</small>-</span><span class="hot"><small>NUMBER</small>3</span>
   </div>
-  <p style="margin-top:20px">Spaces are dropped. Each token has a <strong>type</strong> (the terminal) and a <strong>value</strong> (the matched text).</p>
-  <p class="note"><code>LPAR</code> and <code>RPAR</code> are the names Lark gives to the strings <code>"("</code> and <code>")"</code> in the grammar.</p>
+  <p>The pieces are the same, and the spaces are dropped in both. We did not write Lark's lexer: Lark built it from the terminals of the grammar.</p>
+</section>
+
+<section>
+  <h2>What a token contains</h2>
+  <table style="font-size:.8em">
+    <tr><th>in the grammar</th><th>token type</th><th>token value</th></tr>
+    <tr><td>NUMBER: /[0-9]+/</td><td><code>NUMBER</code></td><td><code>'1'</code>, <code>'2'</code>, <code>'3'</code></td></tr>
+    <tr><td>OP: "+" | "-" | ...</td><td><code>OP</code></td><td><code>'+'</code>, <code>'-'</code></td></tr>
+    <tr><td>"(" and ")" in paren</td><td><code>LPAR</code>, <code>RPAR</code></td><td><code>'('</code>, <code>')'</code></td></tr>
+    <tr><td>%ignore WS</td><td>no token</td><td></td></tr>
+  </table>
+  <p style="margin-top:20px">Our <code>tokenize</code> returned plain strings. A Lark token also records which terminal matched: its <strong>type</strong>. The matched text is its <strong>value</strong>, and it is still a string: <code>'1'</code>, not the number 1.</p>
+  <p class="note"><code>LPAR</code> and <code>RPAR</code> are names Lark makes up for strings written directly in a rule. The type is what the transform will look at later, with the pattern <code>Token(type="NUMBER", value=digits)</code>.</p>
 </section>
 
 <section>
