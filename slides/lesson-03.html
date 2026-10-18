@@ -469,7 +469,7 @@ def parse_bin(tokens, i):
       <p><code>parse_expr</code> tries <code>parse_bin</code>, which calls <code>parse_expr</code> at the same <code>i</code>, and so on: <code>RecursionError</code>. This is <strong>left recursion</strong>.</p>
     </div>
   </div>
-  <p class="note">By hand, the left-recursive rule is rewritten as a loop, <code>expr: mono (OP mono)*</code>, like <code>compute</code> in the calculator. Lark accepts left recursion as it is, so we keep the grammar as written.</p>
+  <p class="note">Lark accepts left recursion, so we keep the grammar as written.</p>
 </section>
 
 <section class="part">
