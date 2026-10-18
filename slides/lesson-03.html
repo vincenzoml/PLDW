@@ -488,6 +488,9 @@ tokenize("(1 + 2) - 3")
   <pre><code class="language-python" data-trim>
 print(list(parser.lex("(1 + 2) - 3")))
   </code></pre>
+  <pre class="out"><code data-trim style="white-space:pre-wrap">
+[Token('LPAR', '('), Token('NUMBER', '1'), Token('OP', '+'), Token('NUMBER', '2'), Token('RPAR', ')'), Token('OP', '-'), Token('NUMBER', '3')]
+  </code></pre>
   <div class="chips tokens" style="margin-top:10px">
     <span><small>LPAR</small>(</span><span class="hot"><small>NUMBER</small>1</span><span class="odd"><small>OP</small>+</span><span class="hot"><small>NUMBER</small>2</span><span><small>RPAR</small>)</span><span class="odd"><small>OP</small>-</span><span class="hot"><small>NUMBER</small>3</span>
   </div>
