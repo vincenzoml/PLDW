@@ -444,36 +444,32 @@ parser = Lark(grammar, start="expr")
 
 <section>
   <h2>Why not write the parser by hand?</h2>
-  <div class="split flip">
+  <p>By hand, one usually writes one function per rule (<strong>recursive descent</strong>). This works for most rules, but not for ours.</p>
+  <div class="cols" style="display:grid; grid-template-columns:1fr 1fr; gap:40px">
     <div>
+      <p class="cite">Works: the rule starts with a token</p>
       <pre><code class="language-python" data-trim>
-# expr: bin | mono
-def parse_expr(tokens, i):
-    return parse_bin(tokens, i)   # try bin first
-
+# paren: "(" expr ")"
+def parse_paren(tokens, i):
+    expect(tokens, i, "(")
+    e, i = parse_expr(tokens, i + 1)
+    expect(tokens, i, ")")
+    return e, i + 1
+      </code></pre>
+      <p>It reads <code>(</code> before calling <code>parse_expr</code>, so each call starts further on. The calls end when the tokens end.</p>
+    </div>
+    <div>
+      <p class="cite">Loops: the rule starts with itself</p>
+      <pre><code class="language-python" data-trim>
 # bin: expr OP mono
 def parse_bin(tokens, i):
     left, i = parse_expr(tokens, i)
-    op = tokens[i]
-    right, i = parse_mono(tokens, i + 1)
-    return (op, left, right), i
+    ...
       </code></pre>
-      <pre class="out"><code data-trim>
-parse_expr(tokens, 0)
-  parse_bin(tokens, 0)
-    parse_expr(tokens, 0)
-      parse_bin(tokens, 0)
-        ...
-RecursionError: maximum recursion depth exceeded
-      </code></pre>
-    </div>
-    <div>
-      <p class="lead">A parser written by hand usually has one function per rule. Each function reads tokens from position <code>i</code> and returns the node it built and the new position. This is called <strong>recursive descent</strong>.</p>
-      <p>The rule <code>bin</code> starts with <code>expr</code>, so <code>parse_bin</code> calls <code>parse_expr</code> at the same position: no token has been read. The two functions call each other until Python stops them.</p>
-      <p>The usual fix is to write the rule with a loop: <code>expr: mono (OP mono)*</code>. That loop is <code>compute</code>, in the calculator.</p>
-      <p class="note">Lark accepts left-recursive rules as they are. Parsing algorithms are not part of this course.</p>
+      <p><code>parse_expr</code> tries <code>parse_bin</code>, which calls <code>parse_expr</code> at the same <code>i</code>, and so on: <code>RecursionError</code>. This is <strong>left recursion</strong>.</p>
     </div>
   </div>
+  <p class="note">By hand, the left-recursive rule is rewritten as a loop, <code>expr: mono (OP mono)*</code>, like <code>compute</code> in the calculator. Lark accepts left recursion as it is, so we keep the grammar as written.</p>
 </section>
 
 <section class="part">
