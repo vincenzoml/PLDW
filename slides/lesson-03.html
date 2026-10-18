@@ -967,6 +967,65 @@ Error: Unexpected end-of-input. Expected one of:
 </section>
 
 <section>
+  <h2>Debugging, stage 1: the tokens</h2>
+  <pre><code class="language-python" data-trim>
+s = "10 - 4 - 3"
+print(list(parser.lex(s)))
+  </code></pre>
+  <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
+[Token('NUMBER', '10'), Token('OP', '-'), Token('NUMBER', '4'), Token('OP', '-'), Token('NUMBER', '3')]
+  </code></pre>
+  <p>Five tokens, in the order of the text. <code>10</code> is one <code>NUMBER</code>, not two; the spaces are gone.</p>
+  <p class="note">A problem here would be, for example, <code>-4</code> read as one token, or a character that no terminal matches.</p>
+</section>
+
+<section>
+  <h2>Debugging, stage 2: the parse tree</h2>
+  <div class="split flip">
+    <pre class="out"><code class="language-text" data-trim>
+expr
+  bin
+    expr
+      bin
+        expr
+          mono
+            ground	10
+        -
+        mono
+          ground	4
+    -
+    mono
+      ground	3
+    </code></pre>
+    <div>
+      <pre><code class="language-python" data-trim>
+print(parser.parse(s).pretty())
+      </code></pre>
+      <p>Indentation shows the children of each node. The outer <code>bin</code> has three children: an <code>expr</code>, the operator <code>-</code>, and the <code>mono</code> for 3.</p>
+      <p>The inner <code>bin</code>, <code>10 - 4</code>, is the left operand of the outer one. So the tree groups as <code>(10 - 4) - 3</code>.</p>
+      <p class="note">If the grouping is not the one you expected, the grammar is the problem, not the evaluator.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Debugging, stage 3: the AST</h2>
+  <pre><code class="language-python" data-trim>
+print(parse_ast(s))
+print(evaluate(parse_ast(s)))
+  </code></pre>
+  <pre class="out"><code class="language-text" data-trim>
+BinaryExpression(op='-',
+  left=BinaryExpression(op='-',
+    left=Number(value=10), right=Number(value=4)),
+  right=Number(value=3))
+3
+  </code></pre>
+  <p>The same grouping as the parse tree, without the nodes that only the grammar needs (<code>expr</code>, <code>mono</code>, <code>ground</code>). The value is 3.</p>
+  <p class="note">Output re-indented; Python prints the AST on one line. If this AST is right and the value is wrong, the bug is in <code>evaluate</code>.</p>
+</section>
+
+<section>
   <h2>Adding comparisons</h2>
   <div class="split flip">
     <pre style="font-size:.54em"><code class="language-python" data-trim>
