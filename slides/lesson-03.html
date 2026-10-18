@@ -745,8 +745,9 @@ BinaryExpression(op='-',
   left=Tree('paren', [BinaryExpression(...)]),
   right=Number(value=3))
       </code></pre>
-      <p class="punch">If a rule has no method, there is no error: its Lark <code>Tree</code> stays inside the AST.</p>
-      <p class="note">With <code>match</code>, the last case raises an error. Code in <code>alternatives.py</code>.</p>
+      <p class="punch">There is no method for <code>paren</code>, and Lark does not complain: it leaves that node as it was, a Lark <code>Tree</code>, in the middle of our AST.</p>
+      <p>The mistake shows up only later, when <code>evaluate</code> finds a node it does not know. With our <code>match</code> version, a missing case raises an error during the transform itself.</p>
+      <p class="note">Code in <code>alternatives.py</code>.</p>
     </div>
   </div>
 </section>
