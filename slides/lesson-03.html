@@ -511,6 +511,32 @@ print(list(parser.lex("(1 + 2) - 3")))
 </section>
 
 <section>
+  <h2>A token is a string</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+# in Lark, simplified
+class Token(str):
+    ...
+
+t = list(parser.lex("(1 + 2) - 3"))[2]
+
+t                    # Token('OP', '+')
+isinstance(t, str)   # True
+t == "+"             # True
+t.type               # 'OP'
+t.value              # '+'
+t.line, t.column     # (1, 4)
+    </code></pre>
+    <div>
+      <p class="lead"><code>class Token(str)</code> means that <code>Token</code> is a <strong>subclass</strong> of <code>str</code>: every token is also a string.</p>
+      <p>From <code>str</code> it inherits comparison, printing and the string methods, so <code>t == "+"</code> compares the text. Lark adds the attributes: the type, and the position in the input, which it uses in error messages.</p>
+      <p>It is not a dataclass. <code>Token('OP', '+')</code> is only how a token prints itself.</p>
+      <p class="note">In a <code>match</code>, write the attributes by keyword: <code>Token(type="OP", value=op)</code>. <code>Token("OP", op)</code> raises a <code>TypeError</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
   <h2>The parse tree</h2>
   <div class="split flip">
     <figure class="diagram"><svg viewBox="0 0 480 520" style="height:450px;width:auto" role="img" aria-label="The parse tree of (1 + 2) - 3: sixteen nodes, of which two bin nodes and three ground nodes carry meaning">
