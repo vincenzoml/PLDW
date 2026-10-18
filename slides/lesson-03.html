@@ -795,8 +795,8 @@ def evaluate(ast: Expression) -&gt; int:
     </code></pre>
     <div>
       <p class="lead">Values are <code>int</code>, so the result cannot be <code>-3.5</code>. Which integer?</p>
-      <p class="fragment">Here <strong>-4</strong>: <code>//</code> rounds towards minus infinity. C and Java truncate, giving <strong>-3</strong>.</p>
-      <p class="note fragment">We use Python's <code>//</code> and <code>%</code>, for which \( a = (a / b) \cdot b + a \bmod b \) holds. With truncation, <code>%</code> would have to change too.</p>
+      <p class="fragment">-3.5 lies between -4 and -3. Python's <code>//</code> always takes the smaller one: <strong>-4</strong>. C and Java drop the decimal part: <strong>-3</strong>.</p>
+      <p class="note fragment">The remainder <code>%</code> must agree with the quotient, so that quotient · 2 + remainder = -7. In Python, <code>(0-7) % 2</code> is 1, since -4 · 2 + 1 = -7. In C it is -1, since -3 · 2 - 1 = -7.</p>
     </div>
   </div>
 </section>
