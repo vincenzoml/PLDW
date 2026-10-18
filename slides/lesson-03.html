@@ -820,7 +820,7 @@ def evaluate(ast: Expression) -&gt; int:
   </svg></figure>
   <div class="cards" style="--n:3; margin-top:18px">
     <div class="card"><p class="idx">1 · SYNTAX ERROR</p><p>Raised by Lark before evaluation: <code>1 +</code> is not a program.</p></div>
-    <div class="card"><p class="idx">2 · INTERNAL ERROR</p><p><code>Unexpected parse tree node</code>: the grammar and the transform disagree. This is a bug in the interpreter.</p></div>
+    <div class="card"><p class="idx">2 · INTERNAL ERROR</p><p>Raised by the last case of <code>transform_parse_tree</code>, <code>Unexpected parse tree node</code>. It happens if we add a rule to the grammar and forget its case in the transform. No input can cause it: the mistake is ours, not the user's.</p></div>
     <div class="card warm"><p class="idx">3 · RUNTIME ERROR</p><p><code>1/(2-2)</code> is a valid program with no value. We raise a <code>ValueError</code>.</p></div>
   </div>
   <p class="note">Without the check, Python would raise <code>ZeroDivisionError</code>. We raise our own error so that the language defines it. Returning infinity or 0 would also be possible; the language has to pick one.</p>
