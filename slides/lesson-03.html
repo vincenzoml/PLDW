@@ -444,21 +444,34 @@ parser = Lark(grammar, start="expr")
 
 <section>
   <h2>Why not write the parser by hand?</h2>
-  <div class="split">
-    <figure class="diagram"><svg viewBox="0 0 520 280" role="img" aria-label="A hand-written parser for bin: expr OP mono calls parse expr, which tries bin, which calls parse expr again, without reading a character">
-      <defs><marker id="rd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warm)"/></marker></defs>
-      <rect x="20" y="100" width="170" height="60" rx="6" class="d-box"/><text x="105" y="136" text-anchor="middle" class="d-t-m">parse expr</text>
-      <rect x="330" y="100" width="170" height="60" rx="6" class="d-box"/><text x="415" y="136" text-anchor="middle" class="d-t-m">parse bin</text>
-      <path d="M 105 96 C 105 30, 415 30, 415 96" class="d-arrow-warm" marker-end="url(#rd)"/>
-      <text x="260" y="38" text-anchor="middle" class="d-t-warm">try a bin first</text>
-      <path d="M 415 164 C 415 230, 105 230, 105 164" class="d-arrow-warm" marker-end="url(#rd)"/>
-      <text x="260" y="246" text-anchor="middle" class="d-t-warm">its left operand is an expr</text>
-      <text x="260" y="136" text-anchor="middle" class="d-t-serif">no input read</text>
-    </svg></figure>
+  <div class="split flip">
     <div>
-      <p class="lead">A hand-written parser usually has one function per rule: <strong>recursive descent</strong>.</p>
-      <p>With a left-recursive rule, <em>parse expr</em> calls itself before reading any input, and never terminates.</p>
-      <p class="note">The usual fix is to rewrite the grammar with a loop. Lark handles left recursion directly. Parsing algorithms are not part of this course.</p>
+      <pre><code class="language-python" data-trim>
+# expr: bin | mono
+def parse_expr(tokens, i):
+    return parse_bin(tokens, i)   # try bin first
+
+# bin: expr OP mono
+def parse_bin(tokens, i):
+    left, i = parse_expr(tokens, i)
+    op = tokens[i]
+    right, i = parse_mono(tokens, i + 1)
+    return (op, left, right), i
+      </code></pre>
+      <pre class="out"><code data-trim>
+parse_expr(tokens, 0)
+  parse_bin(tokens, 0)
+    parse_expr(tokens, 0)
+      parse_bin(tokens, 0)
+        ...
+RecursionError: maximum recursion depth exceeded
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">A parser written by hand usually has one function per rule. Each function reads tokens from position <code>i</code> and returns the node it built and the new position. This is called <strong>recursive descent</strong>.</p>
+      <p>The rule <code>bin</code> starts with <code>expr</code>, so <code>parse_bin</code> calls <code>parse_expr</code> at the same position: no token has been read. The two functions call each other until Python stops them.</p>
+      <p>The usual fix is to write the rule with a loop: <code>expr: mono (OP mono)*</code>. That loop is <code>compute</code>, in the calculator.</p>
+      <p class="note">Lark accepts left-recursive rules as they are. Parsing algorithms are not part of this course.</p>
     </div>
   </div>
 </section>
