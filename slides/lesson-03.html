@@ -1116,7 +1116,7 @@ evaluate_string("2-3*4")
 evaluate(parse_ast_prec("2-3*4"))
     </code></pre>
     <div>
-      <p class="cite">Level 1 of 4</p>
+      <p class="cite">Level 1 of 6</p>
       <ol>
         <li>For each input, draw the AST on paper and write its value, before running anything.</li>
         <li>Run them. Where were you wrong, and which grammar rule decided it?</li>
@@ -1135,7 +1135,7 @@ evaluate_string("2^3^2")     # 64: left to right
 evaluate_string("2^(0-1)")   # ?
     </code></pre>
     <div>
-      <p class="cite">Level 2 of 4</p>
+      <p class="cite">Level 2 of 6</p>
       <ol>
         <li>Add <code>^</code>, power, to the flat grammar: <code>OP</code>, <code>Op</code>, the transform, the evaluator.</li>
         <li>Run <code>mypy</code> before the evaluator has its case. What does it say?</li>
@@ -1156,7 +1156,7 @@ evaluate_string("--1")        # ?
 evaluate_string("1--2")       # ?
     </code></pre>
     <div>
-      <p class="cite">Level 3 of 4</p>
+      <p class="cite">Level 3 of 6</p>
       <ol>
         <li>Write down what the three <code>?</code> should be, before you start.</li>
         <li>A new rule, a new node, a new case in the transform, a new case in the evaluator.</li>
@@ -1180,13 +1180,66 @@ calc("(1+2")        # ValueError
 calc("7/(1-1)")     # ValueError
     </code></pre>
     <div>
-      <p class="cite">Level 4 of 4 · take home</p>
+      <p class="cite">Level 4 of 6 · take home</p>
       <ol>
         <li>Rewrite the take-home calculator using <code>precedence.py</code>.</li>
         <li>Add <code>^</code> as a new level, tighter than <code>*</code>, right-associative. Hint: a named terminal and a right-recursive rule.</li>
         <li>All errors must be <code>ValueError</code>: convert Lark's exceptions.</li>
         <li>Add a REPL.</li>
       </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 5 · At home: sets of integers</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def run(text: str) -&gt; str: ...
+
+run("{1, 2, 3} | {3, 4}")         # '{1, 2, 3, 4}'
+run("{1, 2, 3} &amp; {2, 3, 4}")      # '{2, 3}'
+run("{1, 2, 3} - {2}")            # '{1, 3}'
+run("{1, 2} | {3} &amp; {3, 4}")      # '{1, 2, 3}'
+run("({1, 2} | {3}) &amp; {3, 4}")    # '{3}'
+run("{} - {1}")                   # '{}'
+run("{1, 2")                      # ValueError
+    </code></pre>
+    <div>
+      <p class="cite">Level 5 of 6 · take home</p>
+      <ol>
+        <li>A new language, from the grammar to <code>evaluate</code>: set literals, <code>|</code> union, <code>&amp;</code> intersection, <code>-</code> difference, parentheses.</li>
+        <li><code>&amp;</code> binds tighter than <code>|</code> and <code>-</code>, which group from left to right.</li>
+        <li>Values are <code>frozenset[int]</code>. <code>run</code> returns the elements in increasing order, as in the examples.</li>
+        <li>All errors are <code>ValueError</code>.</li>
+      </ol>
+      <p class="note">The empty set <code>{}</code> must be accepted: in the grammar, the list of numbers is optional.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 6 · At home: intervals</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def run(text: str) -&gt; list[tuple[int, int]]: ...
+
+run("[1, 4] | [3, 8]")            # [(1, 8)]
+run("[1, 4] &amp; [3, 8]")            # [(3, 4)]
+run("[1, 4] | [3, 8] &amp; [6, 10]")  # [(1, 4), (6, 8)]
+run("[1, 5] | [6, 8]")            # [(1, 8)]
+run("[1, 2] &amp; [5, 6]")            # []
+run("[5, 1]")                     # ValueError
+    </code></pre>
+    <div>
+      <p class="cite">Level 6 of 6 · take home</p>
+      <ol>
+        <li>The same sets of integers, written as intervals: <code>[1, 4]</code> is 1, 2, 3, 4. Only <code>|</code> and <code>&amp;</code>.</li>
+        <li>A value is a list of intervals, <strong>sorted</strong>, with no two intervals that overlap or touch. Every result must have this form.</li>
+        <li>Write <code>normalize</code> first: sort, then merge. Union is <code>normalize(a + b)</code>.</li>
+        <li>Intersection: intersect every interval of one list with every interval of the other, then <code>normalize</code>.</li>
+      </ol>
+      <p class="note"><code>[1, 5] | [6, 8]</code> is <code>[(1, 8)]</code>: between 5 and 6 there is no integer.</p>
     </div>
   </div>
 </section>
