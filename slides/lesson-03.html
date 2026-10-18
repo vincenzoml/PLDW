@@ -55,6 +55,32 @@ calc("2 + x")          # error
 </section>
 
 <section>
+  <h2>The program, and its functions</h2>
+  <div class="split">
+    <pre><code class="language-python" data-trim>
+def calc(text: str) -&gt; int:
+    tokens = tokenize(text)
+    return compute(tokens)
+
+
+calc("12+5 - 3")
+# tokenize: ['12', '+', '5', '-', '3']
+# compute:  4
+
+calc("2 + x")
+# tokenize: ValueError
+#   unexpected character 'x' at position 4
+    </code></pre>
+    <div class="cards" style="--n:1; gap:14px; margin-top:0">
+      <div class="card"><p class="idx">tokenize(text) → list[str]</p><p>Cuts the text into numbers and operators, skipping spaces.</p></div>
+      <div class="card"><p class="idx">compute(pieces) → int</p><p>Checks that numbers and operators alternate, and keeps a running total from left to right.</p></div>
+      <div class="card"><p class="idx">number(piece) → int</p><p>Called by <code>compute</code> on each number: checks that it is made of digits, then converts it.</p></div>
+    </div>
+  </div>
+  <p class="note">The first version uses <code>text.split()</code> in place of <code>tokenize</code>. The next slides go through the functions one at a time.</p>
+</section>
+
+<section>
   <h2>With spaces: split, then one loop</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
@@ -174,37 +200,6 @@ def calc(text: str) -&gt; int:
       <p class="note">The pieces are called <strong>tokens</strong>. Cutting text into tokens is the first stage of every interpreter.</p>
     </div>
   </div>
-</section>
-
-<section>
-  <h2>How the functions fit together</h2>
-  <figure class="diagram"><svg viewBox="0 0 1120 280" role="img" aria-label="calc passes the text to tokenize, which returns a list of tokens; compute reads the list and calls number on each number piece; calc_with_spaces uses text.split() instead of tokenize">
-    <defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
-    <rect x="0" y="40" width="190" height="96" rx="6" class="d-box"/>
-    <text x="95" y="74" text-anchor="middle" class="d-t-mono-s">text</text>
-    <text x="95" y="112" text-anchor="middle" class="d-t-m">"12+5 - 3"</text>
-    <rect x="270" y="40" width="190" height="96" rx="6" class="d-box-soft"/>
-    <text x="365" y="74" text-anchor="middle" class="d-t-mono-s">tokenize</text>
-    <text x="365" y="112" text-anchor="middle" class="d-t">cut into pieces</text>
-    <rect x="540" y="40" width="250" height="96" rx="6" class="d-box-soft"/>
-    <text x="665" y="74" text-anchor="middle" class="d-t-mono-s">list of tokens</text>
-    <text x="665" y="112" text-anchor="middle" class="d-t-m">['12','+','5','-','3']</text>
-    <rect x="870" y="40" width="250" height="96" rx="6" class="d-box-accent"/>
-    <text x="995" y="74" text-anchor="middle" class="d-t-mono-s">compute</text>
-    <text x="995" y="112" text-anchor="middle" class="d-t">running total: 4</text>
-    <path d="M 194 88 L 266 88" class="d-arrow" marker-end="url(#fa)"/>
-    <path d="M 464 88 L 536 88" class="d-arrow" marker-end="url(#fa)"/>
-    <path d="M 794 88 L 866 88" class="d-arrow" marker-end="url(#fa)"/>
-    <rect x="870" y="200" width="250" height="70" rx="6" class="d-box"/>
-    <text x="995" y="230" text-anchor="middle" class="d-t-mono-s">number</text>
-    <text x="995" y="256" text-anchor="middle" class="d-t">one for each number</text>
-    <path d="M 995 140 L 995 196" class="d-arrow" marker-end="url(#fa)"/>
-    <path d="M 0 12 L 0 0 L 1120 0 L 1120 12" class="d-thin"/>
-    <text x="560" y="24" text-anchor="middle" class="d-t-muted">calc(text)</text>
-    <text x="365" y="190" text-anchor="middle" class="d-t-mono-s">calc_with_spaces: text.split() in its place</text>
-    <path d="M 365 140 L 365 168" class="d-thin"/>
-  </svg></figure>
-  <p class="note">Each stage can raise a <code>ValueError</code>: <code>tokenize</code> for a character it does not know, <code>compute</code> and <code>number</code> for a list that is not well formed.</p>
 </section>
 
 <section>
