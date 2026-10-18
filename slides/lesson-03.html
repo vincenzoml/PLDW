@@ -443,30 +443,6 @@ parser = Lark(grammar, start="expr")
 </section>
 
 <section>
-  <h2>An ambiguous grammar in practice</h2>
-  <pre><code class="language-python" data-trim>
-for algorithm in ["earley", "lalr"]:
-    p = Lark(grammar_ambiguous, start="expr", parser=algorithm)
-    tree = p.parse("10-4-3")
-    print(algorithm, evaluate(transform_parse_tree(tree)))  # 3 or 9
-  </code></pre>
-  <div class="split even" style="align-items:start">
-    <pre class="out"><code class="language-text" data-trim>
-$ PYTHONHASHSEED=1 python alternatives.py
-earley 9
-lalr 9
-$ PYTHONHASHSEED=2 python alternatives.py
-earley 3
-lalr 9
-    </code></pre>
-    <div>
-      <p><code>grammar_ambiguous</code> uses <code>bin: expr OP expr</code>. There is no error and no warning. Earley's choice depends on Python's string hashing, which changes between runs.</p>
-      <p class="punch">We want a grammar that gives exactly one tree for each input.</p>
-    </div>
-  </div>
-</section>
-
-<section>
   <h2>Why not write the parser by hand?</h2>
   <div class="split">
     <figure class="diagram"><svg viewBox="0 0 520 280" role="img" aria-label="A hand-written parser for bin: expr OP mono calls parse expr, which tries bin, which calls parse expr again, without reading a character">
