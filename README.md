@@ -38,6 +38,7 @@ Online at **<https://vincenzoml.github.io/PLDW/>**. They are plain HTML files: a
 - `slides/lesson-01a.html` — Lecture 1, part A: what a language is made of
 - `slides/lesson-01b.html` — Lecture 1, part B: Python, with VS Code
 - `slides/lesson-02.html` — Lecture 2: types and pattern matching in Python (code, exercises and solutions in `code/lesson-02/`)
+- `slides/lesson-03.html` — Lecture 3: a mini interpreter, from the calculator written by hand to a parser built with Lark (code and solutions in `code/lesson-03/`)
 
 ## Exam
 
