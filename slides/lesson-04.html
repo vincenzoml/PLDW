@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semantic domains</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+<style>
+  /* program output, set apart from the code that printed it */
+  .reveal pre.out code { background: var(--paper-2); color: var(--ink); border-left: 3px solid var(--warm); }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>Semantic domains</h1>
+  <p class="sub">Lecture 4. What the values of a language are, and where names get their meaning.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<!-- ================================================================ exercises 5 and 6 -->
+
+<section class="part">
+  <p class="kicker">Lecture 3, exercises 5 and 6</p>
+  <h2>Sets and intervals</h2>
+</section>
+
+<section>
+  <h2>Exercise 5: sets of integers</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+run("{1, 2, 3} | {3, 4}")         # '{1, 2, 3, 4}'
+run("{1, 2, 3} &amp; {2, 3, 4}")      # '{2, 3}'
+run("{1, 2, 3} - {2}")            # '{1, 3}'
+run("{1, 2} | {3} &amp; {3, 4}")      # '{1, 2, 3}'
+run("({1, 2} | {3}) &amp; {3, 4}")    # '{3}'
+run("{} - {1}")                   # '{}'
+run("{1, 2")                      # ValueError
+    </code></pre>
+    <div>
+      <p class="lead">A new language, built like the one of Lecture 3: grammar, AST, transform, <code>evaluate</code>.</p>
+      <p><code>|</code> is union, <code>&amp;</code> intersection, <code>-</code> difference. <code>&amp;</code> binds tighter than the other two.</p>
+      <p class="note">The solution is in <code>code/lesson-03/sets.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The grammar: two levels</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+grammar = r"""
+    ?expr: expr UNIONOP inter -&gt; bin
+         | inter
+    ?inter: inter INTEROP atom -&gt; bin
+          | atom
+    ?atom: set | paren
+    paren: "(" expr ")"
+    set: "{" (NUMBER ("," NUMBER)*)? "}"
+
+    NUMBER: /[0-9]+/
+    UNIONOP: "|" | "-"
+    INTEROP: "&amp;"
+
+    %import common.WS
+    %ignore WS
+"""
+    </code></pre>
+    <div>
+      <p class="lead">The same structure as <code>precedence.py</code>: one rule per level of precedence.</p>
+      <p><code>expr</code> is the outer level, with <code>|</code> and <code>-</code>. <code>inter</code> is the inner level, with <code>&amp;</code>. So <code>&amp;</code> is computed first.</p>
+      <p>Both rules are left-recursive, so both levels group from left to right.</p>
+      <p class="note">As in Lecture 3, <code>?</code> removes nodes with one child and <code>-&gt; bin</code> gives both levels the same node name.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The set literal</h2>
+  <pre><code class="language-python" data-trim>
+set: "{" (NUMBER ("," NUMBER)*)? "}"
+  </code></pre>
+  <table style="font-size:.8em; margin-top:10px">
+    <tr><th>piece</th><th>meaning</th></tr>
+    <tr><td>"{" ... "}"</td><td>the braces</td></tr>
+    <tr><td>NUMBER ("," NUMBER)*</td><td>a number, then zero or more times a comma and a number</td></tr>
+    <tr><td>( ... )?</td><td>all of the list is optional: <code>{}</code> is allowed</td></tr>
+  </table>
+  <p style="margin-top:18px">The parse tree of <code>{1, 2, 3}</code> is a node <code>set</code> whose children are the three <code>NUMBER</code> tokens. The braces and commas are anonymous strings, so they do not appear in the tree.</p>
+  <p class="note"><code>*</code> means "zero or more times" and <code>?</code> after a group means "optional", as in regular expressions.</p>
+</section>
+
+<section>
+  <h2>AST and transform</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class SetLiteral:
+    elements: frozenset[int]
+
+
+def transform(tree: Tree | str) -&gt; Expression:
+    match tree:
+        case Tree(data="paren", children=[subtree]):
+            return transform(subtree)
+        case Tree(data="set", children=numbers):
+            return SetLiteral(frozenset(
+                int(n) for n in numbers if isinstance(n, Token)))
+        case Tree(data="bin",
+                  children=[left, Token(value="|" | "&amp;" | "-" as op), right]):
+            return BinaryExpression(op, transform(left), transform(right))
+        case _:
+            raise ValueError(f"Unexpected parse tree node: {tree}")
+    </code></pre>
+    <div>
+      <p class="lead"><code>children=numbers</code> matches a list of any length, also empty.</p>
+      <p>The repeated <code>1</code> in <code>{1, 1}</code> disappears when the <code>frozenset</code> is built.</p>
+      <p><code>frozenset</code> is a set that cannot be changed after it is built. AST nodes are <code>frozen</code> dataclasses, and their fields should not change either.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Evaluating sets</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(ast: Expression) -&gt; frozenset[int]:
+    match ast:
+        case SetLiteral(elements):
+            return elements
+        case BinaryExpression(op, left, right):
+            left_value = evaluate(left)
+            right_value = evaluate(right)
+            match op:
+                case "|":
+                    return left_value | right_value
+                case "&amp;":
+                    return left_value &amp; right_value
+                case "-":
+                    return left_value - right_value
+                case _:
+                    assert_never(op)
+        case _:
+            assert_never(ast)
+    </code></pre>
+    <div>
+      <p class="lead">The evaluator of Lecture 3, with a different type of values: <code>frozenset[int]</code> instead of <code>int</code>.</p>
+      <p>Python's sets already have the three operations, with the same symbols.</p>
+      <p><code>show</code> turns a value into the text of the examples, with the elements sorted: <code>'{1, 2, 3}'</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Errors</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+from lark.exceptions import LarkError
+
+def run(text: str) -&gt; str:
+    try:
+        tree = parser.parse(text)
+    except LarkError as e:
+        raise ValueError(f"syntax error: {str(e).splitlines()[0]}") from e
+    return show(evaluate(transform(tree)))
+    </code></pre>
+    <div>
+      <p class="lead">Lark raises its own exceptions. <code>LarkError</code> is the class they all inherit from.</p>
+      <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
+'{1, 2': syntax error: Unexpected end-of-input. Expected one of:
+'{1,, 2}': syntax error: No terminal matches ',' in the current parser context, at line 1 col 4
+'{1} + {2}': syntax error: No terminal matches '+' in the current parser context, at line 1 col 5
+      </code></pre>
+      <p class="note"><code>from e</code> keeps Lark's exception attached to ours, so the traceback still shows where it came from.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 6: intervals</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+run("[1, 4] | [3, 8]")            # [(1, 8)]
+run("[1, 4] &amp; [3, 8]")            # [(3, 4)]
+run("[1, 4] | [3, 8] &amp; [6, 10]")  # [(1, 4), (6, 8)]
+run("[1, 5] | [6, 8]")            # [(1, 8)]
+run("[1, 2] &amp; [5, 6]")            # []
+run("[5, 1]")                     # ValueError
+    </code></pre>
+    <div>
+      <p class="lead">The same sets of integers, written as intervals. <code>[1, 4]</code> is the set 1, 2, 3, 4.</p>
+      <p>Grammar and AST change little. The work is in the values: a value is a list of intervals, and every result must be sorted, with no two intervals that overlap or touch.</p>
+      <p class="note">The solution is in <code>code/lesson-03/intervals.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Grammar and AST</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+interval: "[" NUMBER "," NUMBER "]"
+
+@dataclass(frozen=True)
+class Interval:
+    low: int
+    high: int
+
+        case Tree(data="interval",
+                  children=[Token(value=low), Token(value=high)]):
+            if int(low) &gt; int(high):
+                raise ValueError(
+                    f"empty interval [{low}, {high}]: {low} &gt; {high}")
+            return Interval(int(low), int(high))
+    </code></pre>
+    <div>
+      <p class="lead">The two levels of the grammar are those of exercise 5, without <code>-</code>. The literal changes: two numbers in square brackets.</p>
+      <p><code>[5, 1]</code> is accepted by the grammar, which cannot compare numbers. The check is in the transform.</p>
+      <p class="note">Another choice is possible: accept <code>[5, 1]</code> as the empty set. The language has to decide.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The normal form of a value</h2>
+  <figure class="diagram"><svg viewBox="0 0 960 250" role="img" aria-label="On a number line, the intervals [7,9], [1,2], [4,4], [3,3] become [1,4] and [7,9]: sorted, and with touching intervals merged">
+    <text x="0" y="55" class="d-t-mono-s">input</text>
+    <rect x="152" y="36" width="150" height="30" rx="4" class="d-box-soft"/><text x="227" y="57" text-anchor="middle" class="d-t-m">[1, 2]</text>
+    <rect x="332" y="36" width="60" height="30" rx="4" class="d-box-soft"/><text x="362" y="57" text-anchor="middle" class="d-t-m">[3, 3]</text>
+    <rect x="422" y="36" width="60" height="30" rx="4" class="d-box-soft"/><text x="452" y="57" text-anchor="middle" class="d-t-m">[4, 4]</text>
+    <rect x="692" y="36" width="240" height="30" rx="4" class="d-box-soft"/><text x="812" y="57" text-anchor="middle" class="d-t-m">[7, 9]</text>
+    <path d="M 120 110 L 950 110" class="d-thin"/>
+    <text x="182" y="135" text-anchor="middle" class="d-t-m">1</text><text x="272" y="135" text-anchor="middle" class="d-t-m">2</text>
+    <text x="362" y="135" text-anchor="middle" class="d-t-m">3</text><text x="452" y="135" text-anchor="middle" class="d-t-m">4</text>
+    <text x="542" y="135" text-anchor="middle" class="d-t-m">5</text><text x="632" y="135" text-anchor="middle" class="d-t-m">6</text>
+    <text x="722" y="135" text-anchor="middle" class="d-t-m">7</text><text x="812" y="135" text-anchor="middle" class="d-t-m">8</text>
+    <text x="902" y="135" text-anchor="middle" class="d-t-m">9</text>
+    <text x="0" y="195" class="d-t-mono-s">normal</text>
+    <rect x="152" y="176" width="330" height="30" rx="4" class="d-box-accent"/><text x="317" y="197" text-anchor="middle" class="d-t-m">[1, 4]</text>
+    <rect x="692" y="176" width="240" height="30" rx="4" class="d-box-accent"/><text x="812" y="197" text-anchor="middle" class="d-t-m">[7, 9]</text>
+    <text x="587" y="240" text-anchor="middle" class="d-t-muted">5 and 6 are missing: the two intervals stay apart</text>
+  </svg></figure>
+  <p>The same set of integers can be written in many ways. We choose one of them, the <strong>normal form</strong>: sorted, and with intervals that overlap or touch merged into one.</p>
+  <p class="note">With a normal form, two values are equal as sets exactly when they are equal as lists: <code>==</code> works.</p>
+</section>
+
+<section>
+  <h2><code>normalize</code></h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+type Value = list[tuple[int, int]]
+
+def normalize(intervals: Value) -&gt; Value:
+    result: Value = []
+    for low, high in sorted(intervals):
+        if result != [] and low &lt;= result[-1][1] + 1:
+            last_low, last_high = result[-1]
+            result[-1] = (last_low, max(last_high, high))
+        else:
+            result.append((low, high))
+    return result
+    </code></pre>
+    <div>
+      <p class="lead"><code>sorted</code> orders the pairs by their first element. Then one pass from left to right.</p>
+      <p>If the next interval starts before or right after the end of the last one, <code>low &lt;= last_high + 1</code>, the two are merged. Otherwise a new interval starts.</p>
+      <p><code>max</code> is needed because an interval can be inside the previous one: <code>[1, 9]</code> and <code>[2, 3]</code> give <code>[1, 9]</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>normalize</code>, step by step</h2>
+  <pre><code class="language-python" data-trim>
+normalize([(7, 9), (1, 2), (4, 4), (3, 3)])
+# sorted: [(1, 2), (3, 3), (4, 4), (7, 9)]
+  </code></pre>
+  <table style="font-size:.8em; margin-top:10px">
+    <tr><th>next interval</th><th>last in result</th><th>what happens</th><th>result</th></tr>
+    <tr><td>(1, 2)</td><td></td><td>result is empty: append</td><td><code>[(1, 2)]</code></td></tr>
+    <tr><td>(3, 3)</td><td>(1, 2)</td><td>3 &lt;= 2 + 1: merge</td><td><code>[(1, 3)]</code></td></tr>
+    <tr><td>(4, 4)</td><td>(1, 3)</td><td>4 &lt;= 3 + 1: merge</td><td><code>[(1, 4)]</code></td></tr>
+    <tr><td>(7, 9)</td><td>(1, 4)</td><td>7 &gt; 4 + 1: append</td><td><code>[(1, 4), (7, 9)]</code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Union and intersection</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def union(a: Value, b: Value) -&gt; Value:
+    return normalize(a + b)
+
+
+def intersection(a: Value, b: Value) -&gt; Value:
+    pieces = []
+    for low1, high1 in a:
+        for low2, high2 in b:
+            low = max(low1, low2)
+            high = min(high1, high2)
+            if low &lt;= high:
+                pieces.append((low, high))
+    return normalize(pieces)
+    </code></pre>
+    <div>
+      <p class="lead">Union: put the two lists together, then <code>normalize</code> does the work.</p>
+      <p>Intersection of two intervals: it starts at the larger of the two starts and ends at the smaller of the two ends. If the start is after the end, the two intervals have nothing in common.</p>
+      <p class="note">Every pair is tried: with lists of length n and m, n · m pairs. There is a faster way, which walks the two sorted lists together.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Intersection, step by step</h2>
+  <pre><code class="language-python" data-trim>
+run("([1, 3] | [6, 9]) &amp; ([2, 7] | [9, 12])")
+# a = [(1, 3), (6, 9)]     b = [(2, 7), (9, 12)]
+  </code></pre>
+  <table style="font-size:.8em; margin-top:10px">
+    <tr><th>from a</th><th>from b</th><th>max of starts, min of ends</th><th>kept?</th></tr>
+    <tr><td>(1, 3)</td><td>(2, 7)</td><td>(2, 3)</td><td>yes</td></tr>
+    <tr><td>(1, 3)</td><td>(9, 12)</td><td>(9, 3)</td><td>no: 9 &gt; 3</td></tr>
+    <tr><td>(6, 9)</td><td>(2, 7)</td><td>(6, 7)</td><td>yes</td></tr>
+    <tr><td>(6, 9)</td><td>(9, 12)</td><td>(9, 9)</td><td>yes: the single number 9</td></tr>
+  </table>
+  <p style="margin-top:18px">Result after <code>normalize</code>: <code>[(2, 3), (6, 7), (9, 9)]</code>.</p>
+</section>
+
+<section>
+  <h2>Three languages, one evaluator</h2>
+  <table style="font-size:.8em">
+    <tr><th>language</th><th>a value is</th><th><code>|</code> or <code>+</code> computes</th></tr>
+    <tr><td>Lecture 3</td><td><code>int</code></td><td><code>left_value + right_value</code></td></tr>
+    <tr><td>exercise 5</td><td><code>frozenset[int]</code></td><td><code>left_value | right_value</code></td></tr>
+    <tr><td>exercise 6</td><td><code>list[tuple[int, int]]</code>, in normal form</td><td><code>union(left_value, right_value)</code></td></tr>
+  </table>
+  <p style="margin-top:20px">The three <code>evaluate</code> functions have the same shape: a case for literals, a case for binary expressions, a <code>match</code> on the operator. What changes is the type of values and the operations on them.</p>
+  <p class="note">The type of values was the main design decision in each exercise. Today it gets a name: the <strong>semantic domain</strong>.</p>
+</section>
+
+<!-- ================================================================ where the meaning lives -->
+
+<section class="part">
+  <p class="kicker">Where the meaning lives</p>
+  <h2>The evaluator, again</h2>
+</section>
+
+<section>
+  <h2>The evaluator of Lecture 3</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(ast: Expression) -&gt; int:
+    match ast:
+        case Number(value):
+            return value
+        case BinaryExpression(op, left, right):
+            left_value = evaluate(left)
+            right_value = evaluate(right)
+            match op:
+                case "+":
+                    return left_value + right_value
+                case "-":
+                    return left_value - right_value
+                ...
+    </code></pre>
+    <div>
+      <p class="lead">What <code>+</code> means is written inside <code>evaluate</code>, in the <code>match op</code>: one case per operator.</p>
+      <ul>
+        <li>To add a power operator, we have to edit <code>evaluate</code>.</li>
+        <li>To use a name such as <code>x</code>, there is no place to put its value: <code>evaluate</code> receives only the tree.</li>
+        <li>The values are <code>int</code> only because we wrote <code>left_value + right_value</code>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What changes today</h2>
+  <p>Grammar, parse tree and AST stay as in Lecture 3. The evaluator is rewritten around two ideas:</p>
+  <div class="cards" style="--n:2; margin-top:20px">
+    <div class="card"><p class="idx">SEMANTIC DOMAIN</p><p>The set of values of the language, written as Python types. For now, integers.</p></div>
+    <div class="card"><p class="idx">ENVIRONMENT</p><p>A function that maps names to what they stand for. <code>+</code> is a name too: the environment says it is addition.</p></div>
+  </div>
+  <p class="note" style="margin-top:22px">The environment is a Python function, and some environments are built by other functions. First, a part on functions as values. The code is in <code>code/lesson-04/</code>.</p>
+</section>
+
+<!-- ================================================================ functions as values -->
+
+<section class="part">
+  <p class="kicker">Python</p>
+  <h2>Functions are values</h2>
+</section>
+
+<section>
+  <h2>A function is a value</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def double(x: int) -&gt; int:
+    return 2 * x
+
+f = double      # no parentheses: the function itself
+f(21)           # 42
+
+operations = [double, abs, str]
+[op(-3) for op in operations]   # [-6, 3, '-3']
+    </code></pre>
+    <div>
+      <p class="lead"><code>double</code> without parentheses is the function, not its result.</p>
+      <p>It can be given another name, put in a list, passed to another function, like a number or a string.</p>
+      <p class="note">Lecture 1B showed this briefly. The examples of this part are in <code>functions.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Functions that take functions</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+from collections.abc import Callable
+
+def twice(g: Callable[[int], int], x: int) -&gt; int:
+    return g(g(x))
+
+twice(double, 5)                    # 20
+
+list(map(double, [1, 2, 3]))        # [2, 4, 6]
+
+sorted(["pear", "fig", "banana"], key=len)
+# ['fig', 'pear', 'banana']
+    </code></pre>
+    <div>
+      <p class="lead"><code>Callable[[int], int]</code> is the type of functions that take one <code>int</code> and return an <code>int</code>.</p>
+      <p><code>map</code> applies a function to each element of a list. <code>sorted</code> takes a function <code>key</code> and sorts by its result: here, by length.</p>
+      <p class="note">A function that takes or returns functions is called <strong>higher-order</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Functions that return functions</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def make_adder(n: int) -&gt; Callable[[int], int]:
+    def add_n(x: int) -&gt; int:
+        return x + n
+    return add_n
+
+add3 = make_adder(3)
+add10 = make_adder(10)
+
+add3(4)              # 7
+add10(4)             # 14
+add3(add10(0))       # 13
+    </code></pre>
+    <div>
+      <p class="lead"><code>make_adder</code> defines a function inside its body and returns it, without calling it.</p>
+      <p>Each call of <code>make_adder</code> builds a new function: <code>add3</code> and <code>add10</code> are two different functions.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A closure remembers</h2>
+  <div class="split flip">
+    <figure class="diagram"><svg viewBox="0 0 460 260" role="img" aria-label="add3 is a function together with the value n = 3; add10 is the same code together with n = 10">
+      <rect x="10" y="20" width="200" height="90" rx="6" class="d-box-accent"/>
+      <text x="110" y="52" text-anchor="middle" class="d-t-mono-s">add3</text>
+      <text x="110" y="88" text-anchor="middle" class="d-t-m">x + n</text>
+      <rect x="250" y="40" width="190" height="50" rx="6" class="d-box-warm"/>
+      <text x="345" y="72" text-anchor="middle" class="d-t-m">n = 3</text>
+      <path d="M 210 65 L 250 65" class="d-thin"/>
+      <rect x="10" y="150" width="200" height="90" rx="6" class="d-box-accent"/>
+      <text x="110" y="182" text-anchor="middle" class="d-t-mono-s">add10</text>
+      <text x="110" y="218" text-anchor="middle" class="d-t-m">x + n</text>
+      <rect x="250" y="170" width="190" height="50" rx="6" class="d-box-warm"/>
+      <text x="345" y="202" text-anchor="middle" class="d-t-m">n = 10</text>
+      <path d="M 210 195 L 250 195" class="d-thin"/>
+    </svg></figure>
+    <div>
+      <p class="lead">When <code>make_adder(3)</code> returns, its variable <code>n</code> is still needed: <code>add_n</code> uses it.</p>
+      <p>Python keeps it. The returned function carries its code together with the variables it uses from outside. This is called a <strong>closure</strong>.</p>
+      <p>The code of <code>add3</code> and <code>add10</code> is the same; the value of <code>n</code> they carry is different.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>lambda</code></h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+add3_again = lambda x: x + 3
+add3_again(4)                       # 7
+
+sorted(["pear", "fig", "banana"], key=lambda w: w[-1])
+# ['banana', 'fig', 'pear']: by the last letter
+    </code></pre>
+    <div>
+      <p class="lead"><code>lambda x: x + 3</code> is a function without a name. Its body is one expression, and its value is the result.</p>
+      <p>It is useful when a short function is needed in one place only, as the <code>key</code> of <code>sorted</code>.</p>
+      <p class="note">A <code>lambda</code> can use variables from outside, like a function defined with <code>def</code>: it is a closure too.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Pure functions</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def area(width: int, height: int) -&gt; int:
+    return width * height
+
+calls = 0
+
+def counted_area(width: int, height: int) -&gt; int:
+    global calls
+    calls += 1
+    return width * height
+
+log: list[str] = []
+
+def logged_area(width: int, height: int) -&gt; int:
+    log.append(f"area({width}, {height})")
+    return width * height
+    </code></pre>
+    <div>
+      <p class="lead">A function is <strong>pure</strong> if its result depends only on its arguments, and calling it changes nothing else.</p>
+      <p><code>area</code> is pure. <code>counted_area</code> changes a global variable; <code>logged_area</code> changes a list it did not receive. They have <strong>side effects</strong>.</p>
+      <p>All three return the same number, but calling the last two twice is not the same as calling them once.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why pure functions matter here</h2>
+  <p>A pure function can be understood from its arguments alone: same arguments, same result, nothing else to look at.</p>
+  <p>Today's evaluator is pure, and so are the functions that build environments. Then the equations of the next part describe the code exactly, and each piece can be tested on its own.</p>
+  <p class="note">Printing, reading input and changing memory are side effects. Lecture 6 adds memory to the language, and will keep the evaluator pure by passing the state in and out as a value.</p>
+</section>
+
+<!-- ================================================================ what an expression means -->
+
+<section class="part">
+  <p class="kicker">Semantics</p>
+  <h2>What an expression means</h2>
+</section>
+
+<section>
+  <h2>The value of an expression</h2>
+  <p>Write \( ⟦e⟧ \) for the value of the expression \( e \). In Lecture 3:</p>
+  <p class="formula">\( ⟦n⟧ = n \)<br>\( ⟦e_1 \mathbin{op} e_2⟧ = ⟦e_1⟧ \mathbin{op} ⟦e_2⟧ \)</p>
+  <p>A numeral means the number it writes. A binary expression means the operation applied to the values of the two sides.</p>
+  <p class="note">The brackets separate the text of the program, inside, from its value, outside. On the left <code>+</code> is a symbol of our language; on the right it is addition.</p>
+</section>
+
+<section>
+  <h2>Adding the environment</h2>
+  <p>Write \( \rho \) (the Greek letter rho) for the environment, and \( \rho(x) \) for what the name \( x \) stands for. \( ⟦e⟧\rho \) is the value of \( e \) in the environment \( \rho \).</p>
+  <p class="formula">\( ⟦n⟧\rho = n \)<br>\( ⟦e_1 \mathbin{op} e_2⟧\rho = \rho(op)\,(⟦e_1⟧\rho,\ ⟦e_2⟧\rho) \)</p>
+  <p>The second equation does not say what \( op \) is. It asks the environment, and applies the answer to the values of the two sides.</p>
+  <p class="note">These two equations describe the whole language. The evaluator we write today is a translation of them into Python.</p>
+</section>
+
+<section>
+  <h2><code>(1 + 2) * 3</code>, using the equations</h2>
+  <p class="formula" style="text-align:left">
+    \( ⟦(1 + 2) * 3⟧\rho \)<br>
+    \( = \rho(*)\,(⟦1 + 2⟧\rho,\ ⟦3⟧\rho) \)<br>
+    \( = \rho(*)\,(\rho(+)\,(⟦1⟧\rho,\ ⟦2⟧\rho),\ 3) \)<br>
+    \( = \rho(*)\,(\rho(+)\,(1,\ 2),\ 3) \)<br>
+    \( = \rho(*)\,(3,\ 3) = 9 \)
+  </p>
+  <p>The last two steps use the environment in which \( + \) is addition and \( * \) is multiplication. With another environment, the same steps give another number.</p>
+</section>
+
+<section>
+  <h2>Denotational semantics</h2>
+  <p>Each construct of the language is given a value, its <strong>denotation</strong>, by one equation. The value of a compound expression is computed from the values of its parts.</p>
+  <p>The equations follow the AST: one equation per kind of node, and recursion on the children. The evaluator has the same structure: one <code>case</code> per kind of node, and recursive calls on the children.</p>
+  <p class="note">When a new construct is hard to write as an equation, it usually means that we have not decided yet what it should mean.</p>
+</section>
+
+<!-- ================================================================ three kinds of values -->
+
+<section class="part">
+  <p class="kicker">Semantic domains</p>
+  <h2>Three kinds of values</h2>
+</section>
+
+<section>
+  <h2>Two sets of values in the equations</h2>
+  <p class="formula">\( ⟦n⟧\rho = n \qquad ⟦e_1 \mathbin{op} e_2⟧\rho = \rho(op)\,(⟦e_1⟧\rho,\ ⟦e_2⟧\rho) \)</p>
+  <ul>
+    <li>\( ⟦e⟧\rho \) is always an integer. The values that an expression can produce are the <strong>expressible values</strong>.</li>
+    <li>\( \rho(+) \) is a function of two integers. The values that a name can stand for are the <strong>denotable values</strong>. Here, the operators; later, also numbers, with variables.</li>
+  </ul>
+  <p class="note">A third set, the <strong>storable values</strong>, is what a memory cell can contain. Our language has no memory until Lecture 6.</p>
+</section>
+
+<section>
+  <h2>The three sets in our language</h2>
+  <table style="font-size:.8em">
+    <tr><th>set</th><th>question</th><th>today</th></tr>
+    <tr><td>expressible</td><td>what can an expression compute?</td><td>integers</td></tr>
+    <tr><td>denotable</td><td>what can a name stand for?</td><td>integers and binary operators</td></tr>
+    <tr><td>storable</td><td>what can be kept in memory?</td><td>no memory yet</td></tr>
+  </table>
+  <p style="margin-top:20px">An operator is denotable but not expressible: <code>+</code> has a meaning, but no expression of our language computes an operator. <code>1 + (+)</code> is not a program.</p>
+</section>
+
+<section>
+  <h2>Other languages decide differently</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">C</p><p>A function has a name, so it is denotable. No expression computes a new function, so it is not expressible. A variable can hold a pointer to a function, not the function itself.</p></div>
+    <div class="card"><p class="idx">PYTHON</p><p>Functions are in all three sets: <code>lambda</code> computes one, <code>f = double</code> names one, a list can hold one.</p></div>
+  </div>
+  <p style="margin-top:22px">Deciding which values go in which set is a large part of deciding what a language can do.</p>
+</section>
+
+<section>
+  <h2>The sets as Python types</h2>
+  <pre><code class="language-python" data-trim>
+from collections.abc import Callable
+
+type EVal = int                                # expressible values
+type Operator = Callable[[EVal, EVal], EVal]   # a function of two values
+type DVal = EVal | Operator                    # denotable values
+
+type Environment = Callable[[str], DVal]       # names to denotable values
+  </code></pre>
+  <p>The last line is the \( \rho \) of the equations: a function that takes a name, a string, and returns what the name stands for.</p>
+  <p class="note"><code>type</code> gives a name to a type, as in Lecture 2. The names <code>EVal</code> and <code>DVal</code> come from the textbooks on semantics.</p>
+</section>
+
+<section>
+  <h2>A question left open in Lecture 3</h2>
+  <p>In the extension with comparisons, <code>1 &lt; 2</code> gives <code>1</code>, so that values stay <code>int</code>. Returning <code>True</code> would change the domain:</p>
+  <pre><code class="language-python" data-trim>
+type EVal = int | bool
+  </code></pre>
+  <p>Then each operator must say what it does with each kind of value. Is <code>(1 &lt; 2) + 1</code> equal to 2, or an error? Python says 2, because in Python <code>True</code> is the integer 1. Many languages say it is an error.</p>
+  <p class="note">This is decided in the semantic domain and in the operators, not in the grammar: <code>(1 &lt; 2) + 1</code> parses in both cases.</p>
+</section>
+
+<!-- ================================================================ the environment -->
+
+<section class="part">
+  <p class="kicker">Implementation</p>
+  <h2>The environment as a function</h2>
+</section>
+
+<section>
+  <h2>A function, not a dictionary</h2>
+  <p>A dictionary from names to values would work. We use a function, because in the equations \( \rho \) is a function: the code then says the same thing as the equations.</p>
+  <p>There is a cost. A dictionary can be printed and its keys listed; a function can only be called. To know what is in an environment, we have to ask about one name at a time.</p>
+  <p class="note">Exercise 3 at the end asks you to replace the function with a dictionary, changing three functions only.</p>
+</section>
+
+<section>
+  <h2>The empty environment, and lookup</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def empty_environment() -&gt; Environment:
+    def env(name: str) -&gt; DVal:
+        raise ValueError(f"Undefined identifier: {name}")
+    return env
+
+
+def lookup(env: Environment, name: str) -&gt; DVal:
+    return env(name)
+    </code></pre>
+    <div>
+      <p class="lead">The empty environment knows no name: for every name, it raises an error.</p>
+      <p><code>lookup</code> asks the environment about a name, by calling it.</p>
+      <p class="note"><code>lookup(env, name)</code> and <code>env(name)</code> do the same thing. The separate function keeps the rest of the code independent of how environments are made.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>bind</code>: one more name</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def bind(env: Environment, name: str, value: DVal) -&gt; Environment:
+    def new_env(n: str) -&gt; DVal:
+        if n == name:
+            return value
+        return env(n)
+    return new_env
+    </code></pre>
+    <div>
+      <p class="lead"><code>bind</code> returns a new environment that knows one more name.</p>
+      <p>Asked about <code>name</code>, the new environment answers <code>value</code>. Asked about any other name, it passes the question to the old environment <code>env</code>.</p>
+      <p><code>new_env</code> is a closure, like <code>add_n</code>: it remembers <code>env</code>, <code>name</code> and <code>value</code>.</p>
+      <p class="note">In the equations, <code>bind(env, x, v)</code> is written \( \rho[x \mapsto v] \).</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A chain of environments</h2>
+  <pre><code class="language-python" data-trim>
+e0 = empty_environment()
+e1 = bind(e0, "+", add)
+e2 = bind(e1, "*", multiply)
+  </code></pre>
+  <figure class="diagram"><svg viewBox="0 0 1100 200" role="img" aria-label="e2 answers for *, otherwise asks e1; e1 answers for +, otherwise asks e0; e0 raises an error. Looking up + in e2 goes through e2 to e1, which answers add">
+    <defs><marker id="ca" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <rect x="0" y="30" width="300" height="100" rx="6" class="d-box-accent"/>
+    <text x="150" y="62" text-anchor="middle" class="d-t-mono-s">e2</text>
+    <text x="150" y="100" text-anchor="middle" class="d-t-m">"*" → multiply</text>
+    <rect x="400" y="30" width="300" height="100" rx="6" class="d-box-accent"/>
+    <text x="550" y="62" text-anchor="middle" class="d-t-mono-s">e1</text>
+    <text x="550" y="100" text-anchor="middle" class="d-t-m">"+" → add</text>
+    <rect x="800" y="30" width="300" height="100" rx="6" class="d-box"/>
+    <text x="950" y="62" text-anchor="middle" class="d-t-mono-s">e0</text>
+    <text x="950" y="100" text-anchor="middle" class="d-t-m">error</text>
+    <path d="M 304 80 L 396 80" class="d-arrow" marker-end="url(#ca)"/>
+    <path d="M 704 80 L 796 80" class="d-arrow" marker-end="url(#ca)"/>
+    <text x="350" y="160" text-anchor="middle" class="d-t-muted">other names</text>
+    <text x="750" y="160" text-anchor="middle" class="d-t-muted">other names</text>
+  </svg></figure>
+  <p><code>lookup(e2, "+")</code>: <code>e2</code> compares <code>"+"</code> with <code>"*"</code>, different, and asks <code>e1</code>. <code>e1</code> compares <code>"+"</code> with <code>"+"</code> and answers <code>add</code>.</p>
+  <p class="note"><code>lookup(e2, "-")</code> goes through <code>e2</code> and <code>e1</code> and reaches <code>e0</code>: <code>Undefined identifier: -</code>.</p>
+</section>
+
+<section>
+  <h2><code>bind</code> does not change the old environment</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+lookup(e2, "*")    # &lt;function multiply at 0x...&gt;
+lookup(e1, "*")    # ValueError: Undefined identifier: *
+    </code></pre>
+    <div>
+      <p class="lead"><code>e1</code> is exactly as it was before <code>e2</code> was built. Code that still uses <code>e1</code> does not see <code>*</code>.</p>
+      <p>With a dictionary there are two options. Change it, <code>env[name] = value</code>, and the old version is lost. Or copy it, <code>{**env, name: value}</code>, and pay for a copy at each <code>bind</code>.</p>
+      <p>The closure keeps the old environment without copying anything.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why the old environment must survive</h2>
+  <p>In Lecture 5 the language gets local names:</p>
+  <pre><code class="language-text" data-trim>
+let x = 3 in x + 1
+  </code></pre>
+  <p>The body <code>x + 1</code> is evaluated in the environment extended with <code>x</code>. After the <code>let</code>, the program goes on in the environment it had before, where <code>x</code> is not defined, or has its old value.</p>
+  <p>With <code>bind</code> this needs no work: the extended environment is a new one, and the old one was never changed.</p>
+</section>
+
+<section>
+  <h2>The cost of a chain</h2>
+  <p>Looking up a name goes through the chain until it is found: with n names bound, up to n comparisons. A dictionary finds a name in about the same time however many names it has.</p>
+  <p>For the small programs of this course it does not matter. If it did, we would change how environments are made and keep the three functions, <code>empty_environment</code>, <code>lookup</code> and <code>bind</code>, with the same types. The evaluator would not change.</p>
+</section>
+
+<!-- ================================================================ operators -->
+
+<section class="part">
+  <p class="kicker">Implementation</p>
+  <h2>Operators in the environment</h2>
+</section>
+
+<section>
+  <h2>Operators as Python functions</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def add(x: int, y: int) -&gt; int:
+    return x + y
+
+def subtract(x: int, y: int) -&gt; int:
+    return x - y
+
+def multiply(x: int, y: int) -&gt; int:
+    return x * y
+
+def divide(x: int, y: int) -&gt; int:
+    if y == 0:
+        raise ValueError("Division by zero")
+    return x // y
+
+def modulo(x: int, y: int) -&gt; int:
+    if y == 0:
+        raise ValueError("Division by zero")
+    return x % y
+    </code></pre>
+    <div>
+      <p class="lead">Each operator of the language is an ordinary Python function of two integers: a value of type <code>Operator</code>.</p>
+      <p>The check for division by zero moves from the evaluator into <code>divide</code> and <code>modulo</code>. The evaluator no longer knows what division is.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The initial environment</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def create_initial_env() -&gt; Environment:
+    env = empty_environment()
+    env = bind(env, "+", add)
+    env = bind(env, "-", subtract)
+    env = bind(env, "*", multiply)
+    env = bind(env, "/", divide)
+    env = bind(env, "%", modulo)
+    return env
+    </code></pre>
+    <div>
+      <p class="lead">The environment in which every program starts: five names, five operators.</p>
+      <p>Each line builds a new environment from the previous one. The name <code>env</code> is reused, but the five environments are different values.</p>
+      <p class="note">Python does the same: before your program runs, names such as <code>print</code> and <code>len</code> are already defined.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Operators are values</h2>
+  <pre><code class="language-python" data-trim>
+env = create_initial_env()
+print(lookup(env, "+"))
+times = lookup(env, "*")
+if callable(times):
+    print(times(6, 7))
+lookup(env, "x")
+  </code></pre>
+  <pre class="out"><code class="language-text" data-trim>
+&lt;function add at 0x10605d300&gt;
+42
+ValueError: Undefined identifier: x
+  </code></pre>
+  <p>Asking the environment about <code>+</code> gives back a function, which can be called like any other.</p>
+  <p class="note"><code>callable</code> is needed for <code>mypy</code>: a <code>DVal</code> can also be an <code>int</code>, and an <code>int</code> cannot be called.</p>
+</section>
+
+<!-- ================================================================ the evaluator -->
+
+<section class="part">
+  <p class="kicker">Implementation</p>
+  <h2>The evaluator</h2>
+</section>
+
+<section>
+  <h2>Two equations, in Python</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(ast: Expression, env: Environment) -&gt; EVal:
+    match ast:
+        case Number(value):
+            return value
+        case BinaryExpression(op, left, right):
+            operator = lookup(env, op)
+            if not callable(operator):
+                raise ValueError(f"{op} is not an operator")
+            return operator(evaluate(left, env),
+                            evaluate(right, env))
+    </code></pre>
+    <div>
+      <p class="lead"><code>evaluate</code> has a second parameter, the environment.</p>
+      <p>The binary case looks up the operator in the environment, evaluates the two sides in the same environment, and applies the operator.</p>
+      <p>There is no <code>match op</code> any more: the evaluator does not know which operators exist.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Equations and code, side by side</h2>
+  <table style="font-size:.8em">
+    <tr><th>equation</th><th>Python</th></tr>
+    <tr><td>⟦e⟧ρ</td><td><code>evaluate(e, env)</code></td></tr>
+    <tr><td>⟦n⟧ρ = n</td><td><code>case Number(value): return value</code></td></tr>
+    <tr><td>ρ(op)</td><td><code>lookup(env, op)</code></td></tr>
+    <tr><td>⟦e₁⟧ρ, ⟦e₂⟧ρ</td><td><code>evaluate(left, env)</code>, <code>evaluate(right, env)</code></td></tr>
+    <tr><td>ρ(op)(v₁, v₂)</td><td><code>operator(...)</code></td></tr>
+    <tr><td>ρ[x ↦ v]</td><td><code>bind(env, x, v)</code></td></tr>
+  </table>
+  <p class="note" style="margin-top:18px">The check <code>callable(operator)</code> has no equation: it handles a case the equations do not cover, a name bound to a number used as an operator.</p>
+</section>
+
+<section>
+  <h2><code>(1+2)*3</code>, step by step</h2>
+  <pre><code class="language-python" data-trim>
+evaluate(parse_ast("(1+2)*3"), env)
+  </code></pre>
+  <pre><code class="language-text" data-trim>
+evaluate(BinaryExpression('*', BinaryExpression('+', 1, 2), 3), env)
+  lookup(env, "*")                             multiply
+  evaluate(BinaryExpression('+', 1, 2), env)
+    lookup(env, "+")                           add
+    evaluate(Number(1), env)                   1
+    evaluate(Number(2), env)                   2
+    add(1, 2)                                  3
+  evaluate(Number(3), env)                     3
+  multiply(3, 3)                               9
+  </code></pre>
+  <p class="note">The calls made by <code>evaluate</code>, with their results on the right; the AST is written in short form. They follow the steps we did with the equations.</p>
+</section>
+
+<section>
+  <h2>The environment is a parameter</h2>
+  <p>The environment could be a global variable, read by <code>evaluate</code>. We pass it as a parameter instead.</p>
+  <ul>
+    <li>The value of an expression depends on the tree and the environment, and on nothing else, as in \( ⟦e⟧\rho \). <code>evaluate</code> is pure.</li>
+    <li>Two parts of a program can be evaluated in two different environments. In Lecture 5, the body of a <code>let</code> is evaluated in an extended environment, and the rest of the program in the old one.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The same tree, two environments</h2>
+  <pre><code class="language-python" data-trim>
+def power(x: int, y: int) -&gt; int:
+    return x ** y
+
+ast = parse_ast("2*3")
+print(evaluate(ast, env))
+print(evaluate(ast, bind(env, "*", power)))
+  </code></pre>
+  <pre class="out"><code class="language-text" data-trim>
+6
+8
+  </code></pre>
+  <p>The tree is the same and <code>evaluate</code> is the same. In the second environment, <code>*</code> stands for <code>power</code>.</p>
+</section>
+
+<section>
+  <h2>Three errors</h2>
+  <pre><code class="language-python" data-trim>
+evaluate_string("10/0")
+evaluate(parse_ast("2-3"), bind(empty_environment(), "+", add))
+evaluate(parse_ast("1+2"), bind(env, "+", 3))
+  </code></pre>
+  <pre class="out"><code class="language-text" data-trim>
+ValueError: Division by zero
+ValueError: Undefined identifier: -
+ValueError: + is not an operator
+  </code></pre>
+  <div class="cards" style="--n:3; margin-top:14px">
+    <div class="card"><p class="idx">THE OPERATOR FAILS</p><p>Raised by <code>divide</code>, not by the evaluator.</p></div>
+    <div class="card"><p class="idx">NAME NOT BOUND</p><p>The grammar accepts <code>-</code>; this environment does not know it.</p></div>
+    <div class="card warm"><p class="idx">NOT AN OPERATOR</p><p><code>+</code> is bound to the number 3.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Adding an operator</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+# grammar: one more string for the terminal
+OP: "+" | "-" | "*" | "/" | "%" | "^"
+
+# environment: one more line
+env = bind(env, "^", power)
+    </code></pre>
+    <div>
+      <p class="lead">In Lecture 3, a new operator needed a new case in <code>evaluate</code>. Now it needs the grammar and the environment.</p>
+      <p><code>evaluate</code> does not change.</p>
+      <p class="note">The precedence and associativity of <code>^</code> are a different matter: they are in the grammar, as in Lecture 3.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ another domain -->
+
+<section class="part">
+  <p class="kicker">Another semantic domain</p>
+  <h2>The same syntax, other values</h2>
+</section>
+
+<section>
+  <h2>Exercise 5 with an environment</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+type EVal = frozenset[int]
+
+def set_env() -&gt; Environment:
+    env = empty_environment()
+    env = bind(env, "|", lambda a, b: a | b)
+    env = bind(env, "&amp;", lambda a, b: a &amp; b)
+    env = bind(env, "-", lambda a, b: a - b)
+    return env
+
+other = bind(set_env(), "|", lambda a, b: a ^ b)
+
+run("{1, 2} | {2, 3}", set_env())   # '{1, 2, 3}'
+run("{1, 2} | {2, 3}", other)       # '{1, 3}'
+    </code></pre>
+    <div>
+      <p class="lead">The sets of exercise 5, with the operators in the environment, written as <code>lambda</code>s.</p>
+      <p>The binary case of <code>evaluate</code> is the same as for integers. Only the literal case and the types change.</p>
+      <p class="note">In <code>other</code>, <code>|</code> means "in one of the two sets, not in both". The code is in <code>sets_env.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Values are pictures</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+type Picture = tuple[str, ...]   # rows, all of the same length
+type Operator = Callable[[Picture, Picture], Picture]
+type DVal = Picture | Operator
+type Environment = Callable[[str], DVal]
+
+
+def block(n: int) -&gt; Picture:
+    return tuple("#" * n for _ in range(n))
+
+block(2)    # ('##', '##')
+    </code></pre>
+    <div>
+      <p class="lead">Grammar and AST of Lecture 3, unchanged. The semantic domain changes: a value is a picture made of characters, one string per row.</p>
+      <p>A numeral <code>n</code> means a filled square of side <code>n</code>.</p>
+      <p class="note">The code is in <code>pictures.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Two operators on pictures</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def width(p: Picture) -&gt; int:
+    return len(p[0]) if p else 0
+
+def beside(p: Picture, q: Picture) -&gt; Picture:
+    height = max(len(p), len(q))
+    rows_p = p + (" " * width(p),) * (height - len(p))
+    rows_q = q + (" " * width(q),) * (height - len(q))
+    return tuple(a + b for a, b in zip(rows_p, rows_q))
+
+def above(p: Picture, q: Picture) -&gt; Picture:
+    w = max(width(p), width(q))
+    return tuple(row.ljust(w) for row in p + q)
+    </code></pre>
+    <div>
+      <p class="lead"><code>beside</code> puts two pictures side by side. The shorter one is filled with rows of spaces at the bottom.</p>
+      <p><code>above</code> puts the first picture on top of the second. <code>ljust</code> fills each row with spaces on the right, up to the larger width.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The picture environment</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+def picture_env() -&gt; Environment:
+    env = empty_environment()
+    env = bind(env, "+", beside)
+    env = bind(env, "*", above)
+    return env
+
+show(evaluate(parse_ast("(1+2)*3"), picture_env()))
+      </code></pre>
+      <p>In <code>evaluate</code>, the numeral case becomes <code>return block(value)</code>. The binary case does not change.</p>
+    </div>
+    <div>
+      <pre class="out"><code class="language-text" data-trim>
+###
+ ##
+###
+###
+###
+      </code></pre>
+      <p class="note"><code>1+2</code>: a square of side 1 beside one of side 2. <code>*3</code>: above a square of side 3.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What the picture language does not have</h2>
+  <pre><code class="language-python" data-trim>
+evaluate(parse_ast("3-1"), picture_env())
+  </code></pre>
+  <pre class="out"><code class="language-text" data-trim>
+ValueError: Undefined identifier: -
+  </code></pre>
+  <p>The grammar accepts <code>3-1</code>; the picture environment has no meaning for <code>-</code>. The error comes only at evaluation.</p>
+  <p class="note">In a real picture language we would remove <code>-</code> from the grammar too, so that the parser reports the error. Here the grammar is left as it is, to show that the environment decides which operators have a meaning.</p>
+</section>
+
+<!-- ================================================================ wrap-up -->
+
+<section class="part">
+  <p class="kicker">Summary</p>
+  <h2>Designing with domains</h2>
+</section>
+
+<section>
+  <h2>An order for your own language</h2>
+  <ol>
+    <li>The <strong>expressible values</strong>: what does a program of your language compute? Images, sounds, sets, numbers.</li>
+    <li>The <strong>denotable values</strong>: what can a name stand for? Operators, constants, later functions.</li>
+    <li>The <strong>equations</strong>: one for each construct, saying what it computes from the values of its parts.</li>
+    <li>Then the <strong>grammar</strong>, which can often start from the one of Lecture 3.</li>
+  </ol>
+  <p class="note">The picture file is about forty lines, and its grammar was not written for pictures.</p>
+</section>
+
+<section>
+  <h2>The decisions of today</h2>
+  <table style="font-size:.72em">
+    <tr><th>decision</th><th>alternative</th><th>why</th></tr>
+    <tr><td>environment as a function</td><td>a dictionary</td><td>same as ρ in the equations; but it cannot be printed</td></tr>
+    <tr><td>bind returns a new environment</td><td>change it in place</td><td>the old environment survives, as <code>let</code> will need</td></tr>
+    <tr><td>environment as a parameter</td><td>a global variable</td><td>same tree and same environment give the same value</td></tr>
+    <tr><td>operators looked up by name</td><td>a <code>match</code> in <code>evaluate</code></td><td>new operators without editing the evaluator</td></tr>
+    <tr><td>errors as <code>ValueError</code></td><td>Python's <code>TypeError</code></td><td>the messages speak about our language</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Where we are</h2>
+  <p>The evaluator receives the environment as a parameter and is a translation of two equations. The meaning of each operator is in the environment.</p>
+  <p>The values of the language are a decision, written down as Python types. The same grammar gave integers, sets and pictures.</p>
+  <p>A program cannot add names to the environment yet: <code>let x = 3 in x + 1</code> needs a new rule in the grammar, a new node and a new equation. That is Lecture 5, binding and scoping.</p>
+</section>
+
+<!-- ================================================================ exercises -->
+
+<section class="part">
+  <p class="kicker">Exercises</p>
+  <h2>Your turn</h2>
+</section>
+
+<section>
+  <h2>Exercise 1 · A power operator</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+evaluate_string("2^3")      # 8
+evaluate_string("2*3")      # 6
+evaluate_string("2^3^2")    # ?
+    </code></pre>
+    <div>
+      <p class="cite">Level 1 of 5</p>
+      <ol>
+        <li>In <code>domains.py</code>, add <code>"^"</code> to the <code>OP</code> terminal and bind it to <code>power</code> in <code>create_initial_env</code>.</li>
+        <li>Check that <code>evaluate</code> did not need any change.</li>
+        <li>What is <code>2^3^2</code>, and why? Is it what a mathematician expects?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · Named constants</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+evaluate_string("ten * 2")       # 20
+evaluate_string("ten + ten")     # 20
+evaluate_string("eleven")        # ValueError
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 5</p>
+      <ol>
+        <li>Bind <code>ten</code> to <code>10</code> in the initial environment: it is a <code>DVal</code> too.</li>
+        <li>Add an <code>IDENTIFIER</code> terminal, a rule for it in <code>mono</code>, a node <code>Var(name)</code> and its case in <code>evaluate</code>.</li>
+        <li>Write the equation for <code>Var</code> first, then the code.</li>
+        <li>What should <code>+ + 1</code> and <code>ten(1, 2)</code> do? Which stage reports each error?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · A dictionary instead</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+type Environment = dict[str, DVal]
+
+def empty_environment() -&gt; Environment: ...
+def lookup(env: Environment, name: str) -&gt; DVal: ...
+def bind(env: Environment, name: str, value: DVal) -&gt; Environment: ...
+    </code></pre>
+    <div>
+      <p class="cite">Level 3 of 5</p>
+      <ol>
+        <li>Change the type <code>Environment</code> and the three functions. Nothing else.</li>
+        <li><code>bind</code> must not change the dictionary it receives: check that <code>lookup(e1, "*")</code> still fails after <code>e2 = bind(e1, "*", multiply)</code>.</li>
+        <li>Which version would you rather debug? Which is faster with 1000 names?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · Pictures</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+1+2 with bottom alignment:
+
+ ##
+###
+    </code></pre>
+    <div>
+      <p class="cite">Level 4 of 5</p>
+      <ol>
+        <li>In <code>pictures.py</code>, make <code>+</code> align the two pictures at the bottom, changing only the environment and the operators.</li>
+        <li>Add an operator <code>-</code>: <code>p - q</code> is <code>p</code> beside <code>q</code> mirrored left to right. Write its equation first.</li>
+        <li>Which parts of the program did you not touch?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 5 · At home: a domain of your own</h2>
+  <div>
+    <p class="cite">Level 5 of 5 · take home</p>
+    <ol>
+      <li>Choose a domain for your project language: what does a program compute?</li>
+      <li>Write the semantic domain as Python types: <code>EVal</code>, <code>Operator</code>, <code>DVal</code>.</li>
+      <li>Choose two or three operators and write their equations.</li>
+      <li>Implement them with the grammar of Lecture 3 and an environment, as for pictures.</li>
+      <li>What did the arithmetic grammar force on you that your domain does not need?</li>
+    </ol>
+  </div>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>
