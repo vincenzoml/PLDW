@@ -23,6 +23,164 @@
   <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
 </section>
 
+<!-- ================================================================ exercise 5 -->
+
+<section class="part">
+  <p class="kicker">Lecture 3, exercise 5</p>
+  <h2>Sets of integers</h2>
+</section>
+
+<section>
+  <h2>Exercise 5: sets of integers</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+run("{1, 2, 3} | {3, 4}")         # '{1, 2, 3, 4}'
+run("{1, 2, 3} &amp; {2, 3, 4}")      # '{2, 3}'
+run("{1, 2, 3} - {2}")            # '{1, 3}'
+run("{1, 2} | {3} &amp; {3, 4}")      # '{1, 2, 3}'
+run("({1, 2} | {3}) &amp; {3, 4}")    # '{3}'
+run("{} - {1}")                   # '{}'
+run("{1, 2")                      # ValueError
+    </code></pre>
+    <div>
+      <p class="lead">A new language, built like the one of Lecture 3: grammar, AST, transform, <code>evaluate</code>.</p>
+      <p><code>|</code> is union, <code>&amp;</code> intersection, <code>-</code> difference. <code>&amp;</code> binds tighter than the other two.</p>
+      <p class="note">The solution is in <code>code/lesson-03/sets.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The grammar: two levels</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+grammar = r"""
+    ?expr: expr UNIONOP inter -&gt; bin
+         | inter
+    ?inter: inter INTEROP atom -&gt; bin
+          | atom
+    ?atom: set | paren
+    paren: "(" expr ")"
+    set: "{" (NUMBER ("," NUMBER)*)? "}"
+
+    NUMBER: /[0-9]+/
+    UNIONOP: "|" | "-"
+    INTEROP: "&amp;"
+
+    %import common.WS
+    %ignore WS
+"""
+    </code></pre>
+    <div>
+      <p class="lead">The same structure as <code>precedence.py</code>: one rule per level of precedence.</p>
+      <p><code>expr</code> is the outer level, with <code>|</code> and <code>-</code>. <code>inter</code> is the inner level, with <code>&amp;</code>. So <code>&amp;</code> is computed first.</p>
+      <p>Both rules are left-recursive, so both levels group from left to right.</p>
+      <p class="note">As in Lecture 3, <code>?</code> removes nodes with one child and <code>-&gt; bin</code> gives both levels the same node name.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The set literal</h2>
+  <pre><code class="language-python" data-trim>
+set: "{" (NUMBER ("," NUMBER)*)? "}"
+  </code></pre>
+  <table style="font-size:.8em; margin-top:10px">
+    <tr><th>piece</th><th>meaning</th></tr>
+    <tr><td>"{" ... "}"</td><td>the braces</td></tr>
+    <tr><td>NUMBER ("," NUMBER)*</td><td>a number, then zero or more times a comma and a number</td></tr>
+    <tr><td>( ... )?</td><td>all of the list is optional: <code>{}</code> is allowed</td></tr>
+  </table>
+  <p style="margin-top:18px">The parse tree of <code>{1, 2, 3}</code> is a node <code>set</code> whose children are the three <code>NUMBER</code> tokens. The braces and commas are anonymous strings, so they do not appear in the tree.</p>
+  <p class="note"><code>*</code> means "zero or more times" and <code>?</code> after a group means "optional", as in regular expressions.</p>
+</section>
+
+<section>
+  <h2>AST and transform</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class SetLiteral:
+    elements: frozenset[int]
+
+
+def transform(tree: Tree | str) -&gt; Expression:
+    match tree:
+        case Tree(data="paren", children=[subtree]):
+            return transform(subtree)
+        case Tree(data="set", children=numbers):
+            return SetLiteral(frozenset(
+                int(n) for n in numbers if isinstance(n, Token)))
+        case Tree(data="bin",
+                  children=[left, Token(value="|" | "&amp;" | "-" as op), right]):
+            return BinaryExpression(op, transform(left), transform(right))
+        case _:
+            raise ValueError(f"Unexpected parse tree node: {tree}")
+    </code></pre>
+    <div>
+      <p class="lead"><code>children=numbers</code> matches a list of any length, also empty.</p>
+      <p>The repeated <code>1</code> in <code>{1, 1}</code> disappears when the <code>frozenset</code> is built.</p>
+      <p><code>frozenset</code> is a set that cannot be changed after it is built. AST nodes are <code>frozen</code> dataclasses, and their fields should not change either.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Evaluating sets</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(ast: Expression) -&gt; frozenset[int]:
+    match ast:
+        case SetLiteral(elements):
+            return elements
+        case BinaryExpression(op, left, right):
+            left_value = evaluate(left)
+            right_value = evaluate(right)
+            match op:
+                case "|":
+                    return left_value | right_value
+                case "&amp;":
+                    return left_value &amp; right_value
+                case "-":
+                    return left_value - right_value
+                case _:
+                    assert_never(op)
+        case _:
+            assert_never(ast)
+    </code></pre>
+    <div>
+      <p class="lead">The evaluator of Lecture 3, with a different type of values: <code>frozenset[int]</code> instead of <code>int</code>.</p>
+      <p>Python's sets already have the three operations, with the same symbols.</p>
+      <p><code>show</code> turns a value into the text of the examples, with the elements sorted: <code>'{1, 2, 3}'</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Errors</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+from lark.exceptions import LarkError
+
+def run(text: str) -&gt; str:
+    try:
+        tree = parser.parse(text)
+    except LarkError as e:
+        raise ValueError(f"syntax error: {str(e).splitlines()[0]}") from e
+    return show(evaluate(transform(tree)))
+    </code></pre>
+    <div>
+      <p class="lead">Lark raises its own exceptions. <code>LarkError</code> is the class they all inherit from.</p>
+      <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
+'{1, 2': syntax error: Unexpected end-of-input. Expected one of:
+'{1,, 2}': syntax error: No terminal matches ',' in the current parser context, at line 1 col 4
+'{1} + {2}': syntax error: No terminal matches '+' in the current parser context, at line 1 col 5
+      </code></pre>
+      <p class="note"><code>from e</code> keeps Lark's exception attached to ours, so the traceback still shows where it came from.</p>
+    </div>
+  </div>
+</section>
+
 <section>
   <h2>Three languages, one evaluator</h2>
   <table style="font-size:.8em">
