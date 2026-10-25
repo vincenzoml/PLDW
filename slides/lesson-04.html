@@ -181,18 +181,6 @@ def run(text: str) -&gt; str:
   </div>
 </section>
 
-<section>
-  <h2>Three languages, one evaluator</h2>
-  <table style="font-size:.8em">
-    <tr><th>language</th><th>a value is</th><th><code>|</code> or <code>+</code> computes</th></tr>
-    <tr><td>Lecture 3</td><td><code>int</code></td><td><code>left_value + right_value</code></td></tr>
-    <tr><td>exercise 5</td><td><code>frozenset[int]</code></td><td><code>left_value | right_value</code></td></tr>
-    <tr><td>exercise 6</td><td><code>list[tuple[int, int]]</code>, in normal form</td><td><code>union(left_value, right_value)</code></td></tr>
-  </table>
-  <p style="margin-top:20px">The three <code>evaluate</code> functions have the same shape: a case for literals, a case for binary expressions, a <code>match</code> on the operator. What changes is the type of values and the operations on them.</p>
-  <p class="note">The type of values was the main design decision in each exercise. Today it gets a name: the <strong>semantic domain</strong>.</p>
-</section>
-
 <!-- ================================================================ where the meaning lives -->
 
 <section class="part">
