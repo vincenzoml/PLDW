@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binding and scoping</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+<style>
+  /* program output, set apart from the code that printed it */
+  .reveal pre.out code { background: var(--paper-2); color: var(--ink); border-left: 3px solid var(--warm); }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>Binding and scoping</h1>
+  <p class="sub">Lecture 5. Programs that give names to values, and the part of the program where each name means something.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<!-- ================================================================ exercises of lecture 4 -->
+
+<section class="part">
+  <p class="kicker">Lecture 4, exercises 1 and 2</p>
+  <h2>Power and named constants</h2>
+</section>
+
+<section>
+  <h2>Exercise 1: a power operator</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+OP: "+" | "-" | "*" | "/" | "%" | "^"
+
+env = bind(env, "^", power)
+
+evaluate_string("2^3")      # 8
+evaluate_string("2^3^2")    # 64
+    </code></pre>
+    <div>
+      <p class="lead">Two lines, and <code>evaluate</code> does not change.</p>
+      <p><code>2^3^2</code> is 64: the rule <code>bin: expr OP mono</code> groups from the left, so it is <code>(2^3)^2</code>.</p>
+      <p>A mathematician reads \( 2^{3^2} = 2^9 = 512 \): power groups from the right. To get that, <code>^</code> needs its own level in the grammar, with a right-recursive rule.</p>
+      <p class="note">The environment says what <code>^</code> computes; the grammar says how it groups.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2: named constants</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+mono: ground | var | paren
+var: IDENTIFIER
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+@dataclass(frozen=True)
+class Var:
+    name: str
+
+case Tree(data="var",
+          children=[Token(type="IDENTIFIER", value=name)]):
+    return Var(name=name)
+    </code></pre>
+    <div>
+      <p class="lead">A name is one more kind of <code>mono</code>: it can stand wherever a number can.</p>
+      <p><code>IDENTIFIER</code> is a letter or <code>_</code>, followed by letters, digits and <code>_</code>: the same rule as for Python names.</p>
+      <p>The parse tree has a node <code>var</code>, which becomes a <code>Var</code> in the AST.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The equation for a name</h2>
+  <p class="formula">\( ⟦x⟧\rho = \rho(x) \)</p>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+case Var(name):
+    meaning = lookup(env, name)
+    if callable(meaning):
+        raise ValueError(
+            f"{name} is an operator, not a value")
+    return meaning
+    </code></pre>
+    <div>
+      <p class="lead">The value of a name is what the environment says it stands for.</p>
+      <p>The check is the mirror of the one for operators: a name used as a value must stand for a number.</p>
+      <p class="note"><code>+ + 1</code> and <code>ten(1, 2)</code> are syntax errors: the parser rejects them, before any environment is involved.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Who puts <code>ten</code> in the environment?</h2>
+  <pre><code class="language-python" data-trim>
+env = bind(create_initial_env(), "ten", 10)
+evaluate(parse_ast("ten * 2"), env)     # 20
+  </code></pre>
+  <p>Only the Python program that runs the interpreter. The program written in our language can use names, but cannot create them.</p>
+  <p>Today the language gets a construct that adds a name to the environment: <code>let</code>.</p>
+  <p class="note">The code of this lecture is in <code>code/lesson-05/</code>: <code>binding.py</code> and <code>scoping.py</code>.</p>
+</section>
+
+<!-- ================================================================ let -->
+
+<section class="part">
+  <p class="kicker">Binding</p>
+  <h2>Giving names to values</h2>
+</section>
+
+<section>
+  <h2>Why names</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+(17 * 23 + 4) * (17 * 23 + 4) - (17 * 23 + 4)
+
+let n = 17 * 23 + 4 in n * n - n
+    </code></pre>
+    <div>
+      <p class="lead">The same expression written three times is three chances to make a mistake, and three times the work.</p>
+      <p>The second line computes it once, gives the result a name, and uses the name.</p>
+      <p>It also says something to the reader: these three are the same thing.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>let</code>, in three parts</h2>
+  <pre><code class="language-text" data-trim>
+let  x  =  3  in  x + 1
+     │     │      └── the body: where x can be used
+     │     └── the definition: its value is given to x
+     └── the name
+  </code></pre>
+  <p>The value of the whole expression is the value of the body, computed in an environment where <code>x</code> stands for 3. Here, 4.</p>
+  <p class="note">The syntax comes from ISWIM, a language designed by Peter Landin in 1966, through ML. Haskell, OCaml and F# still write it this way.</p>
+</section>
+
+<section>
+  <h2>Binding is not assignment</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">BINDING</p><p><code>let x = 3 in ...</code> makes a new environment where <code>x</code> stands for 3. It is valid in the body, and nowhere else. Nothing that existed before is changed.</p></div>
+    <div class="card warm"><p class="idx">ASSIGNMENT</p><p><code>x = 3</code> in Python changes what <code>x</code> stands for, from now on. Code that read <code>x</code> before and reads it again later sees two different values.</p></div>
+  </div>
+  <p style="margin-top:22px">Our language has binding only. A name, once bound, stands for the same value in all of its body.</p>
+  <p class="note">Assignment needs memory, which can change while the program runs: Lecture 6.</p>
+</section>
+
+<!-- ================================================================ syntax -->
+
+<section class="part">
+  <p class="kicker">Syntax</p>
+  <h2>The grammar of <code>let</code></h2>
+</section>
+
+<section>
+  <h2>The grammar</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+grammar = r"""
+    ?expr: let | arith
+    let: "let" IDENTIFIER "=" expr "in" expr
+    ?arith: bin | mono
+    bin: arith OP mono
+    mono: ground | var | paren
+    paren: "(" expr ")"
+    ground: NUMBER
+    var: IDENTIFIER
+
+    NUMBER: /[0-9]+/
+    OP: "+" | "-" | "*" | "/" | "%"
+    IDENTIFIER: /(?!(let|in)\b)[a-zA-Z_][a-zA-Z0-9_]*/
+
+    %import common.WS
+    %ignore WS
+"""
+    </code></pre>
+    <div>
+      <p class="lead">The rules of Lecture 4 move one level down, into <code>arith</code>. Above them, an expression is a <code>let</code> or an arithmetic expression.</p>
+      <p>The definition and the body of a <code>let</code> are <code>expr</code>: they can contain other <code>let</code>s.</p>
+      <p class="note"><code>"let"</code>, <code>"="</code> and <code>"in"</code> are anonymous strings: they do not appear in the parse tree.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Where the body ends</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let x = 1 in x + 2         3
+(let x = 1 in x) + 2       3
+let x = 1 in (x + 2)       3
+
+2 + let y = 3 in y         syntax error
+2 + (let y = 3 in y)       5
+    </code></pre>
+    <div>
+      <p class="lead">The body goes as far to the right as it can. In the first line it is <code>x + 2</code>, not <code>x</code>.</p>
+      <p>The left side of <code>bin</code> is an <code>arith</code>, so it cannot be a <code>let</code>: <code>let x = 1 in x</code> followed by <code>+ 2</code> is not a way to read the first line. There is one parse tree only.</p>
+      <p>A <code>let</code> inside arithmetic needs parentheses.</p>
+      <p class="note">OCaml accepts <code>2 + let y = 3 in y</code>. We chose a smaller grammar with no ambiguity; the price is some parentheses.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Reserved words</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+IDENTIFIER: /(?!(let|in)\b)[a-zA-Z_][a-zA-Z0-9_]*/
+    </code></pre>
+    <div>
+      <p class="lead">Without the first part, <code>let</code> and <code>in</code> would also match <code>IDENTIFIER</code>, and <code>let in = 3 in in</code> would be a program.</p>
+      <p><code>(?!...)</code> means "not followed by": a name cannot start with the word <code>let</code> or the word <code>in</code>. <code>\b</code> is the end of a word, so <code>inside</code> and <code>let1</code> are still names.</p>
+      <p class="note">Python has 35 reserved words: <code>if</code>, <code>def</code>, <code>lambda</code>, ... Try <code>lambda = 3</code> in Python.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The AST</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class Let:
+    name: str
+    definition: Expression
+    body: Expression
+
+
+type Expression = Number | Var | BinaryExpression | Let
+
+
+case Tree(data="let",
+          children=[Token(type="IDENTIFIER", value=name),
+                    definition, body]):
+    return Let(name=name,
+               definition=transform_parse_tree(definition),
+               body=transform_parse_tree(body))
+    </code></pre>
+    <div>
+      <p class="lead">One new node, with the three parts of a <code>let</code>.</p>
+      <p>The name is a string, not an expression: <code>let 3 = x in ...</code> is not a program.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A parse tree and its AST</h2>
+  <div class="split flip">
+    <pre class="out"><code class="language-text" data-trim>
+let
+  x
+  mono
+    ground	1
+  bin
+    mono
+      var	x
+    +
+    mono
+      ground	2
+    </code></pre>
+    <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
+Let(name='x',
+    definition=Number(value=1),
+    body=BinaryExpression(op='+',
+                          left=Var(name='x'),
+                          right=Number(value=2)))
+    </code></pre>
+  </div>
+  <p class="note">The parse tree of <code>let x = 1 in x + 2</code>, from <code>parser.parse(...).pretty()</code>, and the AST built from it.</p>
+</section>
+
+<!-- ================================================================ semantics -->
+
+<section class="part">
+  <p class="kicker">Semantics</p>
+  <h2>What <code>let</code> means</h2>
+</section>
+
+<section>
+  <h2>Two new equations</h2>
+  <p class="formula">\( ⟦x⟧\rho = \rho(x) \)<br>\( ⟦\mathtt{let}\ x = e_1\ \mathtt{in}\ e_2⟧\rho = ⟦e_2⟧\big(\rho[x \mapsto ⟦e_1⟧\rho]\big) \)</p>
+  <ul>
+    <li>The definition \( e_1 \) is computed in \( \rho \), the environment the <code>let</code> is in.</li>
+    <li>The body \( e_2 \) is computed in a different environment: \( \rho \) with one more name.</li>
+  </ul>
+  <p class="note">This is the first equation where the environment on the right is not the one on the left. Until today, \( \rho \) was passed down unchanged.</p>
+</section>
+
+<section>
+  <h2>The evaluator</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(ast: Expression, env: Environment) -&gt; EVal:
+    match ast:
+        case Number(value):
+            return value
+        case Var(name):
+            meaning = lookup(env, name)
+            if callable(meaning):
+                raise ValueError(
+                    f"{name} is an operator, not a value")
+            return meaning
+        case BinaryExpression(op, left, right):
+            ...                       # as in Lecture 4
+        case Let(name, definition, body):
+            value = evaluate(definition, env)
+            return evaluate(body, bind(env, name, value))
+    </code></pre>
+    <div>
+      <p class="lead">The <code>Let</code> case is the equation, line by line.</p>
+      <p>Compute the definition in <code>env</code>. Build a new environment with <code>bind</code>. Compute the body in it.</p>
+      <p class="note">This is the use of <code>bind</code> announced in Lecture 4: <code>env</code> is not changed, and the code after the <code>let</code> still sees it as it was.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Equations and code, side by side</h2>
+  <table style="font-size:.8em">
+    <tr><th>equation</th><th>Python</th></tr>
+    <tr><td>⟦x⟧ρ = ρ(x)</td><td><code>case Var(name): ... lookup(env, name)</code></td></tr>
+    <tr><td>⟦e₁⟧ρ</td><td><code>value = evaluate(definition, env)</code></td></tr>
+    <tr><td>ρ[x ↦ ⟦e₁⟧ρ]</td><td><code>bind(env, name, value)</code></td></tr>
+    <tr><td>⟦e₂⟧(ρ[x ↦ ...])</td><td><code>evaluate(body, bind(...))</code></td></tr>
+  </table>
+  <p class="note" style="margin-top:18px">As in Lecture 4, each equation is one <code>case</code>, and the recursive calls are on the children of the node.</p>
+</section>
+
+<section>
+  <h2><code>let x = 1 in let y = x + 1 in x * y</code></h2>
+  <pre><code class="language-text" data-trim>
+evaluate(Let('x', 1, Let('y', x + 1, x * y)), ρ0)
+  evaluate(Number(1), ρ0)                         1
+  ρ1 = bind(ρ0, "x", 1)
+  evaluate(Let('y', x + 1, x * y), ρ1)
+    evaluate(x + 1, ρ1)                           2
+    ρ2 = bind(ρ1, "y", 2)
+    evaluate(x * y, ρ2)
+      lookup(ρ2, "x")                             1
+      lookup(ρ2, "y")                             2
+      multiply(1, 2)                              2
+  </code></pre>
+  <p class="note">\( \rho_0 \) is the initial environment, with the five operators. Each <code>let</code> builds a new environment on top of the previous one.</p>
+</section>
+
+<section>
+  <h2>The chain, while computing <code>x * y</code></h2>
+  <figure class="diagram"><svg viewBox="0 0 1100 200" role="img" aria-label="ρ2 binds y to 2 and asks ρ1 for other names; ρ1 binds x to 1 and asks ρ0; ρ0 has the five operators">
+    <defs><marker id="ca" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <rect x="0" y="30" width="300" height="100" rx="6" class="d-box-accent"/>
+    <text x="150" y="62" text-anchor="middle" class="d-t-mono-s">ρ2</text>
+    <text x="150" y="100" text-anchor="middle" class="d-t-m">"y" → 2</text>
+    <rect x="400" y="30" width="300" height="100" rx="6" class="d-box-accent"/>
+    <text x="550" y="62" text-anchor="middle" class="d-t-mono-s">ρ1</text>
+    <text x="550" y="100" text-anchor="middle" class="d-t-m">"x" → 1</text>
+    <rect x="800" y="30" width="300" height="100" rx="6" class="d-box"/>
+    <text x="950" y="62" text-anchor="middle" class="d-t-mono-s">ρ0</text>
+    <text x="950" y="100" text-anchor="middle" class="d-t-m">+ - * / %</text>
+    <path d="M 304 80 L 396 80" class="d-arrow" marker-end="url(#ca)"/>
+    <path d="M 704 80 L 796 80" class="d-arrow" marker-end="url(#ca)"/>
+    <text x="350" y="160" text-anchor="middle" class="d-t-muted">other names</text>
+    <text x="750" y="160" text-anchor="middle" class="d-t-muted">other names</text>
+  </svg></figure>
+  <p><code>lookup(ρ2, "x")</code> goes from <code>ρ2</code> to <code>ρ1</code>, which answers 1. <code>lookup(ρ2, "*")</code> goes all the way to <code>ρ0</code>.</p>
+  <p class="note">The same picture as in Lecture 4. Then the chain was built by Python code; now it is built by the program.</p>
+</section>
+
+<!-- ================================================================ scope -->
+
+<section class="part">
+  <p class="kicker">Scope</p>
+  <h2>Where a name is valid</h2>
+</section>
+
+<section>
+  <h2>The scope of a binding</h2>
+  <pre><code class="language-text" data-trim>
+let x = 3 in x + 1
+    ─        ─────
+    binds    scope of x
+  </code></pre>
+  <p>The <strong>scope</strong> of a binding is the part of the program where the name refers to it. For <code>let x = e₁ in e₂</code>, the scope of <code>x</code> is <code>e₂</code>, and only <code>e₂</code>.</p>
+  <p>The equation says it: \( \rho[x \mapsto ...] \) is used for \( e_2 \) and for nothing else.</p>
+  <p class="note">The scope is a part of the text of the program. It can be found by reading the program, without running it.</p>
+</section>
+
+<section>
+  <h2>Outside the scope</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+(let x = 1 in x) + x
+    </code></pre>
+    <div>
+      <p class="lead">The second <code>x</code> is outside the parentheses, so outside the body: it is not in the scope of the <code>let</code>.</p>
+      <pre class="out"><code class="language-text" data-trim>
+Undefined identifier: x
+      </code></pre>
+      <p>When the <code>let</code> is done, <code>evaluate</code> goes back to the environment it had, which does not contain <code>x</code>. Nothing needs to be removed.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The definition is not in the scope</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let x = x + 1 in x                Undefined identifier: x
+
+let x = 1 in let x = x + 10 in x * 2       22
+    </code></pre>
+    <div>
+      <p class="lead">In <code>let x = x + 1 in ...</code>, the <code>x</code> of the definition is computed in \( \rho \), before <code>x</code> is bound.</p>
+      <p>If an outer <code>x</code> exists, the definition uses it: in the second line, the inner <code>x</code> is <code>1 + 10</code>.</p>
+      <p class="note">A <code>let</code> whose definition sees its own name is a <strong>recursive</strong> binding. Recursive functions need it; we will come back to it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Shadowing</h2>
+  <div class="split flip">
+    <figure class="diagram"><svg viewBox="0 0 460 300" role="img" aria-label="the inner environment binds x to 11 and comes first in the chain; the outer one binds x to 1 and is never reached when looking up x">
+      <defs><marker id="sa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+      <rect x="80" y="10" width="300" height="70" rx="6" class="d-box-accent"/>
+      <text x="230" y="52" text-anchor="middle" class="d-t-m">"x" → 11</text>
+      <rect x="80" y="115" width="300" height="70" rx="6" class="d-box-warm"/>
+      <text x="230" y="157" text-anchor="middle" class="d-t-m">"x" → 1</text>
+      <rect x="80" y="220" width="300" height="70" rx="6" class="d-box"/>
+      <text x="230" y="262" text-anchor="middle" class="d-t-m">+ - * / %</text>
+      <path d="M 230 80 L 230 112" class="d-arrow" marker-end="url(#sa)"/>
+      <path d="M 230 185 L 230 217" class="d-arrow" marker-end="url(#sa)"/>
+    </svg></figure>
+    <div>
+      <p class="lead">In <code>let x = 1 in let x = x + 10 in x * 2</code> there are two bindings of <code>x</code>. In <code>x * 2</code>, the inner one wins.</p>
+      <p>The outer binding is <strong>shadowed</strong>: it still exists, but in the inner body it cannot be reached by its name.</p>
+      <p><code>lookup</code> stops at the first environment that knows the name. Shadowing needs no code of its own.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Shadowing ends with the scope</h2>
+  <pre><code class="language-text" data-trim>
+let x = 5 in (let x = 1 in x) + x                6
+(let x = 2 in x * x) + (let x = 3 in x * x)      13
+  </code></pre>
+  <p>In the first line the inner <code>x</code> is 1 inside the parentheses; after them, <code>x</code> is 5 again.</p>
+  <p>In the second line the two <code>x</code> are unrelated: each <code>let</code> builds its own environment from the initial one.</p>
+  <p class="note">With assignment, <code>x = 1</code> inside the parentheses would destroy the 5. With binding, the old environment is still there.</p>
+</section>
+
+<section>
+  <h2>Free and bound</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+x + y                    free: x, y
+let x = 1 in x + y       free: y
+let x = x in x           free: x
+let y = 2 in 3           free: none
+    </code></pre>
+    <div>
+      <p class="lead">An occurrence of a name is <strong>bound</strong> if it is in the scope of a <code>let</code> for that name; otherwise it is <strong>free</strong>.</p>
+      <p>The free names are those the expression needs from outside: its value depends on what the environment says about them.</p>
+      <p>In the third line, the first <code>x</code> after <code>=</code> is free, the last one is bound.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Free variables, in Python</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def free_variables(ast: Expression) -&gt; frozenset[str]:
+    match ast:
+        case Number(_):
+            return frozenset()
+        case Var(name):
+            return frozenset({name})
+        case BinaryExpression(_, left, right):
+            return free_variables(left) | free_variables(right)
+        case Let(name, definition, body):
+            return (free_variables(definition)
+                    | (free_variables(body) - {name}))
+    </code></pre>
+    <div>
+      <p class="lead">A function with the same structure as <code>evaluate</code>: one case per node, recursion on the children.</p>
+      <p>The <code>Let</code> case follows the scope: the definition counts in full, the body without the bound name.</p>
+      <p class="note">It does not need an environment and does not compute anything: it only reads the text. A program with no free names is <strong>closed</strong>, and can be run in the initial environment without <code>Undefined identifier</code> errors.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ static and dynamic -->
+
+<section class="part">
+  <p class="kicker">Scoping</p>
+  <h2>Static and dynamic</h2>
+</section>
+
+<section>
+  <h2>When is the definition computed?</h2>
+  <p>Our <code>let</code> computes the definition first, then the body: it is <strong>eager</strong>. Another choice: bind the name to the definition itself, not computed, and compute it each time the name is used.</p>
+  <pre><code class="language-text" data-trim>
+let z = 1 / 0 in 7
+  </code></pre>
+  <p>Eager: <code>Division by zero</code>. The other way: 7, because <code>z</code> is never used.</p>
+  <p class="note">This is the idea behind the lazy evaluation of Haskell. The code of this part is in <code>scoping.py</code>.</p>
+</section>
+
+<section>
+  <h2>Then a question comes up</h2>
+  <pre><code class="language-text" data-trim>
+let x = 5 in
+  let f = x + 10 in
+    let x = 42 in
+      f
+  </code></pre>
+  <p>When <code>f</code> is used, its definition <code>x + 10</code> is computed. Which <code>x</code>?</p>
+  <div class="cards" style="--n:2; margin-top:14px">
+    <div class="card"><p class="idx">STATIC · 15</p><p>The <code>x</code> visible where <code>f</code> was defined: the environment of its <code>let</code>.</p></div>
+    <div class="card warm"><p class="idx">DYNAMIC · 52</p><p>The <code>x</code> visible where <code>f</code> is used: the environment at that moment.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>A delayed definition</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class Delayed:
+    definition: Expression
+    env: Environment
+
+type DVal = EVal | Operator | Delayed
+type Environment = Callable[[str], DVal]
+
+
+case Let(name, definition, body):
+    return evaluate(body,
+                    bind(env, name, Delayed(definition, env)))
+    </code></pre>
+    <div>
+      <p class="lead">A new denotable value: a definition not computed yet, with the environment of its <code>let</code>.</p>
+      <p>The <code>Let</code> case no longer calls <code>evaluate</code> on the definition: it stores it.</p>
+      <p class="note">The denotable values change, the expressible values do not: an expression still computes an integer. A <code>Delayed</code> is something a name can stand for, not a result.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Using the name: two choices</h2>
+  <div class="split">
+    <div>
+      <p class="cite">static</p>
+      <pre><code class="language-python" data-trim>
+case Var(name):
+    match env(name):
+        case Delayed(definition, saved_env):
+            return evaluate_static(definition,
+                                   saved_env)
+        ...
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite">dynamic</p>
+      <pre><code class="language-python" data-trim>
+case Var(name):
+    match env(name):
+        case Delayed(definition, _):
+            return evaluate_dynamic(definition,
+                                    env)
+        ...
+      </code></pre>
+    </div>
+  </div>
+  <p>The only difference is the environment used for the definition: the one saved in the <code>Delayed</code>, or the current one.</p>
+  <p class="note">The rest of the two evaluators is identical.</p>
+</section>
+
+<section>
+  <h2>The equations</h2>
+  <p class="formula">\( ⟦\mathtt{let}\ x = e_1\ \mathtt{in}\ e_2⟧\rho = ⟦e_2⟧\big(\rho[x \mapsto (e_1, \rho)]\big) \)</p>
+  <p class="formula">static: \( ⟦x⟧\rho = ⟦e⟧\rho' \) where \( \rho(x) = (e, \rho') \)<br>dynamic: \( ⟦x⟧\rho = ⟦e⟧\rho \) where \( \rho(x) = (e, \_) \)</p>
+  <p>The pair \( (e, \rho') \) is code together with the environment it was written in: the same thing as a closure in Lecture 4.</p>
+  <p class="note">Dynamic scoping does not need the second component. It is there only to keep one <code>Delayed</code> for both evaluators.</p>
+</section>
+
+<section>
+  <h2>Three evaluators, six programs</h2>
+  <table style="font-size:.72em">
+    <tr><th>program</th><th>eager</th><th>static</th><th>dynamic</th></tr>
+    <tr><td><code>let x = 5 in let f = x + 10 in let x = 42 in f</code></td><td>15</td><td>15</td><td>52</td></tr>
+    <tr><td><code>let a = 1 in let f = a + 10 in let a = 100 in f</code></td><td>11</td><td>11</td><td>110</td></tr>
+    <tr><td><code>let x = 1 in let y = x * 2 in y + y</code></td><td>4</td><td>4</td><td>4</td></tr>
+    <tr><td><code>let z = 1 / 0 in 7</code></td><td>error</td><td>7</td><td>7</td></tr>
+    <tr><td><code>let f = x + 1 in let x = 2 in f</code></td><td>error</td><td>error</td><td>3</td></tr>
+    <tr><td><code>let x = 1 in let x = x + 1 in x</code></td><td>2</td><td>2</td><td>RecursionError</td></tr>
+  </table>
+  <p class="note" style="margin-top:14px">Output of <code>python3 scoping.py</code>. Eager and static agree whenever eager has no error: in our language, computing a definition earlier or later gives the same number.</p>
+</section>
+
+<section>
+  <h2>The last line, with dynamic scoping</h2>
+  <pre><code class="language-text" data-trim>
+let x = 1 in let x = x + 1 in x
+  </code></pre>
+  <p>The body <code>x</code> stands for <code>Delayed(x + 1)</code>. Its definition is computed in the current environment, where <code>x</code> stands for <code>Delayed(x + 1)</code> again. And so on, until Python stops it.</p>
+  <p>With dynamic scoping, a definition can see itself, by accident. With static scoping, the inner <code>x + 1</code> sees the outer <code>x</code>, as the text suggests.</p>
+</section>
+
+<section>
+  <h2>In real languages</h2>
+  <div class="split">
+    <div>
+      <p class="cite">Python: static</p>
+      <pre><code class="language-python" data-trim>
+x = 1
+def f():
+    return x
+def g():
+    x = 2
+    return f()
+g()        # 1
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite">bash: dynamic</p>
+      <pre><code class="language-bash" data-trim>
+x=1
+f() { echo $x; }
+g() { local x=2; f; }
+g          # 2
+      </code></pre>
+    </div>
+  </div>
+  <p>In Python, <code>x</code> in <code>f</code> is the one visible where <code>f</code> is written. In bash, it is the one of whoever called <code>f</code>.</p>
+  <p class="note">Early Lisp and Emacs Lisp scope dynamically too. Almost every language designed since the 1980s scopes statically.</p>
+</section>
+
+<section>
+  <h2>Why static scoping won</h2>
+  <ul>
+    <li>The meaning of a name can be found by reading the text around it. With dynamic scoping, it depends on the path the program took to get there.</li>
+    <li>Renaming a bound name, consistently, never changes the result. With dynamic scoping, renaming <code>x</code> in <code>g</code> changes what <code>f</code> prints.</li>
+    <li><code>free_variables</code> tells, before running, which names a closed program needs. With dynamic scoping a name can be found at run time in a caller.</li>
+  </ul>
+  <p class="note">The difference really matters with functions, which are code that runs later, far from where it was written. Functions come in a later lecture, with closures as their values.</p>
+</section>
+
+<!-- ================================================================ wrap-up -->
+
+<section class="part">
+  <p class="kicker">Summary</p>
+  <h2>Names in your language</h2>
+</section>
+
+<section>
+  <h2>The decisions of today</h2>
+  <table style="font-size:.72em">
+    <tr><th>decision</th><th>alternative</th><th>why</th></tr>
+    <tr><td>binding</td><td>assignment</td><td>no memory needed; a name means one thing in its whole scope</td></tr>
+    <tr><td><code>let</code> at the top level of an expression</td><td><code>let</code> anywhere, as in OCaml</td><td>one parse tree only; some parentheses</td></tr>
+    <tr><td>reserved words</td><td>keywords usable as names</td><td>a simpler parser, clearer programs</td></tr>
+    <tr><td>definition outside its scope</td><td>recursive binding</td><td><code>let x = x + 1</code> uses the outer <code>x</code></td></tr>
+    <tr><td>eager</td><td>delayed</td><td>each definition computed once</td></tr>
+    <tr><td>static scoping</td><td>dynamic scoping</td><td>names can be understood by reading the text</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Where we are</h2>
+  <p>A program can now add names to the environment, with <code>let</code>. Two new equations, two new cases in <code>evaluate</code>, and <code>bind</code> as it was in Lecture 4.</p>
+  <p>The scope of a name is a part of the text. Static scoping keeps it that way; dynamic scoping makes it depend on the run.</p>
+  <p>Names cannot change value yet. Lecture 6, state and commands, adds memory: a name stands for a location, and the content of the location can change.</p>
+</section>
+
+<!-- ================================================================ exercises -->
+
+<section class="part">
+  <p class="kicker">Exercises</p>
+  <h2>Your turn</h2>
+</section>
+
+<section>
+  <h2>Exercise 1 · Predict, then run</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let a = 2 in let b = a * a in let a = b + 1 in a * b
+let x = 3 in (let y = x in y * x) + (let x = 1 in x)
+let n = 10 in let m = n % 3 in let n = n / m in n - m
+(let p = 4 in p) * (let q = p in q)
+    </code></pre>
+    <div>
+      <p class="cite">Level 1 of 5</p>
+      <ol>
+        <li>For each line, write the value, or the error, before running it.</li>
+        <li>For each occurrence of a name, say which <code>let</code> binds it, or that it is free.</li>
+        <li>Check with <code>evaluate_string</code> and <code>free_variables</code> in <code>binding.py</code>.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · Check before running</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+run("let x = 1 in x + y")
+# ValueError: free names: y
+
+run("let x = 1 in x + 1")     # 2
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 5</p>
+      <ol>
+        <li>Write <code>run(text)</code>: parse, call <code>free_variables</code>, and evaluate only if the program is closed.</li>
+        <li>Give an example where the check reports an error that evaluation alone would not reach.</li>
+        <li>Which stage of the interpreter does this check belong to: parser, transform, or a new one?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · Several names at once</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let x = 1, y = 2 in x + y          3
+let x = 1, y = x + 1 in x * y      ?
+    </code></pre>
+    <div>
+      <p class="cite">Level 3 of 5</p>
+      <ol>
+        <li>Extend the grammar, the AST and <code>evaluate</code> to allow several bindings in one <code>let</code>.</li>
+        <li>Two choices for the second line: each definition sees the names before it, or no definition sees any of them. Write the equation for each.</li>
+        <li>Can you implement it without a new AST node, by transforming into nested <code>Let</code>s?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · Computed at most once</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let s = 1+2+3+4+5+6+7+8+9 in s * s * s
+    </code></pre>
+    <div>
+      <p class="cite">Level 4 of 5</p>
+      <ol>
+        <li>In <code>scoping.py</code>, count how many times <code>add</code> is called by the eager and by the static evaluator on this program.</li>
+        <li>Change the static evaluator so that a <code>Delayed</code> definition is computed the first time it is used, and never again. Then <code>let z = 1/0 in 7</code> must still give 7.</li>
+        <li>Your <code>Delayed</code> now changes after it is built. Is <code>evaluate_static</code> still pure?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 5 · At home: names in your language</h2>
+  <div>
+    <p class="cite">Level 5 of 5 · take home</p>
+    <ol>
+      <li>Add <code>let</code> to the language of your project, from exercise 5 of Lecture 4.</li>
+      <li>What can a name stand for in your language: only values, or also operators? Can a program bind <code>+</code> to something else?</li>
+      <li>Write the equations for names and <code>let</code> in your domain. Did they change from today's?</li>
+      <li>Is there a construct of your language where dynamic scoping would make sense?</li>
+    </ol>
+  </div>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>
