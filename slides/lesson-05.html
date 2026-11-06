@@ -96,8 +96,13 @@ case Var(name):
 <section>
   <h2>Who puts <code>ten</code> in the environment?</h2>
   <pre><code class="language-python" data-trim>
-env = bind(create_initial_env(), "ten", 10)
-evaluate(parse_ast("ten * 2"), env)     # 20
+def create_initial_env() -&gt; Environment:
+    ...
+    env = bind(env, "ten", 10)
+    return env
+
+evaluate_string("ten * 2")     # 20
+evaluate_string("eleven")      # ValueError: Undefined identifier: eleven
   </code></pre>
   <p>Only the Python program that runs the interpreter. The program written in our language can use names, but cannot create them.</p>
   <p>Today the language gets a construct that adds a name to the environment: <code>let</code>.</p>
