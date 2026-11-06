@@ -18,10 +18,8 @@ from lark.exceptions import LarkError
 grammar = r"""
     ?expr: let | arith
     let: "let" IDENTIFIER "=" expr "in" expr
-    ?arith: arith ADDOP prod -> bin
-          | prod
-    ?prod: prod MULOP post -> bin
-         | post
+    ?arith: bin | post
+    bin: arith OP post
     ?post: slice | mono
     slice: post "[" expr ":" expr "]"
     mono: text | ground | var | paren | call
@@ -33,8 +31,7 @@ grammar = r"""
 
     STRING: /"[^"]*"/
     NUMBER: /[0-9]+/
-    ADDOP: "+"
-    MULOP: "*"
+    OP: "+" | "*"
     IDENTIFIER: /(?!(let|in)\b)[a-zA-Z_][a-zA-Z0-9_]*/
 
     %import common.WS
@@ -99,7 +96,7 @@ def transform_parse_tree(tree: Tree | str) -> Expression:
             return Number(value=int(digits))
         case Tree(data="var", children=[Token(type="IDENTIFIER", value=name)]):
             return Var(name=name)
-        case Tree(data="bin", children=[left, Token(type="ADDOP" | "MULOP", value=op), right]):
+        case Tree(data="bin", children=[left, Token(type="OP", value=op), right]):
             return BinaryExpression(
                 op, transform_parse_tree(left), transform_parse_tree(right)
             )
@@ -266,7 +263,7 @@ if __name__ == "__main__":
         'upper("ciao") + nl + reverse("ciao")',
         '"programming"[0:7]',
         'let w = "na" in (w * 8 + nl) * 2 + upper("batman")',
-        'let s = "Pisa" in s + nl + "-" * length(s)',
+        'let s = "Pisa" in s + nl + ("-" * length(s))',
         'let s = "Hello" in upper(s[0:1]) + lower(s[1:length(s)])',
         'let p = "level" in reverse(p) + " " + p',
     ]:

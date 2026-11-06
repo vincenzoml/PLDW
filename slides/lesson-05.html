@@ -43,9 +43,8 @@ evaluate_string("2^3^2")    # 64
     </code></pre>
     <div>
       <p class="lead">Two lines, and <code>evaluate</code> does not change.</p>
-      <p><code>2^3^2</code> is 64: the rule <code>bin: expr OP mono</code> groups from the left, so it is <code>(2^3)^2</code>.</p>
-      <p>A mathematician reads \( 2^{3^2} = 2^9 = 512 \): power groups from the right. To get that, <code>^</code> needs its own level in the grammar, with a right-recursive rule.</p>
-      <p class="note">The environment says what <code>^</code> computes; the grammar says how it groups.</p>
+      <p><code>2^3^2</code> is 64: like every operator of our grammar, <code>^</code> groups from the left, so it is <code>(2^3)^2</code>.</p>
+      <p>For \( 2^{3^2} = 512 \), write <code>2^(3^2)</code>.</p>
     </div>
   </div>
 </section>
@@ -771,7 +770,7 @@ let s = 1+2+3+4+5+6+7+8+9 in s * s * s
 upper("ciao") + nl + reverse("ciao")
                                   CIAO
                                   oaic
-let s = "Pisa" in s + nl + "-" * length(s)
+let s = "Pisa" in s + nl + ("-" * length(s))
                                   Pisa
                                   ----
 let w = "na" in (w * 8 + nl) * 2 + upper("batman")
@@ -798,7 +797,7 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
   <ol style="font-size:.85em">
     <li><strong>Domain.</strong> Write <code>EVal</code> and <code>DVal</code>. Numbers are needed for <code>* n</code> and <code>[i:j]</code>: are they expressible values, or only allowed in those places?</li>
     <li><strong>Equations.</strong> One for each construct, before any code. Which constructs are names in the environment, and which are nodes of the AST?</li>
-    <li><strong>Grammar.</strong> A <code>STRING</code> terminal, a rule for <code>name(expr)</code>, a rule for <code>expr[expr:expr]</code>. <code>*</code> must bind tighter than <code>+</code>: with one level only, the Pisa example repeats all of <code>Pisa</code>, newline, <code>-</code> four times. Why?</li>
+    <li><strong>Grammar.</strong> A <code>STRING</code> terminal, a rule for <code>name(expr)</code>, a rule for <code>expr[expr:expr]</code>. Operators group from the left, as today: use parentheses.</li>
     <li><strong>Primitives.</strong> <code>reverse</code>, <code>upper</code> and <code>lower</code> take one argument, the operators of Lecture 4 take two. How does <code>evaluate</code> tell them apart, and what happens with <code>nl(1)</code> or <code>reverse</code> alone?</li>
     <li><strong>Errors.</strong> <code>"a" * "b"</code>, <code>"a" + 3</code>, <code>upper(3)</code>, <code>"abc"["a":2]</code>: each must give a message that speaks about your language, not a Python <code>TypeError</code>.</li>
     <li><strong>Extend.</strong> Add <code>length(a)</code>. Which parts of the program did you change?</li>
