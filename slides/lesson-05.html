@@ -612,29 +612,6 @@ let x = 5 in
 </section>
 
 <section>
-  <h2>Three evaluators, six programs</h2>
-  <table style="font-size:.72em">
-    <tr><th>program</th><th>eager</th><th>static</th><th>dynamic</th></tr>
-    <tr><td><code>let x = 5 in let f = x + 10 in let x = 42 in f</code></td><td>15</td><td>15</td><td>52</td></tr>
-    <tr><td><code>let a = 1 in let f = a + 10 in let a = 100 in f</code></td><td>11</td><td>11</td><td>110</td></tr>
-    <tr><td><code>let x = 1 in let y = x * 2 in y + y</code></td><td>4</td><td>4</td><td>4</td></tr>
-    <tr><td><code>let z = 1 / 0 in 7</code></td><td>error</td><td>7</td><td>7</td></tr>
-    <tr><td><code>let f = x + 1 in let x = 2 in f</code></td><td>error</td><td>error</td><td>3</td></tr>
-    <tr><td><code>let x = 1 in let x = x + 1 in x</code></td><td>2</td><td>2</td><td>RecursionError</td></tr>
-  </table>
-  <p class="note" style="margin-top:14px">Output of <code>python3 scoping.py</code>. Eager and static agree whenever eager has no error: in our language, computing a definition earlier or later gives the same number.</p>
-</section>
-
-<section>
-  <h2>The last line, with dynamic scoping</h2>
-  <pre><code class="language-text" data-trim>
-let x = 1 in let x = x + 1 in x
-  </code></pre>
-  <p>The body <code>x</code> stands for <code>Delayed(x + 1)</code>. Its definition is computed in the current environment, where <code>x</code> stands for <code>Delayed(x + 1)</code> again. And so on, until Python stops it.</p>
-  <p>With dynamic scoping, a definition can see itself, by accident. With static scoping, the inner <code>x + 1</code> sees the outer <code>x</code>, as the text suggests.</p>
-</section>
-
-<section>
   <h2>In real languages</h2>
   <div class="split">
     <div>
