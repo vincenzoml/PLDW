@@ -31,7 +31,26 @@
 </section>
 
 <section>
-  <h2>Exercise 1: a power operator</h2>
+  <h2>Exercise 1 · A power operator</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+evaluate_string("2^3")      # 8
+evaluate_string("2*3")      # 6
+evaluate_string("2^3^2")    # ?
+    </code></pre>
+    <div>
+      <p class="cite">The assignment, from Lecture 4</p>
+      <ol>
+        <li>In <code>domains.py</code>, add <code>"^"</code> to the <code>OP</code> terminal and bind it to <code>power</code> in <code>create_initial_env</code>.</li>
+        <li>Check that <code>evaluate</code> did not need any change.</li>
+        <li>What is <code>2^3^2</code>, and why? Is it what a mathematician expects?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 1: the solution</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
 OP: "+" | "-" | "*" | "/" | "%" | "^"
@@ -50,7 +69,27 @@ evaluate_string("2^3^2")    # 64
 </section>
 
 <section>
-  <h2>Exercise 2: named constants</h2>
+  <h2>Exercise 2 · Named constants</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+evaluate_string("ten * 2")       # 20
+evaluate_string("ten + ten")     # 20
+evaluate_string("eleven")        # ValueError
+    </code></pre>
+    <div>
+      <p class="cite">The assignment, from Lecture 4</p>
+      <ol>
+        <li>Bind <code>ten</code> to <code>10</code> in the initial environment: it is a <code>DVal</code> too.</li>
+        <li>Add an <code>IDENTIFIER</code> terminal, a rule for it in <code>mono</code>, a node <code>Var(name)</code> and its case in <code>evaluate</code>.</li>
+        <li>Write the equation for <code>Var</code> first, then the code.</li>
+        <li>What should <code>+ + 1</code> and <code>ten(1, 2)</code> do? Which stage reports each error?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2: the solution</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
 mono: ground | var | paren
