@@ -12,6 +12,12 @@
 <style>
   /* program output, set apart from the code that printed it */
   .reveal pre.out code { background: var(--paper-2); color: var(--ink); border-left: 3px solid var(--warm); }
+  /* images with transparency, on a checkerboard so that alpha is visible */
+  .reveal .imgs { display: flex; gap: 18px; justify-content: center; }
+  .reveal .imgs figure { margin: 0; text-align: center; }
+  .reveal .imgs img { width: var(--w, 240px); height: auto; margin: 0; border-radius: 4px; }
+  .reveal .imgs figcaption { font-family: var(--mono); font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .reveal img.alpha { background: repeating-conic-gradient(#d9d6cd 0 25%, #f7f5ef 0 50%) 0 0 / 24px 24px; }
 </style>
 </head>
 <body>
@@ -860,6 +866,175 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
       <li>Is there a construct of your language where dynamic scoping would make sense?</li>
     </ol>
   </div>
+</section>
+
+<!-- ================================================================ running example: images -->
+
+<section class="part">
+  <p class="kicker">For the next lectures</p>
+  <h2>Images in Python</h2>
+</section>
+
+<section>
+  <h2>A running example</h2>
+  <div class="imgs">
+    <figure><img class="alpha" src="../code/images/red_circle.png" alt="a red circle, partly transparent"><figcaption>red_circle.png</figcaption></figure>
+    <figure><img class="alpha" src="../code/images/blue_square.png" alt="a blue square, partly transparent"><figcaption>blue_square.png</figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/circle_over_square.png" alt="the circle over the square"><figcaption>circle over square</figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/square_over_circle.png" alt="the square over the circle"><figcaption>square over circle</figcaption></figure>
+  </div>
+  <p style="margin-top:18px">In the next lectures, the values of our language will be images like these, as the pictures of Lecture 4 but with real pixels.</p>
+  <p>Today only the Python part: how to load, combine and save images. The code is in <code>code/images/images.py</code>, with the two images, 512 × 512.</p>
+</section>
+
+<section>
+  <h2>The library: Pillow</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+# once, in the terminal of VS Code
+# pip install pillow
+
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageOps
+    </code></pre>
+    <div>
+      <p class="lead">The standard library of Python has no module for images. Pillow is the one almost everybody uses.</p>
+      <p>Three of its modules are enough: <code>Image</code> to load, save and combine, <code>ImageDraw</code> to draw shapes, <code>ImageOps</code> for ready-made transformations.</p>
+      <p class="note"><code>pathlib</code> is in the standard library: a <code>Path</code> is a file name that knows how to join folders, <code>HERE / "red_circle.png"</code>. Pillow is now in <code>requirements.txt</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Load and save</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+HERE = Path(__file__).parent
+
+def load(path: Path) -&gt; Image.Image:
+    with Image.open(path) as image:
+        return image.convert("RGBA")
+
+def save(image: Image.Image, path: Path) -&gt; None:
+    image.save(path)
+
+circle = load(HERE / "red_circle.png")
+print(circle.size, circle.mode)
+print(circle.getpixel((206, 206)))
+print(circle.getpixel((10, 10)))
+    </code></pre>
+    <div>
+      <pre class="out"><code class="language-text" data-trim>
+(512, 512) RGBA
+(220, 40, 40, 200)
+(0, 0, 0, 0)
+      </code></pre>
+      <p class="lead"><code>convert("RGBA")</code> gives every image the same form, whatever the file was: four numbers per pixel.</p>
+      <p><code>with</code> closes the file when the block ends; <code>convert</code> has already made a copy in memory.</p>
+      <p class="note"><code>save</code> chooses the format from the extension: <code>.png</code> keeps transparency, <code>.jpg</code> does not.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Pixels with alpha</h2>
+  <table style="font-size:.8em">
+    <tr><th>pixel</th><th>R, G, B</th><th>alpha</th><th>meaning</th></tr>
+    <tr><td><code>(220, 40, 40, 200)</code></td><td>red</td><td>200</td><td>red, slightly transparent</td></tr>
+    <tr><td><code>(40, 80, 220, 160)</code></td><td>blue</td><td>160</td><td>blue, more transparent</td></tr>
+    <tr><td><code>(0, 0, 0, 0)</code></td><td>any</td><td>0</td><td>nothing: fully transparent</td></tr>
+    <tr><td><code>(255, 255, 255, 255)</code></td><td>white</td><td>255</td><td>white, fully opaque</td></tr>
+  </table>
+  <p style="margin-top:18px">Each number goes from 0 to 255. The fourth one, <strong>alpha</strong>, says how much the pixel covers what is behind it: 0 not at all, 255 completely.</p>
+  <p class="note">In the slides, the transparent parts are drawn on a grey checkerboard.</p>
+</section>
+
+<section>
+  <h2>Drawing the two examples</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+SIZE = 512
+
+def red_circle() -&gt; Image.Image:
+    image = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    draw.ellipse((56, 56, 356, 356), fill=(220, 40, 40, 200))
+    return image
+
+def blue_square() -&gt; Image.Image:
+    image = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((176, 176, 456, 456), fill=(40, 80, 220, 160))
+    return image
+    </code></pre>
+    <div>
+      <p class="lead"><code>Image.new</code> makes a transparent image; <code>ImageDraw</code> draws on it.</p>
+      <p>The four numbers of <code>ellipse</code> and <code>rectangle</code> are the corners of a box: left, top, right, bottom. The circle and the square overlap in the middle.</p>
+      <p class="note">The files are already in <code>code/images/</code>; these functions are how they were made.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Compositing: one image over another</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+def over(front: Image.Image,
+         back: Image.Image) -&gt; Image.Image:
+    return Image.alpha_composite(back, front)
+
+over(circle, square).getpixel((300, 300))
+# (194, 46, 66, 235)
+      </code></pre>
+      <div class="imgs" style="--w:200px">
+        <figure><img class="alpha" src="../code/images/out/circle_over_square.png" alt="the circle over the square"><figcaption>over(circle, square)</figcaption></figure>
+        <figure><img class="alpha" src="../code/images/out/square_over_circle.png" alt="the square over the circle"><figcaption>over(square, circle)</figcaption></figure>
+      </div>
+    </div>
+    <div>
+      <p class="lead"><code>alpha_composite</code> puts the second image on top of the first. <code>over</code> takes them in the order we read them: front, then back.</p>
+      <p>Where both are present, the front lets a part of the back show through. With alpha between 0 and 1:</p>
+      <p class="formula">\( \alpha = \alpha_f + \alpha_b (1 - \alpha_f) \)</p>
+      <p class="note">The order matters: <code>over</code> is not commutative. The two images on the left differ only in the middle.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>More operations</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def beside(left: Image.Image, right: Image.Image) -&gt; Image.Image:
+    result = Image.new("RGBA",
+                       (left.width + right.width,
+                        max(left.height, right.height)),
+                       (0, 0, 0, 0))
+    result.paste(left, (0, 0))
+    result.paste(right, (left.width, 0))
+    return result
+
+def mirror(image: Image.Image) -&gt; Image.Image:
+    return ImageOps.mirror(image)
+
+def fade(image: Image.Image, factor: float) -&gt; Image.Image:
+    r, g, b, a = image.split()
+    a = a.point(lambda v: round(v * factor))
+    return Image.merge("RGBA", (r, g, b, a))
+    </code></pre>
+    <div>
+      <p class="lead"><code>beside</code> makes an image wide enough for both and pastes them in. <code>above</code>, in the file, does the same vertically.</p>
+      <p><code>mirror</code> flips left to right. <code>fade</code> splits the four channels, multiplies alpha by <code>factor</code>, and puts them back.</p>
+      <p class="note"><code>point</code> applies a function to every pixel of a channel: a function passed as a value, as in Lecture 4.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Every operation returns a new image</h2>
+  <p><code>paste</code> changes the image it is called on. That is why <code>beside</code> pastes onto a new image, and never onto <code>left</code> or <code>right</code>.</p>
+  <p>Then <code>over</code>, <code>beside</code>, <code>mirror</code> and <code>fade</code> are pure functions: the images they receive are not changed, and the same arguments give the same image.</p>
+  <p class="note">In the next lectures they become operators in the environment, as <code>add</code> and <code>multiply</code> were: images will be the expressible values, and <code>over</code> a denotable one. Try them now: <code>python3 code/images/images.py</code> writes its results in <code>code/images/out/</code>.</p>
 </section>
 
 </div></div>

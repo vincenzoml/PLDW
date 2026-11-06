@@ -1,2 +1,3 @@
 lark>=1.2
 mypy
+pillow>=10
