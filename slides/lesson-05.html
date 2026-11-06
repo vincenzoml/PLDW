@@ -723,7 +723,7 @@ let n = 10 in let m = n % 3 in let n = n / m in n - m
     <p>Today's interpreter: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>code/lesson-05/binding.py</code></a></p>
     </div>
     <div>
-      <p class="cite">Level 1 of 5</p>
+      <p class="cite">Level 1 of 4</p>
       <ol>
         <li>For each line, write the value, or the error, before running it.</li>
         <li>For each occurrence of a name, say which <code>let</code> binds it, or that it is free.</li>
@@ -743,7 +743,7 @@ run("let x = 1 in x + y")
 run("let x = 1 in x + 1")     # 2
     </code></pre>
     <div>
-      <p class="cite">Level 2 of 5</p>
+      <p class="cite">Level 2 of 4</p>
       <ol>
         <li>Write <code>run(text)</code>: parse, call <code>free_variables</code>, and evaluate only if the program is closed.</li>
         <li>Give an example where the check reports an error that evaluation alone would not reach.</li>
@@ -761,7 +761,7 @@ let x = 1, y = 2 in x + y          3
 let x = 1, y = x + 1 in x * y      ?
     </code></pre>
     <div>
-      <p class="cite">Level 3 of 5</p>
+      <p class="cite">Level 3 of 4</p>
       <ol>
         <li>Extend the grammar, the AST and <code>evaluate</code> to allow several bindings in one <code>let</code>.</li>
         <li>Two choices for the second line: each definition sees the names before it, or no definition sees any of them. Write the equation for each.</li>
@@ -786,7 +786,7 @@ let s = "Pisa" in s + nl + ("-" * length(s))
 let w = "na" in (w * 8 + nl) * 2 + upper("batman")
     </code></pre>
     <div>
-      <p class="cite">Level 4 of 5 · a longer one</p>
+      <p class="cite">Level 4 of 4 · a longer one</p>
       <p class="lead">A new language, built from <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>binding.py</code></a>: a program computes a text.</p>
       <table style="font-size:.62em">
         <tr><th>construct</th><th>meaning</th></tr>
@@ -802,28 +802,15 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
   </div>
 </section>
 
-<section>
-  <h2>Exercise 5 · At home: names in your language</h2>
-  <div>
-    <p class="cite">Level 5 of 5 · take home</p>
-    <ol>
-      <li>Add <code>let</code> to the language of your project, from exercise 5 of Lecture 4.</li>
-      <li>What can a name stand for in your language: only values, or also operators? Can a program bind <code>+</code> to something else?</li>
-      <li>Write the equations for names and <code>let</code> in your domain. Did they change from today's?</li>
-      <li>Is there a construct of your language where dynamic scoping would make sense?</li>
-    </ol>
-  </div>
-</section>
-
 <!-- ================================================================ extra exercise: images -->
 
 <section class="part">
-  <p class="kicker">Exercise 6 · extra</p>
+  <p class="kicker">Exercise 5 · extra</p>
   <h2>Images in Python</h2>
 </section>
 
 <section>
-  <h2>Exercise 6 · Images in Python</h2>
+  <h2>Exercise 5 · Images in Python</h2>
   <div class="imgs">
     <figure><img class="alpha" src="../code/images/red_circle.png" alt="a red circle, partly transparent"><figcaption>red_circle.png</figcaption></figure>
     <figure><img class="alpha" src="../code/images/blue_square.png" alt="a blue square, partly transparent"><figcaption>blue_square.png</figcaption></figure>
@@ -1014,7 +1001,7 @@ def fade(image: Image.Image, factor: float) -&gt; Image.Image:
 </section>
 
 <section>
-  <h2>Exercise 6 · Steps</h2>
+  <h2>Exercise 5 · Steps</h2>
   <div>
     <p class="cite">Extra · Python only</p>
     <ol>
