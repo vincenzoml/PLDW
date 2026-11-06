@@ -813,15 +813,15 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
   <h2>Exercise 5 · A language for images</h2>
   <div class="split flip">
     <pre><code class="language-text" data-trim>
-print(circle over square)
+print(circle &amp; square)
                        the circle, in front of the square
-print(circle beside mirror(circle))
+print(circle | mirror(circle))
                        two circles, side by side
 let c = scale(circle, 0.5) in
-  print((c beside c) above (c beside c))
+  print((c | c) / (c | c))
                        four small circles, in a grid
 let bg = load("sky.png") in
-  print(circle over bg)
+  print(circle &amp; bg)
     </code></pre>
     <div>
       <p class="cite">Extra · a language of images</p>
@@ -830,8 +830,8 @@ let bg = load("sky.png") in
         <tr><th>construct</th><th>meaning</th></tr>
         <tr><td><code>circle</code>, <code>square</code></td><td>the two example images, 512 × 512</td></tr>
         <tr><td><code>load("file.png")</code></td><td>an image read from a file</td></tr>
-        <tr><td><code>a over b</code></td><td><code>a</code> in front of <code>b</code></td></tr>
-        <tr><td><code>a beside b</code>, <code>a above b</code></td><td>side by side, one on top of the other</td></tr>
+        <tr><td><code>a &amp; b</code></td><td><code>a</code> in front of <code>b</code>: <code>over</code></td></tr>
+        <tr><td><code>a | b</code>, <code>a / b</code></td><td>side by side, <code>a</code> on top of <code>b</code>: <code>beside</code>, <code>above</code></td></tr>
         <tr><td><code>mirror(a)</code>, <code>scale(a, f)</code></td><td>flipped left to right, resized by <code>f</code></td></tr>
         <tr><td><code>print(a)</code></td><td>opens a window with <code>a</code>; its value is <code>a</code></td></tr>
         <tr><td><code>let x = e₁ in e₂</code></td><td>as today</td></tr>
