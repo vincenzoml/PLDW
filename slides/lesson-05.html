@@ -1020,6 +1020,17 @@ def fade(image: Image.Image, factor: float) -&gt; Image.Image:
   <p>Then <code>over</code>, <code>scale</code>, <code>beside</code>, <code>mirror</code> and <code>fade</code> are pure functions: the images they receive are not changed, and the same arguments give the same image.</p>
 </section>
 
+<section>
+  <h2>Exercise 5 · The results</h2>
+  <div class="imgs">
+    <figure><img class="alpha" src="../code/images/out/lang-1.png" alt="the result of print(circle &amp; square)"><figcaption><code>print(circle &amp; square)</code></figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/lang-2.png" alt="the result of print(circle | mirror(circle))"><figcaption><code>print(circle | mirror(circle))</code></figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/lang-3.png" alt="the result of let c = scale(circle, 0.5) in print((c | c) / (c | c))"><figcaption><code>let c = scale(circle, 0.5) in print((c | c) / (c | c))</code></figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/lang-4.png" alt="the result of let bg = load("sky.png") in print(circle &amp; bg)"><figcaption><code>let bg = load("sky.png") in print(circle &amp; bg)</code></figcaption></figure>
+  </div>
+  <p style="margin-top:18px">What each <code>print</code> shows. A solution is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/imagelang.py"><code>code/images/imagelang.py</code></a>: run it with <code>--show</code> to open the windows.</p>
+</section>
+
 </div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
