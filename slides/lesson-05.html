@@ -868,23 +868,23 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
   </div>
 </section>
 
-<!-- ================================================================ running example: images -->
+<!-- ================================================================ extra exercise: images -->
 
 <section class="part">
-  <p class="kicker">For the next lectures</p>
+  <p class="kicker">Exercise 7 · extra</p>
   <h2>Images in Python</h2>
 </section>
 
 <section>
-  <h2>A running example</h2>
+  <h2>Exercise 7 · Images in Python</h2>
   <div class="imgs">
     <figure><img class="alpha" src="../code/images/red_circle.png" alt="a red circle, partly transparent"><figcaption>red_circle.png</figcaption></figure>
     <figure><img class="alpha" src="../code/images/blue_square.png" alt="a blue square, partly transparent"><figcaption>blue_square.png</figcaption></figure>
     <figure><img class="alpha" src="../code/images/out/circle_over_square.png" alt="the circle over the square"><figcaption>circle over square</figcaption></figure>
     <figure><img class="alpha" src="../code/images/out/square_over_circle.png" alt="the square over the circle"><figcaption>square over circle</figcaption></figure>
   </div>
-  <p style="margin-top:18px">In the next lectures, the values of our language will be images like these, as the pictures of Lecture 4 but with real pixels.</p>
-  <p>Today only the Python part: how to load, combine and save images. The code is in <code>code/images/images.py</code>, with the two images, 512 × 512.</p>
+  <p style="margin-top:18px">The pictures of Lecture 4, with real pixels. Python only, no language: how to load, combine and save images.</p>
+  <p>The next slides give the library and some examples. The code is in <code>code/images/images.py</code>, with the two images, 512 × 512.</p>
 </section>
 
 <section>
@@ -1034,7 +1034,20 @@ def fade(image: Image.Image, factor: float) -&gt; Image.Image:
   <h2>Every operation returns a new image</h2>
   <p><code>paste</code> changes the image it is called on. That is why <code>beside</code> pastes onto a new image, and never onto <code>left</code> or <code>right</code>.</p>
   <p>Then <code>over</code>, <code>beside</code>, <code>mirror</code> and <code>fade</code> are pure functions: the images they receive are not changed, and the same arguments give the same image.</p>
-  <p class="note">In the next lectures they become operators in the environment, as <code>add</code> and <code>multiply</code> were: images will be the expressible values, and <code>over</code> a denotable one. Try them now: <code>python3 code/images/images.py</code> writes its results in <code>code/images/out/</code>.</p>
+</section>
+
+<section>
+  <h2>Exercise 7 · Steps</h2>
+  <div>
+    <p class="cite">Extra · Python only</p>
+    <ol>
+      <li>Run <code>python3 code/images/images.py</code> and look at the results in <code>code/images/out/</code>.</li>
+      <li>Write <code>rotate(image, degrees)</code> and <code>grayscale(image)</code>, keeping the transparency. Look for them in <code>Image</code> and <code>ImageOps</code>.</li>
+      <li>With <code>beside</code> and <code>above</code>, build a 2 × 2 grid: the circle, its mirror, the square, the square faded to half.</li>
+      <li>Is <code>over</code> associative? Compare <code>over(a, over(b, c))</code> and <code>over(over(a, b), c)</code> pixel by pixel, with a third image of your own.</li>
+      <li>Which of your functions are pure? Check that none changes the images it receives.</li>
+    </ol>
+  </div>
 </section>
 
 </div></div>

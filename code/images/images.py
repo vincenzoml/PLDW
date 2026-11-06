@@ -1,6 +1,6 @@
-"""Images in Python: the running example of the next lectures.
+"""Lecture 5, exercise 7: images in Python.
 
-Only Python here, no language yet. Pillow is the library (`pip install pillow`);
+Only Python here, no language. Pillow is the library (`pip install pillow`);
 everything else is the standard library.
 
 Run with `python3 images.py`: it draws the two example images, if they are
