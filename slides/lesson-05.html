@@ -46,7 +46,7 @@ evaluate_string("2*3")      # 6
     <div>
       <p class="cite">The assignment, from Lecture 4</p>
       <ol>
-        <li>In <code>domains.py</code>, add <code>"^"</code> to the <code>OP</code> terminal and bind it to <code>power</code> in <code>create_initial_env</code>.</li>
+        <li>In <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-04/domains.py"><code>domains.py</code></a>, add <code>"^"</code> to the <code>OP</code> terminal and bind it to <code>power</code> in <code>create_initial_env</code>.</li>
         <li>Check that <code>evaluate</code> did not need any change.</li>
       </ol>
     </div>
@@ -146,7 +146,7 @@ evaluate_string("eleven")      # ValueError: Undefined identifier: eleven
   </code></pre>
   <p>Only the Python program that runs the interpreter. The program written in our language can use names, but cannot create them.</p>
   <p>Today the language gets a construct that adds a name to the environment: <code>let</code>.</p>
-  <p class="note">The code of this lecture is in <code>code/lesson-05/</code>: <code>binding.py</code> and <code>scoping.py</code>.</p>
+  <p class="note">The code of this lecture is in <a href="https://github.com/vincenzoml/PLDW/tree/main/code/lesson-05"><code>code/lesson-05/</code></a>: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>binding.py</code></a> and <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/scoping.py"><code>scoping.py</code></a>.</p>
 </section>
 
 <!-- ================================================================ let -->
@@ -194,6 +194,31 @@ let  x  =  3  in  x + 1
   <p class="note">Assignment needs memory, which can change while the program runs: Lecture 6.</p>
 </section>
 
+<section>
+  <h2>The same program, two answers</h2>
+  <div class="split">
+    <div>
+      <p class="cite">Our language</p>
+      <pre><code class="language-plaintext" data-trim>
+let x = 3 in
+  let f = x + 1 in
+    let x = 10 in
+      f                 # 4
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite">Python</p>
+      <pre><code class="language-python" data-trim>
+x = 3
+f = lambda: x + 1
+x = 10
+f()                     # 11
+      </code></pre>
+    </div>
+  </div>
+  <p style="margin-top:22px">The second <code>let x</code> makes a new <code>x</code>; the <code>x</code> that <code>f</code> was computed from is still 3. The second <code>x = 10</code> changes the only <code>x</code> there is, and <code>f</code> reads it when it is called.</p>
+</section>
+
 <!-- ================================================================ syntax -->
 
 <section class="part">
@@ -226,6 +251,7 @@ grammar = r"""
     <div>
       <p class="lead">The rules of Lecture 4 move one level down, into <code>arith</code>. Above them, an expression is a <code>let</code> or an arithmetic expression.</p>
       <p>The definition and the body of a <code>let</code> are <code>expr</code>: they can contain other <code>let</code>s.</p>
+      <p>Since <code>let</code> is above <code>arith</code>, it cannot be an operand: <code>1 + let x = 2 in x</code> is a syntax error. Write <code>1 + (let x = 2 in x)</code>.</p>
       <p class="note"><code>"let"</code>, <code>"="</code> and <code>"in"</code> are anonymous strings: they do not appear in the parse tree.</p>
     </div>
   </div>
@@ -377,7 +403,9 @@ def evaluate(ast: Expression, env: Environment) -&gt; EVal:
 </section>
 
 <section>
-  <h2><code>let x = 1 in let y = x + 1 in x * y</code></h2>
+  <h2><code style="display:inline-block;white-space:pre;font-size:.62em;line-height:1.2;padding:.15em .4em">let x = 1 in
+  let y = x + 1 in
+    x * y</code></h2>
   <pre><code class="language-text" data-trim>
 evaluate(Let('x', 1, Let('y', x + 1, x * y)), ρ0)
   evaluate(Number(1), ρ0)                         1
@@ -554,7 +582,7 @@ def free_variables(ast: Expression) -&gt; frozenset[str]:
 let z = 1 / 0 in 7
   </code></pre>
   <p>Eager: <code>Division by zero</code>. The other way: 7, because <code>z</code> is never used.</p>
-  <p class="note">This is the idea behind the lazy evaluation of Haskell. The code of this part is in <code>scoping.py</code>.</p>
+  <p class="note">This is the idea behind the lazy evaluation of Haskell. The code of this part is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/scoping.py"><code>scoping.py</code></a>.</p>
 </section>
 
 <section>
@@ -745,7 +773,7 @@ let n = 10 in let m = n % 3 in let n = n / m in n - m
       <ol>
         <li>For each line, write the value, or the error, before running it.</li>
         <li>For each occurrence of a name, say which <code>let</code> binds it, or that it is free.</li>
-        <li>Check with <code>evaluate_string</code> and <code>free_variables</code> in <code>binding.py</code>.</li>
+        <li>Check with <code>evaluate_string</code> and <code>free_variables</code> in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>binding.py</code></a>.</li>
       </ol>
     </div>
   </div>
@@ -798,7 +826,7 @@ let s = 1+2+3+4+5+6+7+8+9 in s * s * s
     <div>
       <p class="cite">Level 4 of 6</p>
       <ol>
-        <li>In <code>scoping.py</code>, count how many times <code>add</code> is called by the eager and by the static evaluator on this program.</li>
+        <li>In <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/scoping.py"><code>scoping.py</code></a>, count how many times <code>add</code> is called by the eager and by the static evaluator on this program.</li>
         <li>Change the static evaluator so that a <code>Delayed</code> definition is computed the first time it is used, and never again. Then <code>let z = 1/0 in 7</code> must still give 7.</li>
         <li>Your <code>Delayed</code> now changes after it is built. Is <code>evaluate_static</code> still pure?</li>
       </ol>
@@ -822,7 +850,7 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
     </code></pre>
     <div>
       <p class="cite">Level 5 of 6 · a longer one</p>
-      <p class="lead">A new language, built from <code>binding.py</code>: a program computes a text.</p>
+      <p class="lead">A new language, built from <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>binding.py</code></a>: a program computes a text.</p>
       <table style="font-size:.62em">
         <tr><th>construct</th><th>meaning</th></tr>
         <tr><td><code>"..."</code></td><td>a text, written between double quotes</td></tr>
@@ -847,7 +875,7 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
     <li><strong>Errors.</strong> <code>"a" * "b"</code>, <code>"a" + 3</code>, <code>upper(3)</code>, <code>"abc"["a":2]</code>: each must give a message that speaks about your language, not a Python <code>TypeError</code>.</li>
     <li><strong>Extend.</strong> Add <code>length(a)</code>. Which parts of the program did you change?</li>
   </ol>
-  <p class="note">A solution is in <code>code/lesson-05/text.py</code>.</p>
+  <p class="note">A solution is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/text.py"><code>code/lesson-05/text.py</code></a>.</p>
 </section>
 
 <section>
@@ -879,7 +907,7 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
     <figure><img class="alpha" src="../code/images/out/square_over_circle.png" alt="the square over the circle"><figcaption>square over circle</figcaption></figure>
   </div>
   <p style="margin-top:18px">Images are a good domain for a small language. This exercise writes, in Python, the primitives such a language would need: load, combine, save.</p>
-  <p>The next slides give the library and some examples. The code is in <code>code/images/images.py</code>, with the two images, 512 × 512.</p>
+  <p>The next slides give the library and some examples. The code is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/images.py"><code>code/images/images.py</code></a>, with the two images, 512 × 512.</p>
 </section>
 
 <section>
