@@ -601,61 +601,6 @@ let x = 5 in
 </section>
 
 <section>
-  <h2>A delayed definition</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
-@dataclass(frozen=True)
-class Delayed:
-    definition: Expression
-    env: Environment
-
-type DVal = EVal | Operator | Delayed
-type Environment = Callable[[str], DVal]
-
-
-case Let(name, definition, body):
-    return evaluate(body,
-                    bind(env, name, Delayed(definition, env)))
-    </code></pre>
-    <div>
-      <p class="lead">A new denotable value: a definition not computed yet, with the environment of its <code>let</code>.</p>
-      <p>The <code>Let</code> case no longer calls <code>evaluate</code> on the definition: it stores it.</p>
-      <p class="note">The denotable values change, the expressible values do not: an expression still computes an integer. A <code>Delayed</code> is something a name can stand for, not a result.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>Using the name: two choices</h2>
-  <div class="split">
-    <div>
-      <p class="cite">static</p>
-      <pre><code class="language-python" data-trim>
-case Var(name):
-    match env(name):
-        case Delayed(definition, saved_env):
-            return evaluate_static(definition,
-                                   saved_env)
-        ...
-      </code></pre>
-    </div>
-    <div>
-      <p class="cite">dynamic</p>
-      <pre><code class="language-python" data-trim>
-case Var(name):
-    match env(name):
-        case Delayed(definition, _):
-            return evaluate_dynamic(definition,
-                                    env)
-        ...
-      </code></pre>
-    </div>
-  </div>
-  <p>The only difference is the environment used for the definition: the one saved in the <code>Delayed</code>, or the current one.</p>
-  <p class="note">The rest of the two evaluators is identical.</p>
-</section>
-
-<section>
   <h2>The equations</h2>
   <p class="formula">\( ⟦\mathtt{let}\ x = e_1\ \mathtt{in}\ e_2⟧\rho = ⟦e_2⟧\big(\rho[x \mapsto (e_1, \rho)]\big) \)</p>
   <p class="formula">static: \( ⟦x⟧\rho = ⟦e⟧\rho' \) where \( \rho(x) = (e, \rho') \)<br>dynamic: \( ⟦x⟧\rho = ⟦e⟧\rho \) where \( \rho(x) = (e, \_) \)</p>
