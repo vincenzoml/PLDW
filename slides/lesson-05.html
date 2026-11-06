@@ -603,9 +603,12 @@ let x = 5 in
 <section>
   <h2>The equations</h2>
   <p class="formula">\( ⟦\mathtt{let}\ x = e_1\ \mathtt{in}\ e_2⟧\rho = ⟦e_2⟧\big(\rho[x \mapsto (e_1, \rho)]\big) \)</p>
-  <p class="formula">static: \( ⟦x⟧\rho = ⟦e⟧\rho' \) where \( \rho(x) = (e, \rho') \)<br>dynamic: \( ⟦x⟧\rho = ⟦e⟧\rho \) where \( \rho(x) = (e, \_) \)</p>
-  <p>The pair \( (e, \rho') \) is code together with the environment it was written in: the same thing as a closure in Lecture 4.</p>
-  <p class="note">Dynamic scoping does not need the second component. It is there only to keep one <code>Delayed</code> for both evaluators.</p>
+  <p><code>let</code> binds <code>x</code> to a pair: its definition \( e_1 \) and the environment \( \rho \) of the <code>let</code>. When <code>x</code> is used, with \( \rho(x) = (e, \rho') \):</p>
+  <div class="cards" style="--n:2; margin-top:14px">
+    <div class="card"><p class="idx">STATIC</p><p class="formula">\( ⟦x⟧\rho = ⟦e⟧\rho' \)</p><p>Compute \( e \) in \( \rho' \), the environment saved at the <code>let</code>.</p></div>
+    <div class="card warm"><p class="idx">DYNAMIC</p><p class="formula">\( ⟦x⟧\rho = ⟦e⟧\rho \)</p><p>Compute \( e \) in \( \rho \), the environment where <code>x</code> is used. \( \rho' \) is ignored.</p></div>
+  </div>
+  <p class="note">The pair \( (e, \rho') \) is a closure, as in Lecture 4.</p>
 </section>
 
 <section>
