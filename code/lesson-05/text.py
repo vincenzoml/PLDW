@@ -1,4 +1,4 @@
-"""Lecture 5, exercise 5: a language for composing text.
+"""Lecture 5, exercise 4: a language for composing text.
 
 A solution. The values are strings and integers; `let` and the environment
 are those of binding.py, and the primitives on text are names in the initial

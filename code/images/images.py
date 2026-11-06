@@ -1,4 +1,4 @@
-"""Lecture 5, exercise 7: images in Python.
+"""Lecture 5, exercise 6: images in Python.
 
 Only Python here, no language. Pillow is the library (`pip install pillow`);
 everything else is the standard library.

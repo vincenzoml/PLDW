@@ -697,7 +697,7 @@ let n = 10 in let m = n % 3 in let n = n / m in n - m
     <p>Today's interpreter: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>code/lesson-05/binding.py</code></a></p>
     </div>
     <div>
-      <p class="cite">Level 1 of 6</p>
+      <p class="cite">Level 1 of 5</p>
       <ol>
         <li>For each line, write the value, or the error, before running it.</li>
         <li>For each occurrence of a name, say which <code>let</code> binds it, or that it is free.</li>
@@ -717,7 +717,7 @@ run("let x = 1 in x + y")
 run("let x = 1 in x + 1")     # 2
     </code></pre>
     <div>
-      <p class="cite">Level 2 of 6</p>
+      <p class="cite">Level 2 of 5</p>
       <ol>
         <li>Write <code>run(text)</code>: parse, call <code>free_variables</code>, and evaluate only if the program is closed.</li>
         <li>Give an example where the check reports an error that evaluation alone would not reach.</li>
@@ -735,7 +735,7 @@ let x = 1, y = 2 in x + y          3
 let x = 1, y = x + 1 in x * y      ?
     </code></pre>
     <div>
-      <p class="cite">Level 3 of 6</p>
+      <p class="cite">Level 3 of 5</p>
       <ol>
         <li>Extend the grammar, the AST and <code>evaluate</code> to allow several bindings in one <code>let</code>.</li>
         <li>Two choices for the second line: each definition sees the names before it, or no definition sees any of them. Write the equation for each.</li>
@@ -746,24 +746,7 @@ let x = 1, y = x + 1 in x * y      ?
 </section>
 
 <section>
-  <h2>Exercise 4 · Computed at most once</h2>
-  <div class="split flip">
-    <pre><code class="language-text" data-trim>
-let s = 1+2+3+4+5+6+7+8+9 in s * s * s
-    </code></pre>
-    <div>
-      <p class="cite">Level 4 of 6</p>
-      <ol>
-        <li>In <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/scoping.py"><code>scoping.py</code></a>, count how many times <code>add</code> is called by the eager and by the static evaluator on this program.</li>
-        <li>Change the static evaluator so that a <code>Delayed</code> definition is computed the first time it is used, and never again. Then <code>let z = 1/0 in 7</code> must still give 7.</li>
-        <li>Your <code>Delayed</code> now changes after it is built. Is <code>evaluate_static</code> still pure?</li>
-      </ol>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>Exercise 5 · A language for text</h2>
+  <h2>Exercise 4 · A language for text</h2>
   <div class="split flip">
     <pre><code class="language-text" data-trim>
 "ab" * 3                          ababab
@@ -777,7 +760,7 @@ let s = "Pisa" in s + nl + ("-" * length(s))
 let w = "na" in (w * 8 + nl) * 2 + upper("batman")
     </code></pre>
     <div>
-      <p class="cite">Level 5 of 6 · a longer one</p>
+      <p class="cite">Level 4 of 5 · a longer one</p>
       <p class="lead">A new language, built from <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>binding.py</code></a>: a program computes a text.</p>
       <table style="font-size:.62em">
         <tr><th>construct</th><th>meaning</th></tr>
@@ -794,7 +777,7 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
 </section>
 
 <section>
-  <h2>Exercise 5 · Steps</h2>
+  <h2>Exercise 4 · Steps</h2>
   <ol style="font-size:.85em">
     <li><strong>Domain.</strong> Write <code>EVal</code> and <code>DVal</code>. Numbers are needed for <code>* n</code> and <code>[i:j]</code>: are they expressible values, or only allowed in those places?</li>
     <li><strong>Equations.</strong> One for each construct, before any code. Which constructs are names in the environment, and which are nodes of the AST?</li>
@@ -807,9 +790,9 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
 </section>
 
 <section>
-  <h2>Exercise 6 · At home: names in your language</h2>
+  <h2>Exercise 5 · At home: names in your language</h2>
   <div>
-    <p class="cite">Level 6 of 6 · take home</p>
+    <p class="cite">Level 5 of 5 · take home</p>
     <ol>
       <li>Add <code>let</code> to the language of your project, from exercise 5 of Lecture 4.</li>
       <li>What can a name stand for in your language: only values, or also operators? Can a program bind <code>+</code> to something else?</li>
@@ -822,12 +805,12 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
 <!-- ================================================================ extra exercise: images -->
 
 <section class="part">
-  <p class="kicker">Exercise 7 · extra</p>
+  <p class="kicker">Exercise 6 · extra</p>
   <h2>Images in Python</h2>
 </section>
 
 <section>
-  <h2>Exercise 7 · Images in Python</h2>
+  <h2>Exercise 6 · Images in Python</h2>
   <div class="imgs">
     <figure><img class="alpha" src="../code/images/red_circle.png" alt="a red circle, partly transparent"><figcaption>red_circle.png</figcaption></figure>
     <figure><img class="alpha" src="../code/images/blue_square.png" alt="a blue square, partly transparent"><figcaption>blue_square.png</figcaption></figure>
@@ -1018,7 +1001,7 @@ def fade(image: Image.Image, factor: float) -&gt; Image.Image:
 </section>
 
 <section>
-  <h2>Exercise 7 · Steps</h2>
+  <h2>Exercise 6 · Steps</h2>
   <div>
     <p class="cite">Extra · Python only</p>
     <ol>
