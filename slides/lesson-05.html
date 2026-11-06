@@ -697,7 +697,7 @@ let n = 10 in let m = n % 3 in let n = n / m in n - m
 (let p = 4 in p) * (let q = p in q)
     </code></pre>
     <div>
-      <p class="cite">Level 1 of 5</p>
+      <p class="cite">Level 1 of 6</p>
       <ol>
         <li>For each line, write the value, or the error, before running it.</li>
         <li>For each occurrence of a name, say which <code>let</code> binds it, or that it is free.</li>
@@ -717,7 +717,7 @@ run("let x = 1 in x + y")
 run("let x = 1 in x + 1")     # 2
     </code></pre>
     <div>
-      <p class="cite">Level 2 of 5</p>
+      <p class="cite">Level 2 of 6</p>
       <ol>
         <li>Write <code>run(text)</code>: parse, call <code>free_variables</code>, and evaluate only if the program is closed.</li>
         <li>Give an example where the check reports an error that evaluation alone would not reach.</li>
@@ -735,7 +735,7 @@ let x = 1, y = 2 in x + y          3
 let x = 1, y = x + 1 in x * y      ?
     </code></pre>
     <div>
-      <p class="cite">Level 3 of 5</p>
+      <p class="cite">Level 3 of 6</p>
       <ol>
         <li>Extend the grammar, the AST and <code>evaluate</code> to allow several bindings in one <code>let</code>.</li>
         <li>Two choices for the second line: each definition sees the names before it, or no definition sees any of them. Write the equation for each.</li>
@@ -752,7 +752,7 @@ let x = 1, y = x + 1 in x * y      ?
 let s = 1+2+3+4+5+6+7+8+9 in s * s * s
     </code></pre>
     <div>
-      <p class="cite">Level 4 of 5</p>
+      <p class="cite">Level 4 of 6</p>
       <ol>
         <li>In <code>scoping.py</code>, count how many times <code>add</code> is called by the eager and by the static evaluator on this program.</li>
         <li>Change the static evaluator so that a <code>Delayed</code> definition is computed the first time it is used, and never again. Then <code>let z = 1/0 in 7</code> must still give 7.</li>
@@ -763,9 +763,53 @@ let s = 1+2+3+4+5+6+7+8+9 in s * s * s
 </section>
 
 <section>
-  <h2>Exercise 5 · At home: names in your language</h2>
+  <h2>Exercise 5 · A language for text</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+"ab" * 3                          ababab
+"programming"[0:7]                program
+upper("ciao") + nl + reverse("ciao")
+                                  CIAO
+                                  oaic
+let s = "Pisa" in s + nl + "-" * length(s)
+                                  Pisa
+                                  ----
+let w = "na" in (w * 8 + nl) * 2 + upper("batman")
+    </code></pre>
+    <div>
+      <p class="cite">Level 5 of 6 · a longer one</p>
+      <p class="lead">A new language, built from <code>binding.py</code>: a program computes a text.</p>
+      <table style="font-size:.62em">
+        <tr><th>construct</th><th>meaning</th></tr>
+        <tr><td><code>"..."</code></td><td>a text, written between double quotes</td></tr>
+        <tr><td><code>a + b</code></td><td>the two texts, one after the other</td></tr>
+        <tr><td><code>a * n</code></td><td><code>a</code> repeated <code>n</code> times</td></tr>
+        <tr><td><code>reverse(a)</code>, <code>upper(a)</code>, <code>lower(a)</code></td><td>backwards, in capitals, in small letters</td></tr>
+        <tr><td><code>nl</code></td><td>a text with one newline in it</td></tr>
+        <tr><td><code>a[i:j]</code></td><td>the characters from position <code>i</code> to <code>j</code>, excluded, as in Python</td></tr>
+        <tr><td><code>let x = e₁ in e₂</code></td><td>as today</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 5 · Steps</h2>
+  <ol style="font-size:.85em">
+    <li><strong>Domain.</strong> Write <code>EVal</code> and <code>DVal</code>. Numbers are needed for <code>* n</code> and <code>[i:j]</code>: are they expressible values, or only allowed in those places?</li>
+    <li><strong>Equations.</strong> One for each construct, before any code. Which constructs are names in the environment, and which are nodes of the AST?</li>
+    <li><strong>Grammar.</strong> A <code>STRING</code> terminal, a rule for <code>name(expr)</code>, a rule for <code>expr[expr:expr]</code>. <code>*</code> must bind tighter than <code>+</code>: with one level only, the Pisa example repeats all of <code>Pisa</code>, newline, <code>-</code> four times. Why?</li>
+    <li><strong>Primitives.</strong> <code>reverse</code>, <code>upper</code> and <code>lower</code> take one argument, the operators of Lecture 4 take two. How does <code>evaluate</code> tell them apart, and what happens with <code>nl(1)</code> or <code>reverse</code> alone?</li>
+    <li><strong>Errors.</strong> <code>"a" * "b"</code>, <code>"a" + 3</code>, <code>upper(3)</code>, <code>"abc"["a":2]</code>: each must give a message that speaks about your language, not a Python <code>TypeError</code>.</li>
+    <li><strong>Extend.</strong> Add <code>length(a)</code>. Which parts of the program did you change?</li>
+  </ol>
+  <p class="note">A solution is in <code>code/lesson-05/text.py</code>.</p>
+</section>
+
+<section>
+  <h2>Exercise 6 · At home: names in your language</h2>
   <div>
-    <p class="cite">Level 5 of 5 · take home</p>
+    <p class="cite">Level 6 of 6 · take home</p>
     <ol>
       <li>Add <code>let</code> to the language of your project, from exercise 5 of Lecture 4.</li>
       <li>What can a name stand for in your language: only values, or also operators? Can a program bind <code>+</code> to something else?</li>
