@@ -671,6 +671,32 @@ g          # 2
 </section>
 
 <section>
+  <h2><code>let</code>: all the changes</h2>
+  <div class="cards" style="--n:3; margin-top:14px; font-size:.8em">
+    <div class="card"><p class="idx">PARSER</p><pre><code class="language-python" data-trim>
+?expr: let | arith
+let: "let" IDENTIFIER "=" expr "in" expr
+mono: ground | var | paren
+var: IDENTIFIER
+    </code></pre></div>
+    <div class="card"><p class="idx">AST</p><pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class Let:
+    name: str
+    definition: Expression
+    body: Expression
+    </code></pre></div>
+    <div class="card warm"><p class="idx">EVALUATE</p><pre><code class="language-python" data-trim>
+case Let(name, definition, body):
+    value = evaluate(definition, env)
+    return evaluate(body,
+        bind(env, name, value))
+    </code></pre></div>
+  </div>
+  <p>Everything else is as in Lecture 4. The full code is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-05/binding.py"><code>code/lesson-05/binding.py</code></a>.</p>
+</section>
+
+<section>
   <h2>Where we are</h2>
   <p>A program can now add names to the environment, with <code>let</code>. Two new equations, two new cases in <code>evaluate</code>, and <code>bind</code> as it was in Lecture 4.</p>
   <p>The scope of a name is a part of the text. Static scoping keeps it that way; dynamic scoping makes it depend on the run.</p>
