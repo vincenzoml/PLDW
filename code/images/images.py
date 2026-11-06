@@ -1,7 +1,7 @@
-"""Lecture 5, exercise 5: images in Python.
+"""Lecture 5, exercise 5: the primitives for a language of images.
 
-Only Python here, no language. Pillow is the library (`pip install pillow`);
-everything else is the standard library.
+Pillow is the library (`pip install pillow`); everything else is the
+standard library. `show` is what the language's `print` should call.
 
 Run with `python3 images.py`: it draws the two example images, if they are
 missing, and writes the results of the operations next to them.
@@ -90,6 +90,11 @@ def fade(image: Image.Image, factor: float) -> Image.Image:
     r, g, b, a = image.split()
     a = a.point(lambda v: round(v * factor))
     return Image.merge("RGBA", (r, g, b, a))
+
+
+def show(image: Image.Image) -> None:
+    """Open a window with the image, in the system's image viewer."""
+    image.show()
 
 
 def on_white(image: Image.Image) -> Image.Image:

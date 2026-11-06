@@ -817,8 +817,8 @@ let w = "na" in (w * 8 + nl) * 2 + upper("batman")
     <figure><img class="alpha" src="../code/images/out/circle_over_square.png" alt="the circle over the square"><figcaption>circle over square</figcaption></figure>
     <figure><img class="alpha" src="../code/images/out/square_over_circle.png" alt="the square over the circle"><figcaption>square over circle</figcaption></figure>
   </div>
-  <p style="margin-top:18px">Images are a good domain for a small language. This exercise writes, in Python, the primitives such a language would need: load, combine, save.</p>
-  <p>The next slides give the library and some examples. The code is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/images.py"><code>code/images/images.py</code></a>, with the two images, 512 × 512.</p>
+  <p style="margin-top:18px">Images are a good domain for a small language. This exercise builds one: its values are images, its primitives are Python functions.</p>
+  <p>The next slides give the library and the primitives. The code is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/images.py"><code>code/images/images.py</code></a>, with the two images, 512 × 512.</p>
 </section>
 
 <section>
@@ -1001,15 +1001,15 @@ def fade(image: Image.Image, factor: float) -&gt; Image.Image:
 </section>
 
 <section>
-  <h2>Exercise 5 · Steps</h2>
+  <h2>Exercise 5 · The language</h2>
   <div>
-    <p class="cite">Extra · Python only</p>
+    <p class="cite">Extra · a language of images</p>
     <ol>
-      <li>Run <code>python3 code/images/images.py</code> and look at the results in <code>code/images/out/</code>.</li>
-      <li>Write <code>rotate(image, degrees)</code> and <code>grayscale(image)</code>, keeping the transparency. Look for them in <code>Image</code> and <code>ImageOps</code>.</li>
-      <li>Build a 2 × 2 grid of the circle, its mirror, the square, the square faded to half: with <code>beside</code> and <code>above</code>, then with <code>scale</code> and <code>over</code> at four positions.</li>
-      <li>Is <code>over</code> associative? Compare <code>over(a, over(b, c))</code> and <code>over(over(a, b), c)</code> pixel by pixel, with a third image of your own.</li>
-      <li>Which of your functions are pure? Check that none changes the images it receives.</li>
+      <li><strong>Grammar.</strong> The names <code>circle</code> and <code>square</code>, <code>load("file.png")</code>, <code>a over b</code>, <code>a beside b</code>, <code>a above b</code>, <code>mirror(e)</code>, <code>scale(e, 0.5)</code>, and <code>let</code> from today.</li>
+      <li><strong>Values.</strong> An expression computes an image. Numbers appear only as arguments of <code>scale</code>.</li>
+      <li><strong>Evaluate.</strong> Each construct calls one function of <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/images.py"><code>images.py</code></a>.</li>
+      <li><strong><code>print(e)</code></strong> opens a window with the image of <code>e</code>, and gives that image as its value. Use <code>show</code> from <code>images.py</code>.</li>
+      <li><strong>Try:</strong> <code>let c = circle in print(c beside mirror(c))</code></li>
     </ol>
   </div>
 </section>
