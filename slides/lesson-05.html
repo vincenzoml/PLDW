@@ -42,14 +42,12 @@
     <pre><code class="language-python" data-trim>
 evaluate_string("2^3")      # 8
 evaluate_string("2*3")      # 6
-evaluate_string("2^3^2")    # ?
     </code></pre>
     <div>
       <p class="cite">The assignment, from Lecture 4</p>
       <ol>
         <li>In <code>domains.py</code>, add <code>"^"</code> to the <code>OP</code> terminal and bind it to <code>power</code> in <code>create_initial_env</code>.</li>
         <li>Check that <code>evaluate</code> did not need any change.</li>
-        <li>What is <code>2^3^2</code>, and why? Is it what a mathematician expects?</li>
       </ol>
     </div>
   </div>
@@ -64,12 +62,9 @@ OP: "+" | "-" | "*" | "/" | "%" | "^"
 env = bind(env, "^", power)
 
 evaluate_string("2^3")      # 8
-evaluate_string("2^3^2")    # 64
     </code></pre>
     <div>
       <p class="lead">Two lines, and <code>evaluate</code> does not change.</p>
-      <p><code>2^3^2</code> is 64: like every operator of our grammar, <code>^</code> groups from the left, so it is <code>(2^3)^2</code>.</p>
-      <p>For \( 2^{3^2} = 512 \), write <code>2^(3^2)</code>.</p>
     </div>
   </div>
 </section>

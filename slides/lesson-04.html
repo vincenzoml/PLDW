@@ -970,14 +970,12 @@ ValueError: Undefined identifier: -
     <pre><code class="language-python" data-trim>
 evaluate_string("2^3")      # 8
 evaluate_string("2*3")      # 6
-evaluate_string("2^3^2")    # ?
     </code></pre>
     <div>
       <p class="cite">Level 1 of 5</p>
       <ol>
         <li>In <code>domains.py</code>, add <code>"^"</code> to the <code>OP</code> terminal and bind it to <code>power</code> in <code>create_initial_env</code>.</li>
         <li>Check that <code>evaluate</code> did not need any change.</li>
-        <li>What is <code>2^3^2</code>, and why? Is it what a mathematician expects?</li>
       </ol>
     </div>
   </div>
