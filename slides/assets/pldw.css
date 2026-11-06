@@ -179,6 +179,8 @@
 .reveal section.part h2 { font-family: var(--serif); font-weight: 300; font-size: 84px; line-height: 1.02;
   letter-spacing: -.02em; color: var(--paper); border: 0; max-width: 16ch; margin: 0; }
 .reveal section.part h2 em { color: #ffb38a; }
+/* inline code in a divider title: no paper chip on ink, warm like em */
+.reveal section.part h2 code { background: transparent; color: #ffb38a; padding: 0; font-size: .85em; }
 
 /* one sentence */
 .reveal section.statement.present { display: flex !important; }
