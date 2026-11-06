@@ -49,8 +49,19 @@ def blue_square() -> Image.Image:
 # --- Operations: each returns a new image ------------------------------------
 
 
-def over(front: Image.Image, back: Image.Image) -> Image.Image:
-    return Image.alpha_composite(back, front)
+def over(front: Image.Image, back: Image.Image, x: int = 0, y: int = 0) -> Image.Image:
+    """`front` on top of `back`, with its top-left corner at (x, y) of `back`.
+    The parts of `front` that fall outside `back` are cut away. Pillow does not
+    accept a negative position."""
+    result = back.copy()
+    result.alpha_composite(front, dest=(x, y))
+    return result
+
+
+def scale(image: Image.Image, factor: float) -> Image.Image:
+    width = max(1, round(image.width * factor))
+    height = max(1, round(image.height * factor))
+    return image.resize((width, height), Image.Resampling.LANCZOS)
 
 
 def beside(left: Image.Image, right: Image.Image) -> Image.Image:
@@ -103,4 +114,7 @@ if __name__ == "__main__":
     save(beside(circle, square), out / "beside.png")
     save(mirror(circle), out / "mirror.png")
     save(over(fade(circle, 0.4), square), out / "faded_over.png")
+    small = scale(circle, 0.5)
+    print(small.size)  # (256, 256)
+    save(over(small, square, 256, 256), out / "small_circle_at.png")
     print(over(circle, square).getpixel((300, 300)))  # where the two overlap

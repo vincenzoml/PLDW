@@ -1002,6 +1002,36 @@ over(circle, square).getpixel((300, 300))
 </section>
 
 <section>
+  <h2>A position, and a scale</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-python" data-trim>
+def over(front: Image.Image, back: Image.Image,
+         x: int = 0, y: int = 0) -&gt; Image.Image:
+    result = back.copy()
+    result.alpha_composite(front, dest=(x, y))
+    return result
+
+def scale(image: Image.Image, factor: float) -&gt; Image.Image:
+    width = max(1, round(image.width * factor))
+    height = max(1, round(image.height * factor))
+    return image.resize((width, height),
+                        Image.Resampling.LANCZOS)
+
+small = scale(circle, 0.5)          # 256 × 256
+over(small, square, 256, 256)
+      </code></pre>
+    </div>
+    <div>
+      <div class="imgs" style="--w:220px"><figure><img class="alpha" src="../code/images/out/small_circle_at.png" alt="a smaller circle over the square, in its lower right part"><figcaption>over(small, square, 256, 256)</figcaption></figure></div>
+      <p class="lead">With <code>x</code> and <code>y</code>, the top-left corner of <code>front</code> goes at that point of <code>back</code>. What falls outside <code>back</code> is cut away.</p>
+      <p><code>scale</code> multiplies width and height by <code>factor</code>; <code>LANCZOS</code> is a way to compute the new pixels that keeps edges smooth.</p>
+      <p class="note">This <code>over</code> is the one in the file. With <code>x = y = 0</code> it gives the same result as the previous slide. Pillow does not accept a negative position.</p>
+    </div>
+  </div>
+</section>
+
+<section>
   <h2>More operations</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
@@ -1032,8 +1062,8 @@ def fade(image: Image.Image, factor: float) -&gt; Image.Image:
 
 <section>
   <h2>Every operation returns a new image</h2>
-  <p><code>paste</code> changes the image it is called on. That is why <code>beside</code> pastes onto a new image, and never onto <code>left</code> or <code>right</code>.</p>
-  <p>Then <code>over</code>, <code>beside</code>, <code>mirror</code> and <code>fade</code> are pure functions: the images they receive are not changed, and the same arguments give the same image.</p>
+  <p><code>paste</code> and the method <code>alpha_composite</code> change the image they are called on. That is why <code>beside</code> pastes onto a new image, and <code>over</code> draws on a copy of <code>back</code>.</p>
+  <p>Then <code>over</code>, <code>scale</code>, <code>beside</code>, <code>mirror</code> and <code>fade</code> are pure functions: the images they receive are not changed, and the same arguments give the same image.</p>
 </section>
 
 <section>
@@ -1043,7 +1073,7 @@ def fade(image: Image.Image, factor: float) -&gt; Image.Image:
     <ol>
       <li>Run <code>python3 code/images/images.py</code> and look at the results in <code>code/images/out/</code>.</li>
       <li>Write <code>rotate(image, degrees)</code> and <code>grayscale(image)</code>, keeping the transparency. Look for them in <code>Image</code> and <code>ImageOps</code>.</li>
-      <li>With <code>beside</code> and <code>above</code>, build a 2 × 2 grid: the circle, its mirror, the square, the square faded to half.</li>
+      <li>Build a 2 × 2 grid of the circle, its mirror, the square, the square faded to half: with <code>beside</code> and <code>above</code>, then with <code>scale</code> and <code>over</code> at four positions.</li>
       <li>Is <code>over</code> associative? Compare <code>over(a, over(b, c))</code> and <code>over(over(a, b), c)</code> pixel by pixel, with a third image of your own.</li>
       <li>Which of your functions are pure? Check that none changes the images it receives.</li>
     </ol>
