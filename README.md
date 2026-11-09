@@ -30,6 +30,10 @@ Lectures appear here as they are taught.
 7. Control flow
 8. Functions
 
+## Project
+
+- [`project-2025/`](project-2025/README.md) — last year's project instructions (2025 edition, in Italian), for reference. Online: <https://vincenzoml.github.io/PLDW/project-2025/>
+
 ## Slides
 
 Online at **<https://vincenzoml.github.io/PLDW/>**. They are plain HTML files: a downloaded copy of the repository opens in any browser too.

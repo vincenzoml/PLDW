@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Progetto — edizione 2025</title>
+<meta name="description" content="Istruzioni del progetto del Programming Languages Lab, edizione 2025 (anno scorso).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ink: #111318; --muted: #6b7079; --rule: #d8d4c8;
+  --paper: #f7f5ef; --paper-2: #efece3;
+  --accent: #3b3fcf; --warm: #d9541f;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #ecebe6; --muted: #9a9ea6; --rule: #33373f;
+          --paper: #121418; --paper-2: #1a1d23; --accent: #9ea2ff; --warm: #ff8a57;
+          color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 18px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased; }
+main { max-width: 820px; margin: 0 auto; padding: 72px 24px 64px; }
+.kicker { font: 500 13px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 18px; }
+.kicker::before { content: ""; display: inline-block; width: 22px; height: 2px;
+  background: var(--warm); vertical-align: middle; margin-right: 10px; }
+h1 { font-size: clamp(36px, 7vw, 56px); line-height: 1.05; letter-spacing: -.02em; margin: 0 0 18px; font-weight: 600; }
+.lead { font-size: 21px; color: var(--ink); margin: 0 0 14px; max-width: 40em; }
+.who { color: var(--muted); font-size: 16px; margin: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h2 { font: 500 13px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin: 64px 0 16px; padding-top: 16px; border-top: 1px solid var(--rule); }
+ol.lectures { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+ol.lectures a { display: grid; grid-template-columns: 9.5em 1fr auto; align-items: baseline; gap: 16px;
+  padding: 18px 20px; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 6px;
+  color: var(--ink); text-decoration: none; }
+ol.lectures a:hover { border-color: var(--accent); }
+ol.lectures .num { font: 500 13px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+ol.lectures .title { font-size: 19px; font-weight: 500; }
+ol.lectures .go { font: 400 14px var(--mono); color: var(--muted); }
+ol.lectures a:hover .go { color: var(--accent); }
+.note { color: var(--muted); font-size: 15px; margin: 14px 0 0; }
+p.body { max-width: 40em; margin: 0 0 12px; }
+footer { margin-top: 72px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 14px; }
+@media (max-width: 560px) {
+  main { padding: 48px 16px 48px; }
+  ol.lectures a { grid-template-columns: 1fr; gap: 4px; }
+  ol.lectures .go { display: none; }
+}
+
+.doc h1 { font-size: clamp(30px, 5vw, 42px); }
+.doc h2 { font: 600 22px/1.3 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink);
+  margin: 40px 0 12px; padding-top: 14px; }
+.doc h3 { font-size: 19px; margin: 28px 0 8px; }
+.doc p, .doc li { max-width: 40em; }
+.doc li { margin: 6px 0; }
+.doc code { font-family: var(--mono); font-size: .9em; }
+.back { font: 400 14px var(--mono); }
+</style>
+</head>
+<body>
+<main class="doc">
+  <p class="back"><a href="../">← Programming Languages Lab</a></p>
+  <p class="kicker">Edizione 2025 · istruzioni dell'anno scorso</p>
+<h1
+id="progetto-intermedio-implementazione-di-un-linguaggio-specifico-di-dominio">PROGETTO
+INTERMEDIO: Implementazione di un Linguaggio Specifico di Dominio</h1>
+<p><strong>Scadenza:</strong> 12 gennaio 2026</p>
+<h2 id="panoramica-del-progetto">Panoramica del Progetto</h2>
+<p>In questo progetto finale è richiesto di progettare e implementare un
+Linguaggio Specifico di Dominio (Domain-Specific Language o DSL) e in
+particolare, nel midterm, costituito <em>almeno</em> da espressioni, let
+binding, funzioni, ifthenelse e cicli while, focalizzato su un dominio
+applicativo a scelta. Il compito si basa sui concetti trattati nel
+corso, tra cui:</p>
+<ul>
+<li>Principi fondamentali della progettazione di linguaggi di
+programmazione</li>
+<li>Tipi e pattern matching strutturale</li>
+<li>Interpreti e alberi sintattici astratti</li>
+<li>Domini semantici e interpretazione basata su ambienti</li>
+<li>Binding di nomi</li>
+<li>Linguaggio delle espressioni e sua valutazione ricorsiva</li>
+<li>Funzioni e closures</li>
+<li>Strutture di controllo</li>
+<li>Scoping statico</li>
+</ul>
+<h2 id="criteri-di-valutazione">CRITERI DI VALUTAZIONE</h2>
+<ul>
+<li>La valutazione complessiva, da confermare tramite orale, terrà conto
+della qualità del progetto midterm (se svolto), della correttezza del
+progetto, e in aggiunta, dell'originalità e completezza delle primitive
+specifiche per il dominio, della visualizzazione del dominio e dei
+risultati, e della qualità degli esempi forniti.</li>
+</ul>
+<h2 id="relazione-con-il-midterm">RELAZIONE CON IL MIDTERM</h2>
+<p>Gli studenti che hanno fatto il midterm possono sia estendere il
+progetto già iniziato, aggiungendo le funzionalità mancanti (funzioni,
+ifthenelse, while) e migliorando la visualizzazione del dominio e gli
+esempi finali, sia crearne uno nuovo. In questo caso, la consegna del
+progetto finale deve includere sia il codice del midterm che quello del
+progetto finale, ed una nuova relazione che sia completa, estesa, e
+includa anche una descrizione degli esempi presentati e della
+visualizzazione del dominio.</p>
+<h2 id="implementazione">Implementazione</h2>
+<h3 id="1-selezione-di-un-dominio-applicativo">1. Selezione di un
+Dominio Applicativo</h3>
+<p>Scegliere un dominio applicativo, ad esempio uno dei seguenti. È
+possibile contattare il docente per consigli nel caso si intenda
+sviluppare un tema diverso:</p>
+<ul>
+<li><p><strong>Elaborazione di Immagini</strong>: Creare un linguaggio
+per manipolare immagini, dove le costanti sono nomi di file e le
+operazioni trasformano una o più immagini (es. somma di immagini,
+applicazione di maschere). Le variabili rappresentano immagini, e la
+semantica produce immagini risultanti.</p></li>
+<li><p><strong>Forme Geometriche</strong>: Sviluppare un linguaggio per
+operazioni su forme geometriche (es. cerchi, poligoni, forme
+irregolari), supportando operazioni come unione, intersezione,
+complemento, o altre ritenute interessanti. Ogni forma è descritta da
+punti e misure appropriate. Il risultato della valutazione semantica è
+una rappresentazione astratta delle figure risultanti (es: una lista di
+polilinee).</p></li>
+<li><p><strong>Operazioni su Grafi</strong>: Implementare un linguaggio
+per grafi non diretti definiti come insiemi di coppie, supportando
+intersezione, unione e altre operazioni sui grafi. Le variabili possono
+denotare nodi o insiemi di nodi, e ci possono essere operazioni di
+"incollaggio" fra grafi diversi identificando nodi che devono essere
+identificati. Il risultato della valutazione è un grafo.</p></li>
+<li><p><strong>Composizione Musicale</strong>: Creare un linguaggio per
+composizione musicale con note come costanti, e operazioni come
+concatenazione di battute, armonia (diverse note suonate
+contemporaneamente), creazione di accordi e trasposizione. Il risultato
+della valutazione è una sequenza di insiemi di note indiciata dal
+tempo.</p></li>
+<li><p><strong>Elaborazione di segnali audio</strong>: Creare un
+linguaggio per manipolare file audio e applicare effetti, usando una
+libreria esistente, ad esempio delay, riverbero, ecc. In questo caso è
+interessante avere come valori nel dominio semantico le funzioni del
+tempo, che possano poi essere applicate ai parametri degli effetti per
+modularli (ad esempio: cambiare l'ampiezza del segnale in accordo con
+"sin(1/t)").</p></li>
+<li><p><strong>Modellazione 3D</strong>: Progettare un linguaggio per
+descrivere complessi simpliciali (triangolazioni di poliedri) con
+trasformazioni come scala, rotazione, deformazione e composizione. Il
+risultato della valutazione è un complesso simpliciale.</p></li>
+<li><p><strong>Manipolazione di testi</strong>: Sviluppare un linguaggio
+per operazioni su testo che includa concatenazione, sostituzione di
+stringhe per espressioni, ripetizione k volte e altre operazioni. La
+valutazione produce il testo finale.</p></li>
+<li><p><strong>Calcolo di processo parallelo</strong>: Sviluppare la
+semantica di un linguaggio simile a quelli visti a lezione, ma con
+costrutto di composizione parallela e comunicazione.</p></li>
+</ul>
+<h3 id="2-requisiti">2. Requisiti</h3>
+<p>L'implementazione del DSL deve includere:</p>
+<ul>
+<li><strong>Struttura Lessicale e Sintattica</strong>: Definire una
+sintassi chiara per il DSL</li>
+<li><strong>Albero Sintattico Astratto (AST)</strong>: Progettare
+strutture dati per rappresentare programmi nel DSL</li>
+<li><strong>Domini Semantici</strong>: Creare tipi appropriati per i
+valori nel dominio</li>
+<li><strong>Interprete</strong>: Implementare un interprete basato su
+ambienti che valuti i programmi DSL</li>
+<li><strong>Programmi di Esempio</strong>: Fornire almeno tre programmi
+di esempio nel DSL</li>
+</ul>
+<h2 id="linee-guida-per-la-consegna">Linee Guida per la Consegna</h2>
+<ul>
+<li>I progetti possono essere completati individualmente o in
+coppie</li>
+<li>Il codice deve essere ben documentato con spiegazioni chiare delle
+decisioni di progettazione, anche se non si richiede di commentare il
+codice riga per riga (anzi, si sconsiglia di farlo)</li>
+<li>Includere un file README.md che spieghi la progettazione del DSL,
+l'approccio di implementazione e gli esempi</li>
+</ul>
+<h2 id="criteri-di-valutazione-1">Criteri di Valutazione</h2>
+<p>Il progetto sarà valutato in base a:</p>
+<ul>
+<li><strong>Progettazione del Linguaggio</strong>: Adeguatezza dei
+costrutti linguistici per il dominio scelto</li>
+<li><strong>Qualità dell'Implementazione</strong>: Correttezza,
+chiarezza e organizzazione del codice</li>
+<li><strong>Documentazione</strong>: Qualità delle spiegazioni e degli
+esempi</li>
+</ul>
+<h2 id="linguaggi-e-strumenti">Linguaggi e Strumenti</h2>
+<ul>
+<li><p>Python 3.12+ è il linguaggio utilizzato nel corso e raccomandato
+per il progetto.</p></li>
+<li><p>Linguaggi alternativi (F#, Haskell, JavaScript, TypeScript) sono
+anch'essi accettati; per altri linguaggi discutere prima con il
+docente.</p></li>
+<li><p>È possibile e consigliabile utilizzare librerie standard
+appropriate al dominio per i calcoli nel dominio semantico (es primitive
+di imaging), ma l'elaborato deve essere svolto in autonomia.</p></li>
+</ul>
+<h2 id="note">NOTE</h2>
+<p>L'esame orale serve a verificare che il progetto sia stato svolto
+personalmente e che la sua struttura sia ben compresa, e a verificare
+che le competenze descritte nelle note del corso siano state acquisite
+(File course_book.pdf nel repository del progetto).</p>
+<ul>
+<li><p>Il repository del progetto con i materiali del corso è
+disponibile all'indirizzo: <a
+href="https://github.com/vincenzoml/PLDW">https://github.com/vincenzoml/PLDW</a></p></li>
+<li><p>Per qualunque chiarimento contattare il docente all'indirizzo
+e-mail <a
+href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a></p></li>
+</ul>
+<h2 id="scadenza">SCADENZA:</h2>
+<ul>
+<li>il 12 gennaio 2026 per chi intende sostenere l'orale nel primo
+appello, altrimenti di regola 15 giorni prima dell'orale stesso da
+concordare a gruppi col docente.</li>
+</ul>
+
+  <footer>Sorgente: <a href="https://github.com/vincenzoml/PLDW/blob/main/project-2025/README.md">project-2025/README.md</a> · Text: CC BY-SA 4.0</footer>
+</main>
+</body>
+</html>
