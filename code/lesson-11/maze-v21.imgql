@@ -1,0 +1,24 @@
+// The maze of maze.imgql, for VoxLogicA 2.1. Run with: voxlogica run maze-v21.imgql
+import "simpleitk"
+import "vox1"
+
+base = ReadImage("maze.png")
+
+isColor(img, rc, gc, bc) = (red(img) =. rc) & (green(img) =. gc) & (blue(img) =. bc)
+png(x) = BinaryThreshold(x, 1, 1, 255, 0)
+
+g = isColor(base, 0, 255, 0)
+b = isColor(base, 0, 0, 255)
+w = isColor(base, 255, 255, 255)
+
+pathToExit = touch(w, g)
+pathFromItem = touch(w, b)
+
+print "corridors to the exit" volume(pathToExit)
+print "items that can escape" volume(touch(b, pathToExit))
+
+save "maze-v21-1.png" png(pathToExit)
+save "maze-v21-2.png" png(pathToExit & not(pathFromItem))
+save "maze-v21-3.png" png(not(pathToExit) & pathFromItem)
+save "maze-v21-4.png" png(w & not(pathToExit) & not(pathFromItem))
+save "maze-v21-5.png" png(touch(b, pathToExit))

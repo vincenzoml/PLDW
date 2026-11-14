@@ -1,0 +1,22 @@
+load base = "maze.png"
+
+let overlay(x) = rgb(
+    mask(red(base), !x) + mask(constant(255), x),
+    mask(green(base), !x),
+    mask(blue(base), !x)
+)
+
+let isColor(img, rc, gc, bc) = (red(img) =. rc) & (green(img) =. gc) & (blue(img) =. bc)
+
+let g = isColor(base, 0, 255, 0)
+let b = isColor(base, 0, 0, 255)
+let w = isColor(base, 255, 255, 255)
+
+let pathToExit = w T g
+let pathFromItem = w T b
+
+save "maze-1.png" overlay(pathToExit)
+save "maze-2.png" overlay(pathToExit & (!pathFromItem))
+save "maze-3.png" overlay((!pathToExit) & pathFromItem)
+save "maze-4.png" overlay(w & (!pathToExit) & (!pathFromItem))
+save "maze-5.png" overlay(b T pathToExit)

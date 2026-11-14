@@ -1,0 +1,13 @@
+load base = "exercise.png"
+
+let k = (red(base) =. 0) & (green(base) =. 0) & (blue(base) =. 0)
+let w = (red(base) =. 255) & (green(base) =. 255) & (blue(base) =. 255)
+let b = (red(base) =. 0) & (green(base) =. 0) & (blue(base) =. 255)
+let g = (red(base) =. 0) & (green(base) =. 255) & (blue(base) =. 0)
+
+save "near-blue.png" N b
+save "interior-green.png" I g
+save "blue-S-green.png" b S g
+save "green-T-blue.png" g T b
+save "green-T-blue-T-black.png" g T (b T k)
+save "distance-black-lt5.png" pdt(k) <. 5
