@@ -373,7 +373,7 @@ if __name__ == "__main__":
             print(e)
 
     print()
-    run_session(["var x = 1", "x <- 2; print x; x <- 3; y <- 0", "print x"])
+    run_session(["var x = 1", "x <- x + 1; print x", "var y = x * 10; print y"])
 
     # Uncomment to try it interactively.
     # REPL()
