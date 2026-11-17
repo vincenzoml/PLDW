@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>State and commands</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+<style>
+  /* program output, set apart from the code that printed it */
+  .reveal pre.out code { background: var(--paper-2); color: var(--ink); border-left: 3px solid var(--warm); }
+  /* images with transparency, on a checkerboard so that alpha is visible */
+  .reveal .imgs { display: flex; gap: 18px; justify-content: center; align-items: flex-end; }
+  .reveal .imgs figure { margin: 0; text-align: center; }
+  .reveal .imgs img { height: var(--h, 200px); width: auto; margin: 0; border-radius: 4px; }
+  .reveal .imgs figcaption { font-family: var(--mono); font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .reveal img.alpha { background: repeating-conic-gradient(#d9d6cd 0 25%, #f7f5ef 0 50%) 0 0 / 24px 24px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>State and commands</h1>
+  <p class="sub">Lecture 6. Variables whose value changes, and the commands that change them.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<!-- ================================================================ exercise 3 of lecture 5 -->
+
+<section class="part">
+  <p class="kicker">Lecture 5, exercise 3</p>
+  <h2>Several names in one <code>let</code></h2>
+</section>
+
+<section>
+  <h2>Exercise 3 · Several names at once</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let x = 1, y = 2 in x + y          3
+let x = 1, y = x + 1 in x * y      ?
+    </code></pre>
+    <div>
+      <p class="cite">The assignment, from Lecture 5</p>
+      <ol>
+        <li>Extend the grammar, the AST and <code>evaluate</code> to allow several bindings in one <code>let</code>.</li>
+        <li>Two choices for the second line: each definition sees the names before it, or no definition sees any of them. Write the equation for each.</li>
+        <li>Can you implement it without a new AST node, by transforming into nested <code>Let</code>s?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3: the grammar</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+?expr: let | arith
+let: "let" binding ("," binding)* "in" expr
+binding: IDENTIFIER "=" expr
+    </code></pre>
+    <div>
+      <p class="lead">A <code>let</code> has one binding, then any number of others, each after a comma.</p>
+      <p><code>( ... )*</code> means "zero or more times", as in regular expressions. With zero, it is the <code>let</code> of Lecture 5.</p>
+      <p>The parse tree of a <code>let</code> has one <code>binding</code> node per name, and the body as its last child.</p>
+      <p class="note">The rest of the grammar does not change.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3: two meanings</h2>
+  <p class="formula">\( ⟦\mathtt{let}\ x_1 = e_1, x_2 = e_2\ \mathtt{in}\ e⟧\rho \ = \ \ ? \)</p>
+  <div class="cards" style="--n:2; margin-top:6px">
+    <div class="card"><p class="idx">SEQUENTIAL</p><p class="formula">\( ⟦\mathtt{let}\ x_1 = e_1\ \mathtt{in}\ \mathtt{let}\ x_2 = e_2\ \mathtt{in}\ e⟧\rho \)</p><p><code>e₂</code> sees <code>x₁</code>. The second line gives 2.</p></div>
+    <div class="card warm"><p class="idx">SIMULTANEOUS</p><p class="formula">\( ⟦e⟧\big(\rho[x_1 \mapsto ⟦e_1⟧\rho,\ x_2 \mapsto ⟦e_2⟧\rho]\big) \quad x_1 \neq x_2 \)</p><p>Both definitions are computed in \( \rho \), and both names are bound at once. The second line gives <code>Undefined identifier: x</code>.</p></div>
+  </div>
+  <p style="margin-top:18px"><code>let x = 1, x = 2 in x</code> gives 2 if sequential. If simultaneous it is an error: \( x \) cannot have two values at once.</p>
+  <p class="note">Scheme has both: <code>let*</code> is sequential, <code>let</code> is simultaneous. OCaml's <code>let ... and ...</code> is simultaneous. Both reject a name bound twice at once.</p>
+</section>
+
+<!-- ================================================================ motivation -->
+
+<section class="part">
+  <p class="kicker">State</p>
+  <h2>What <code>let</code> cannot do</h2>
+</section>
+
+<section>
+  <h2>A counter</h2>
+  <div class="split">
+    <div>
+      <p class="cite">Python</p>
+      <pre><code class="language-python" data-trim>
+count = 0
+count = count + 1
+count = count + 1
+print(count)            # 2
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite">Our language</p>
+      <pre><code class="language-text" data-trim>
+let count = 0 in
+  let count = count + 1 in
+    let count = count + 1 in
+      count               # 2
+      </code></pre>
+    </div>
+  </div>
+  <p style="margin-top:22px">The results are the same, but on the right there are three names <code>count</code>, each bound once. In Python there is one <code>count</code>, and its value changes twice.</p>
+  <p class="note">In Lecture 5: a name, once bound, stands for the same value in all of its scope.</p>
+</section>
+
+<section>
+  <h2>One program, one result</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let a = 17 * 23 in
+  let b = a * a in
+    b - a
+    </code></pre>
+    <div>
+      <p class="lead">A program in our language computes one number, and the REPL prints it.</p>
+      <p>To see <code>a</code> and <code>b</code> too, we need three programs. The language has no way to say "show this, and go on".</p>
+      <p>Both limits have the same cause: an expression is computed for its value, and leaves nothing behind.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Expressions and commands</h2>
+  <div class="cards" style="--n:2">
+    <div class="card"><p class="idx">EXPRESSION</p><p>Is <strong>evaluated</strong>. It gives a value. Computed twice in the same place, it gives the same value.</p><p><code>evaluate(e, env) -&gt; value</code></p></div>
+    <div class="card warm"><p class="idx">COMMAND</p><p>Is <strong>executed</strong>. It gives no value: it changes the memory, or shows something.</p><p><code>execute(c, env, state) -&gt; (env, state)</code></p></div>
+  </div>
+  <p style="margin-top:22px">Today the language gets three commands and a way to put them one after the other. The interpreter gets a second structure next to the environment: the <strong>store</strong>, its memory.</p>
+  <p class="note">The code of this lecture is in <a href="https://github.com/vincenzoml/PLDW/tree/main/code/lesson-06"><code>code/lesson-06/</code></a>: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-06/state.py"><code>state.py</code></a>.</p>
+</section>
+
+<!-- ================================================================ syntax -->
+
+<section class="part">
+  <p class="kicker">Syntax</p>
+  <h2>Three commands and a semicolon</h2>
+</section>
+
+<section>
+  <h2>The commands</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+var x = 10;
+var y = x + 5;
+print y;
+x &lt;- y * 2;
+print x
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+15
+30
+      </code></pre>
+    </div>
+    <div>
+      <table style="font-size:.72em">
+        <tr><th>command</th><th>meaning</th></tr>
+        <tr><td><code>var x = e</code></td><td>a new variable <code>x</code>, holding the value of <code>e</code></td></tr>
+        <tr><td><code>x &lt;- e</code></td><td>from now on, <code>x</code> holds the value of <code>e</code></td></tr>
+        <tr><td><code>print e</code></td><td>shows the value of <code>e</code></td></tr>
+        <tr><td><code>c₁; c₂</code></td><td><code>c₁</code>, then <code>c₂</code></td></tr>
+      </table>
+      <p class="note" style="margin-top:18px">The semicolon goes between two commands. There is none after the last one.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why <code>&lt;-</code> and not <code>=</code></h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+let x = 3 in ...       x stands for 3
+var x = 3              x is a new variable, holding 3
+x &lt;- x + 1             what x holds changes
+    </code></pre>
+    <div>
+      <p class="lead">In our language <code>=</code> already says what a new name stands for, in <code>let</code> and in <code>var</code>.</p>
+      <p>The arrow shows the direction: the value of the right side goes into <code>x</code>. Read as an equation, <code>x = x + 1</code> is false.</p>
+      <p class="note">Pascal and the IMP language of the theory lectures write <code>x := e</code>, R writes <code>x &lt;- e</code>, APL <code>x ← e</code>. C, Java and Python use <code>=</code>, and <code>==</code> for equality.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The grammar</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+grammar = r"""
+    sequence: command | command ";" sequence
+
+    ?command: vardecl | assign | print
+    vardecl: "var" IDENTIFIER "=" expr
+    assign: IDENTIFIER "&lt;-" expr
+    print: "print" expr
+
+    ?expr: let | arith
+    ...                     # as in Lecture 5
+
+    IDENTIFIER: /(?!(let|in|var|print)\b)[a-zA-Z_][a-zA-Z0-9_]*/
+"""
+
+parser = Lark(grammar, start="sequence")
+    </code></pre>
+    <div>
+      <p class="lead">A program is a <code>sequence</code>: one command, or a command, a semicolon, and a sequence.</p>
+      <p>The rules for expressions are those of Lecture 5. Commands are a new level, above them.</p>
+      <p><code>var</code> and <code>print</code> become reserved words, like <code>let</code> and <code>in</code>. The parser starts from <code>sequence</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The two levels do not mix</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+print (x &lt;- 3)                  syntax error
+var x = 1; x &lt;- x &lt;- 2          syntax error
+var x = 1; let y = 2 in y       syntax error
+    </code></pre>
+    <div>
+      <p class="lead">A command contains expressions; an expression never contains a command.</p>
+      <p>An expression alone is not a command either: the third program has nothing to do with the value of <code>let y = 2 in y</code>.</p>
+      <p>So computing an expression never changes the memory. It only reads it.</p>
+      <p class="note">In C, <code>x = 3</code> is also an expression, whose value is 3: <code>y = (x = 3) + 1</code> is a C program. Python added <code>(x := 3)</code> in version 3.8. Then the order in which the operands are computed can change the result.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The AST</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class VarDecl:
+    name: str
+    expr: Expression
+
+@dataclass(frozen=True)
+class Assign:
+    name: str
+    expr: Expression
+
+@dataclass(frozen=True)
+class Print:
+    expr: Expression
+
+type Command = VarDecl | Assign | Print
+    </code></pre>
+    <div>
+      <p class="lead">Three nodes, one per command. The expressions are the nodes of Lecture 5: <code>Number</code>, <code>Var</code>, <code>BinaryExpression</code>, <code>Let</code>.</p>
+      <p>In <code>VarDecl</code> and <code>Assign</code> the name is a string, as in <code>Let</code>: <code>3 &lt;- x</code> is not a program.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A sequence is a chain</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class Sequence:
+    first: Command
+    rest: Sequence | None = None
+
+
+def transform_sequence(tree: Tree) -&gt; Sequence:
+    match tree:
+        case Tree(data="sequence", children=[command]):
+            return Sequence(first=transform_command(command))
+        case Tree(data="sequence", children=[command, rest]):
+            return Sequence(
+                first=transform_command(command),
+                rest=transform_sequence(rest),
+            )
+    </code></pre>
+    <div>
+      <p class="lead">A first command, and the rest of the program, which is again a <code>Sequence</code>, or nothing.</p>
+      <p>The same shape as the grammar rule, so the transformation has one case per alternative.</p>
+      <p class="note">A Python <code>list[Command]</code> would work too. The chain lets us define the meaning of <code>c; rest</code> from the meaning of <code>c</code> and of <code>rest</code>, with one equation.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A parse tree and its AST</h2>
+  <div class="split flip">
+    <pre class="out"><code class="language-text" data-trim>
+sequence
+  vardecl
+    x
+    mono
+      ground	1
+  sequence
+    print
+      mono
+        var	x
+    </code></pre>
+    <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
+Sequence(
+  first=VarDecl(name='x',
+                expr=Number(value=1)),
+  rest=Sequence(
+    first=Print(expr=Var(name='x')),
+    rest=None))
+    </code></pre>
+  </div>
+  <p class="note">The parse tree of <code>var x = 1; print x</code>, from <code>parser.parse(...).pretty()</code>, and the AST built from it.</p>
+</section>
+
+<!-- ================================================================ domains -->
+
+<section class="part">
+  <p class="kicker">Semantic domains</p>
+  <h2>Environment and store</h2>
+</section>
+
+<section>
+  <h2>First idea: change the environment</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+case Assign(name, expr):
+    value = evaluate(expr, env)
+    return bind(env, name, value)    # ?
+    </code></pre>
+    <div>
+      <p class="lead"><code>x &lt;- e</code> could make a new environment where <code>x</code> stands for the new value, and pass it to the next command.</p>
+      <p>For today's programs, which are a list of commands, this would work.</p>
+      <p>It stops working when something keeps an environment to use it later. In Lecture 4 and 5 that was a closure: a pair of an expression and its environment.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What a closure sees</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+x = 3
+f = lambda: x + 1
+x = 10
+f()                     # 11
+    </code></pre>
+    <div>
+      <p class="lead">The same Python program as in Lecture 5. <code>f</code> keeps the environment where it was written, and it still sees the new value of <code>x</code>.</p>
+      <p>If <code>x = 10</code> made a new environment, the one kept by <code>f</code> would still say 3.</p>
+      <p>So the environment kept by <code>f</code> does not contain the value of <code>x</code>. It contains <em>where</em> the value is. What is there can change.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Two maps</h2>
+  <figure class="diagram"><svg viewBox="0 0 1100 240" role="img" aria-label="the environment maps x to location 0, y to location 1, k to 2 and + to the function add; the store maps location 0 to 10 and location 1 to 15">
+    <defs><marker id="ea" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <text x="210" y="22" text-anchor="middle" class="d-t-b">environment ρ</text>
+    <rect x="60" y="36" width="300" height="200" rx="6" class="d-box-accent"/>
+    <text x="210" y="76" text-anchor="middle" class="d-t-m">"x" → ℓ0</text>
+    <text x="210" y="118" text-anchor="middle" class="d-t-m">"y" → ℓ1</text>
+    <text x="210" y="160" text-anchor="middle" class="d-t-m">"k" → 2</text>
+    <text x="210" y="202" text-anchor="middle" class="d-t-m">"+" → add</text>
+    <text x="760" y="22" text-anchor="middle" class="d-t-b">store σ</text>
+    <rect x="610" y="36" width="300" height="110" rx="6" class="d-box-warm"/>
+    <text x="760" y="76" text-anchor="middle" class="d-t-m">ℓ0 → 10</text>
+    <text x="760" y="118" text-anchor="middle" class="d-t-m">ℓ1 → 15</text>
+    <path d="M 330 70 L 606 70" class="d-arrow" marker-end="url(#ea)"/>
+    <path d="M 330 112 L 606 112" class="d-arrow" marker-end="url(#ea)"/>
+  </svg></figure>
+  <p>After <code>var x = 10; var y = x + 5</code>, while computing the body of a <code>let k = 2 in ...</code>. The <strong>environment</strong> says what each name stands for. A variable stands for a <strong>location</strong> ℓ; the <strong>store</strong> says what each location holds.</p>
+  <p class="note">An assignment changes the store and leaves the environment as it is: <code>x</code> stays at ℓ0.</p>
+</section>
+
+<section>
+  <h2>Reading a variable</h2>
+  <p class="formula">\( ⟦x⟧(\rho, \sigma) = \sigma(\rho(x)) \)</p>
+  <ul>
+    <li>An expression is now computed in an environment \( \rho \) <em>and</em> a store \( \sigma \).</li>
+    <li>For a variable, two lookups: \( \rho(x) \) is the location of <code>x</code>, then \( \sigma \) says what is there now.</li>
+  </ul>
+  <p class="note">This is for a name declared with <code>var</code>. A name bound by <code>let</code> stands for a value directly, as in Lecture 5: \( ⟦x⟧(\rho,\sigma) = \rho(x) \).</p>
+</section>
+
+<section>
+  <h2>Assigning a variable</h2>
+  <p class="formula">\( ⟦x \mathrel{\texttt{&lt;-}} e⟧(\rho, \sigma) = \big(\rho,\ \sigma[\rho(x) \mapsto ⟦e⟧(\rho, \sigma)]\big) \)</p>
+  <ul>
+    <li>The environment on the right is \( \rho \), the same as on the left.</li>
+    <li>The store is \( \sigma \) changed at one location: the location of <code>x</code>.</li>
+    <li>The value of <code>e</code> is computed with the old store: in <code>x &lt;- x + 1</code>, the <code>x</code> on the right is the old one.</li>
+  </ul>
+  <p class="note">\( \sigma[\ell \mapsto v] \) is the store that says \( v \) at \( \ell \), and the same as \( \sigma \) everywhere else: the notation of <code>bind</code>, for locations.</p>
+</section>
+
+<section>
+  <h2>In the theory lectures</h2>
+  <pre><code class="language-text" data-trim>
+IMP     x := a     σ : variables → numbers
+
+ours    x &lt;- e     ρ : names → values, operators, locations
+                   σ : locations → values
+  </code></pre>
+  <p>In IMP there is one map: the memory \( \sigma \) goes from variables directly to numbers, and <code>x := a</code> changes it. That is enough for IMP, where every name is a variable and every variable exists from the start of the program.</p>
+  <p>Our language also has <code>let</code>, whose names are not variables, and declarations, which create variables while the program runs. So we keep the two maps apart.</p>
+</section>
+
+<section>
+  <h2>What a name can stand for</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class Loc:
+    address: int
+
+
+type EVal = int          # what an expression can produce
+type MVal = EVal         # what a location can hold
+type Operator = Callable[[EVal, EVal], EVal]
+type DVal = EVal | Operator | Loc  # what a name can stand for
+
+type Environment = Callable[[str], DVal]
+    </code></pre>
+    <div>
+      <p class="lead">Three sets of values, with three names.</p>
+      <table style="font-size:.66em">
+        <tr><th>set</th><th>today</th><th>example</th></tr>
+        <tr><td>expressible <code>EVal</code></td><td>integers</td><td>the value of <code>x + 1</code></td></tr>
+        <tr><td>storable <code>MVal</code></td><td>integers</td><td>what ℓ0 holds</td></tr>
+        <tr><td>denotable <code>DVal</code></td><td>integers, operators, locations</td><td><code>k</code>, <code>+</code>, <code>x</code></td></tr>
+      </table>
+      <p class="note">No expression gives a location: our language has no pointers. No variable can hold an operator. The three sets will grow in different ways.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why <code>Loc</code> is not a bare <code>int</code></h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+match lookup(env, name):
+    case Loc() as loc:          # a variable
+        ...
+    case int() as value:        # a name bound by let
+        ...
+    </code></pre>
+    <div>
+      <p class="lead">If a location were the integer 3, the evaluator could not tell "the value 3" from "the location 3".</p>
+      <p>Wrapping the address in a class of its own costs one line, and the pattern matching sees the difference.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The store as a function</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+type Store = Callable[[int], MVal]
+
+
+@dataclass(frozen=True)
+class State:
+    store: Store
+    next_loc: int
+
+
+def empty_state() -&gt; State:
+    def store(address: int) -&gt; MVal:
+        raise ValueError(
+            f"Location {address} is not allocated")
+
+    return State(store=store, next_loc=0)
+    </code></pre>
+    <div>
+      <p class="lead">The store is built like the environment of Lecture 4: a function, from addresses to values.</p>
+      <p>The <strong>state</strong> is the store together with the first address not used yet, <code>next_loc</code>. A new variable gets that address.</p>
+      <p>The empty store has no location: asking it anything is an error.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Three operations</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def access(state: State, loc: Loc) -&gt; MVal:
+    return state.store(loc.address)
+
+
+def update(state: State, loc: Loc, value: MVal) -&gt; State:
+    def new_store(address: int) -&gt; MVal:
+        if address == loc.address:
+            return value
+        return state.store(address)
+
+    return State(store=new_store, next_loc=state.next_loc)
+
+
+def allocate(state: State, value: MVal) -&gt; tuple[Loc, State]:
+    loc = Loc(state.next_loc)
+    state = update(state, loc, value)
+    return loc, State(store=state.store, next_loc=loc.address + 1)
+    </code></pre>
+    <div>
+      <p class="lead"><code>access</code> reads a location. <code>update</code> makes a new state that differs from the old one at one location.</p>
+      <p><code>allocate</code> takes the next free location, puts a value in it, and moves <code>next_loc</code> forward by one.</p>
+      <p class="note">None of them changes the state it receives: they return a new one.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>update</code> and <code>bind</code></h2>
+  <div class="split">
+    <div>
+      <p class="cite">Lecture 4: the environment</p>
+      <pre><code class="language-python" data-trim>
+def bind(env, name, value):
+    def new_env(n):
+        if n == name:
+            return value
+        return env(n)
+    return new_env
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite">Today: the store</p>
+      <pre><code class="language-python" data-trim>
+def update(state, loc, value):
+    def new_store(address):
+        if address == loc.address:
+            return value
+        return state.store(address)
+    return State(new_store, state.next_loc)
+      </code></pre>
+    </div>
+  </div>
+  <p style="margin-top:22px">The same function: one answers for a name, the other for an address. Environment and store are built in the same way.</p>
+  <p>What makes them different is how the interpreter passes them from one part of the program to the next. That is the next section.</p>
+</section>
+
+<section>
+  <h2>The store is an array</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+memory = []
+memory.append(10)    # var x = 10, cell 0
+memory.append(20)    # var y = 20, cell 1
+memory[0] += 1       # x &lt;- x + 1
+print(memory[0])     # print x
+    </code></pre>
+    <div>
+      <p class="lead">The memory of a computer is an array of cells, and an address is an index into it. Our locations 0, 1, 2, ... are indices in the same way.</p>
+      <table style="font-size:.8em">
+        <tr><th>store</th><th>array</th></tr>
+        <tr><td><code>Loc(i)</code></td><td>the index <code>i</code></td></tr>
+        <tr><td><code>access</code></td><td><code>memory[i]</code></td></tr>
+        <tr><td><code>update</code></td><td><code>memory[i] = v</code></td></tr>
+        <tr><td><code>allocate</code></td><td><code>memory.append(v)</code></td></tr>
+        <tr><td><code>next_loc</code></td><td><code>len(memory)</code></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why not an array</h2>
+  <p>In Lecture 4 the same question came up for the environment: why not a dictionary, a hash table from names to values? We kept a function, because \( \rho \) is a function in the equations, and the code should say the same thing.</p>
+  <p>For the store, the reason is the same: \( \sigma \) is a function in the equations. <code>update</code> gives a new store and leaves the old one as it was, as <code>bind</code> does with the environment.</p>
+  <p class="note">The price: an array reads a cell in one step, while <code>access</code> goes through one function per update made so far. For programs of a few hundred commands, it does not matter.</p>
+</section>
+
+<!-- ================================================================ interpreter -->
+
+<section class="part">
+  <p class="kicker">Semantics</p>
+  <h2>Expressions read, commands change</h2>
+</section>
+
+<section>
+  <h2>Expressions read the state</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate(ast: Expression, env: Environment,
+             state: State) -&gt; EVal:
+    match ast:
+        case Number(value):
+            return value
+        case Var(name):
+            match lookup(env, name):
+                case Loc() as loc:
+                    return access(state, loc)
+                case int() as value:
+                    return value
+                case _:
+                    raise ValueError(
+                        f"{name} is an operator, not a value")
+        case BinaryExpression(op, left, right):
+            ...                 # as in Lecture 5, with state
+        case Let(name, definition, body):
+            value = evaluate(definition, env, state)
+            return evaluate(body, bind(env, name, value), state)
+    </code></pre>
+    <div>
+      <p class="lead"><code>evaluate</code> takes one more argument, the state, and still returns only a value.</p>
+      <p>The state is passed down unchanged to every recursive call: no expression changes it.</p>
+      <p>The only case that is really new is <code>Var</code>: a location is looked up again, in the store.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Commands change the state</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def execute(command: Command, env: Environment,
+            state: State) -&gt; tuple[Environment, State]:
+    match command:
+        case VarDecl(name, expr):
+            value = evaluate(expr, env, state)
+            loc, state = allocate(state, value)
+            return bind(env, name, loc), state
+        case Assign(name, expr):
+            loc = lookup(env, name)
+            if not isinstance(loc, Loc):
+                raise ValueError(f"{name} is not a variable")
+            value = evaluate(expr, env, state)
+            return env, update(state, loc, value)
+        case Print(expr):
+            print(evaluate(expr, env, state))
+            return env, state
+    </code></pre>
+    <div>
+      <p class="lead">A command returns no value: it returns the environment and the state for the commands that come after it.</p>
+      <p>Each case computes its expression with <code>evaluate</code>, in the environment and state it received.</p>
+      <p class="note"><code>print</code> is Python's: it is how the interpreter shows something on the screen.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What each command changes</h2>
+  <table style="font-size:.8em">
+    <tr><th>command</th><th>environment</th><th>store</th><th>screen</th></tr>
+    <tr><td><code>var x = e</code></td><td><code>x</code> → a new location</td><td>the new location holds the value of <code>e</code></td><td>—</td></tr>
+    <tr><td><code>x &lt;- e</code></td><td>—</td><td>the location of <code>x</code> holds the value of <code>e</code></td><td>—</td></tr>
+    <tr><td><code>print e</code></td><td>—</td><td>—</td><td>the value of <code>e</code></td></tr>
+  </table>
+  <p style="margin-top:22px">A declaration changes both maps. An assignment changes only the store: <code>x</code> stays at the same location, and the location holds something else.</p>
+  <p class="note">The screen is not part of the state: <code>print</code> returns the same environment and state it received.</p>
+</section>
+
+<section>
+  <h2>The equations</h2>
+  <p class="formula" style="font-size:1.12em; line-height:1.7">\( ⟦\mathtt{var}\ x = e⟧(\rho, \sigma) = \big(\rho[x \mapsto \ell],\ \sigma[\ell \mapsto ⟦e⟧(\rho, \sigma)]\big) \)<br>
+  \( ⟦x \mathrel{\texttt{&lt;-}} e⟧(\rho, \sigma) = \big(\rho,\ \sigma[\rho(x) \mapsto ⟦e⟧(\rho, \sigma)]\big) \)<br>
+  \( ⟦\mathtt{print}\ e⟧(\rho, \sigma) = (\rho, \sigma) \quad \text{and } ⟦e⟧(\rho, \sigma) \text{ is shown} \)</p>
+  <ul>
+    <li>Each command takes a pair \( (\rho, \sigma) \) and gives a pair: the meaning of a command is a function from states to states.</li>
+    <li>In the first equation \( \ell \) is a new location, <code>next_loc</code>: <code>allocate</code> is the code for \( \sigma[\ell \mapsto ...] \).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Sequence</h2>
+  <p class="formula">\( ⟦c;\ s⟧(\rho, \sigma) = ⟦s⟧\big(⟦c⟧(\rho, \sigma)\big) \)</p>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def execute_sequence(sequence: Sequence, env: Environment,
+                     state: State) -&gt; tuple[Environment, State]:
+    env, state = execute(sequence.first, env, state)
+    if sequence.rest is None:
+        return env, state
+    return execute_sequence(sequence.rest, env, state)
+
+
+def run(text: str) -&gt; None:
+    execute_sequence(parse_program(text),
+                     create_initial_env(), empty_state())
+    </code></pre>
+    <div>
+      <p class="lead">Execute the first command; execute the rest starting from what it returned.</p>
+      <p>The environment made by a declaration goes on to the following commands: in <code>var x = 10; var y = x + 5</code>, the second declaration sees <code>x</code>.</p>
+      <p class="note">So a variable is visible from its declaration to the end of the program.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code style="display:inline-block;white-space:pre;font-size:.62em;line-height:1.2;padding:.15em .4em">var x = 10; x &lt;- x + 1; print x</code></h2>
+  <table style="font-size:.76em">
+    <tr><th>after</th><th>environment</th><th>store</th><th>screen</th></tr>
+    <tr><td>start</td><td>\( \rho_0 \): the operators</td><td>\( \sigma_0 \): empty, next 0</td><td></td></tr>
+    <tr><td><code>var x = 10</code></td><td>\( \rho_1 = \rho_0[x \mapsto \ell_0] \)</td><td>\( \sigma_1 = \sigma_0[\ell_0 \mapsto 10] \), next 1</td><td></td></tr>
+    <tr><td><code>x &lt;- x + 1</code></td><td>\( \rho_1 \)</td><td>\( \sigma_2 = \sigma_1[\ell_0 \mapsto 11] \)</td><td></td></tr>
+    <tr><td><code>print x</code></td><td>\( \rho_1 \)</td><td>\( \sigma_2 \)</td><td>11</td></tr>
+  </table>
+  <p style="margin-top:22px">In <code>x &lt;- x + 1</code>, the right side is computed in \( (\rho_1, \sigma_1) \): \( \sigma_1(\rho_1(x)) + 1 = 10 + 1 \).</p>
+</section>
+
+<section>
+  <h2>The chain of stores</h2>
+  <figure class="diagram"><svg viewBox="0 0 1100 200" role="img" aria-label="σ2 says ℓ0 holds 11 and asks σ1 for other addresses; σ1 says ℓ0 holds 10 and asks σ0; σ0 has no location">
+    <defs><marker id="sc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs>
+    <rect x="0" y="30" width="300" height="100" rx="6" class="d-box-warm"/>
+    <text x="150" y="62" text-anchor="middle" class="d-t-b">σ2</text>
+    <text x="150" y="100" text-anchor="middle" class="d-t-m">ℓ0 → 11</text>
+    <rect x="400" y="30" width="300" height="100" rx="6" class="d-box-warm"/>
+    <text x="550" y="62" text-anchor="middle" class="d-t-b">σ1</text>
+    <text x="550" y="100" text-anchor="middle" class="d-t-m">ℓ0 → 10</text>
+    <rect x="800" y="30" width="300" height="100" rx="6" class="d-box"/>
+    <text x="950" y="62" text-anchor="middle" class="d-t-b">σ0</text>
+    <text x="950" y="100" text-anchor="middle" class="d-t-m">no locations</text>
+    <path d="M 304 80 L 396 80" class="d-arrow" marker-end="url(#sc)"/>
+    <path d="M 704 80 L 796 80" class="d-arrow" marker-end="url(#sc)"/>
+    <text x="350" y="160" text-anchor="middle" class="d-t-muted">other addresses</text>
+    <text x="750" y="160" text-anchor="middle" class="d-t-muted">other addresses</text>
+  </svg></figure>
+  <p><code>access(σ2, ℓ0)</code> stops at <code>σ2</code>, which answers 11. The 10 is still in <code>σ1</code>, and <code>σ1</code> still exists: nothing was overwritten.</p>
+  <p class="note">The same picture as the chain of environments in Lecture 5, with addresses in place of names.</p>
+</section>
+
+<section>
+  <h2>It runs</h2>
+  <div class="split">
+    <pre><code class="language-text" data-trim>
+var x = 10; print x; x &lt;- 20; print x
+
+var x = 10; var y = 20; var z = x + y;
+print z; x &lt;- 30; print x + y; print z
+    </code></pre>
+    <pre class="out"><code class="language-text" data-trim>
+10
+20
+
+30
+50
+30
+    </code></pre>
+  </div>
+  <p style="margin-top:22px">In the second program <code>z</code> does not follow <code>x</code>. <code>var z = x + y</code> computed <code>x + y</code> once, when it was executed, and put 30 in the location of <code>z</code>.</p>
+  <p class="note">A variable holds a value, not the expression that computed it.</p>
+</section>
+
+<section>
+  <h2><code>let</code> and <code>var</code> together</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+var x = 1;
+print let x = 5 in x;
+print x
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+5
+1
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">Inside the body of the <code>let</code>, <code>x</code> stands for the integer 5, and hides the variable.</p>
+      <p>After the body, the environment is the one of the <code>print</code> command again: <code>x</code> is the variable, and its location still holds 1.</p>
+      <p class="note">A name bound by <code>let</code> has no location: it cannot be assigned. With today's grammar there is no way to try, because <code>&lt;-</code> cannot appear inside an expression.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The same expression, two values</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+var x = 10;
+print x;          10
+x &lt;- 20;
+print x           20
+    </code></pre>
+    <div>
+      <p class="lead">In Lecture 5, an expression computed in the same environment always had the same value.</p>
+      <p>Here the two <code>print x</code> have the same environment, \( \rho_1 \), and print two different values: the store changed between them.</p>
+      <p>The value of an expression now depends on <em>when</em> it is computed. Between two assignments, it is still the same.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Declaring a name twice</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+var x = 1;
+var x = 2;
+print x
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+2
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">Two declarations, two locations: \( \ell_0 \) holds 1 and \( \ell_1 \) holds 2.</p>
+      <p>The second <code>x</code> shadows the first, as with <code>let</code>. From then on \( \ell_0 \) cannot be reached by any name, but it is still in the store.</p>
+      <p class="note">Many languages make the second declaration an error. Here it is allowed; exercise 2 asks you to forbid it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ errors -->
+
+<section class="part">
+  <p class="kicker">Errors</p>
+  <h2>When a command fails</h2>
+</section>
+
+<section>
+  <h2>Three programs, wrong on purpose</h2>
+  <div class="split">
+    <pre><code class="language-text" data-trim>
+x &lt;- 1
+
+print y
+
+var x = 1; x &lt;- 1 / 0
+    </code></pre>
+    <pre class="out"><code class="language-text" data-trim>
+Undefined identifier: x
+
+Undefined identifier: y
+
+Division by zero
+    </code></pre>
+  </div>
+  <p style="margin-top:22px">An assignment to a name that was never declared fails in <code>lookup</code>, before anything else: the message is the one of the environment.</p>
+</section>
+
+<section>
+  <h2>Nothing half done</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+case Assign(name, expr):
+    loc = lookup(env, name)               # 1
+    if not isinstance(loc, Loc):
+        raise ValueError(f"{name} is not a variable")
+    value = evaluate(expr, env, state)    # 2
+    return env, update(state, loc, value) # 3
+    </code></pre>
+    <div>
+      <p class="lead">First find the location, then compute the value, and only at the end make the new state.</p>
+      <p>In <code>x &lt;- 1 / 0</code> the error comes at step 2. No new state is made, and the old one is untouched.</p>
+      <p class="note">Each error is raised where its cause is. A <code>try</code> around the whole case, reporting "assignment failed", would hide which of the three steps went wrong.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Syntax errors come first</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+print 1; print (x &lt;- 3)
+    </code></pre>
+    <div>
+      <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
+syntax error: No terminal matches '&lt;' in the current parser context, at line 1 col 19
+      </code></pre>
+      <p class="lead">The 1 is never printed. <code>run</code> parses the whole program before executing any command.</p>
+      <p>A program with a syntax error does nothing at all.</p>
+      <p class="note">Python does the same with a file: a syntax error on the last line stops the first line from running.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A REPL that remembers</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def run_session(lines: list[str]) -&gt; None:
+    env, state = create_initial_env(), empty_state()
+    for line in lines:
+        print(f"&gt; {line}")
+        try:
+            env, state = execute_sequence(
+                parse_program(line), env, state)
+        except ValueError as e:
+            print(e)
+
+run_session(["var x = 1",
+             "x &lt;- x + 1; print x",
+             "var y = x * 10; print y"])
+    </code></pre>
+    <div>
+      <p class="lead">Each line is a program, executed in the environment and the state left by the previous lines.</p>
+      <pre class="out"><code class="language-text" data-trim>
+&gt; var x = 1
+&gt; x &lt;- x + 1; print x
+2
+&gt; var y = x * 10; print y
+20
+      </code></pre>
+      <p class="note"><code>run_session</code> does what the <code>REPL</code> in the file does, with a list of lines in place of the keyboard.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ wrap-up -->
+
+<section class="part">
+  <p class="kicker">Summary</p>
+  <h2>State in your language</h2>
+</section>
+
+<section>
+  <h2>The decisions of today</h2>
+  <table style="font-size:.68em">
+    <tr><th>decision</th><th>alternative</th><th>why</th></tr>
+    <tr><td><code>x &lt;- e</code></td><td><code>x = e</code>, <code>x := e</code></td><td><code>=</code> already means "stands for"</td></tr>
+    <tr><td>commands contain expressions, not the other way round</td><td>assignment as an expression, as in C</td><td>computing an expression never changes the state</td></tr>
+    <tr><td>environment and store</td><td>one map, as in IMP</td><td><code>let</code> names are not variables; closures keep where a value is</td></tr>
+    <tr><td><code>Loc</code> as its own type</td><td>a bare <code>int</code></td><td>pattern matching tells a location from a value</td></tr>
+    <tr><td>the store as a function</td><td>an array changed in place</td><td>same as σ in the equations</td></tr>
+    <tr><td>a second <code>var x</code> makes a new location</td><td>an error</td><td>the same rule as for <code>let</code>: shadowing</td></tr>
+    <tr><td><code>print</code> outside the state</td><td>the output as part of the state</td><td>a simpler state</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>State: all the changes</h2>
+  <div class="cards" style="--n:3; margin-top:14px; font-size:.74em">
+    <div class="card"><p class="idx">PARSER</p><pre><code class="language-python" data-trim>
+sequence: command
+        | command ";" sequence
+?command: vardecl | assign | print
+vardecl: "var" IDENTIFIER "=" expr
+assign: IDENTIFIER "&lt;-" expr
+print: "print" expr
+    </code></pre></div>
+    <div class="card"><p class="idx">DOMAINS</p><pre><code class="language-python" data-trim>
+class Loc:
+    address: int
+
+class State:
+    store: Store
+    next_loc: int
+
+access, update, allocate
+    </code></pre></div>
+    <div class="card warm"><p class="idx">INTERPRETER</p><pre><code class="language-python" data-trim>
+evaluate(e, env, state)
+  -&gt; value
+
+execute(c, env, state)
+  -&gt; (env, state)
+
+execute_sequence(s, env, state)
+    </code></pre></div>
+  </div>
+  <p>The full code is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-06/state.py"><code>code/lesson-06/state.py</code></a>.</p>
+</section>
+
+<section>
+  <h2>Where we are</h2>
+  <p>A program can now declare variables, change them, and print. A variable stands for a location in the environment; the store says what the location holds.</p>
+  <p>Where a name is valid still comes from the text: the body of its <code>let</code>, or the commands after its <code>var</code>. What a location holds comes from the run: the last assignment executed before it is read.</p>
+  <p>Every program is still a straight line: each command is executed once, in the order it is written. Control flow comes next: <code>if</code> to skip commands, <code>while</code> to repeat them.</p>
+</section>
+
+<!-- ================================================================ exercises -->
+
+<section class="part">
+  <p class="kicker">Exercises</p>
+  <h2>Your turn</h2>
+</section>
+
+<section>
+  <h2>Exercise 1 · Predict, then run</h2>
+  <div class="split flip">
+    <div>
+    <pre><code class="language-text" data-trim>
+var a = 1; var b = a + 1; a &lt;- b * 10; print a + b
+var x = 5; var y = x; x &lt;- x + 1; print y
+var n = 3; print let n = n * n in n + 1; print n
+var k = 1; k &lt;- let k = 10 in k + 1; print k
+var m = 2; print m; m &lt;- m / (m - 2); print m
+print 1; let q = 2 in q
+    </code></pre>
+    <p>Today's interpreter: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-06/state.py"><code>code/lesson-06/state.py</code></a></p>
+    </div>
+    <div>
+      <p class="cite">Level 1 of 4</p>
+      <ol>
+        <li>For each program, write what it prints, and the error if there is one, before running it.</li>
+        <li>For each occurrence of a name, say whether it is a variable or a name bound by <code>let</code>.</li>
+        <li>For the first program, write the environment and the store after each command, as in the table of the slides.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · A variable without a value</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+var x; x &lt;- 4; print x * x        16
+var x; print x + 1                 ?
+
+var x = 1; var x = 2               x is already declared
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 4</p>
+      <ol>
+        <li>Add <code>var x</code>, a declaration without a value. Decide what the new location holds: a default value, or nothing, so that reading <code>x</code> before the first assignment is an error. Implement your choice.</li>
+        <li>Make the declaration of a name that is already a variable an error.</li>
+        <li>Should <code>var x = 1; print let x = 5 in x; var x = 2</code> be an error too? Why?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · Two names, one location</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+var x = 1; alias y = x; y &lt;- 7; print x      7
+
+var x = 0;
+alias y = x;
+x &lt;- x + 1;
+y &lt;- y + 1;
+var z = y;
+x &lt;- x + 1;
+print y + z                                    ?
+    </code></pre>
+    <div>
+      <p class="cite">Level 3 of 4</p>
+      <ol>
+        <li>Add the command <code>alias y = x</code>, where <code>x</code> is a variable: after it, <code>y</code> stands for the same location as <code>x</code>.</li>
+        <li>Which of the two maps does <code>alias</code> change?</li>
+        <li>Predict what the second program prints, then run it.</li>
+        <li>Find the same situation in Python, with two names and one list.</li>
+      </ol>
+      <p class="note">Two names for one location are called <strong>aliases</strong>. Without the two maps, they could not be written at all.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · Images with variables</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+var row = scale(circle, 0.5);
+row &lt;- row | row; row &lt;- row | row;
+print row
+
+var p = load("sky.png"); p &lt;- circle &amp; p;
+print p; p &lt;- mirror(p); print p
+
+var a = circle; var b = square; var t = a;
+a &lt;- b; b &lt;- t; print a | b
+    </code></pre>
+    <div>
+      <p class="cite">Level 4 of 4 · a longer one</p>
+      <p class="lead">The language of images of Lecture 5, exercise 5, with today's commands. <code>print(a)</code> becomes the command <code>print a</code>.</p>
+      <table style="font-size:.62em">
+        <tr><th>command</th><th>meaning</th></tr>
+        <tr><td><code>var x = e</code></td><td>a new variable, holding the image <code>e</code></td></tr>
+        <tr><td><code>x &lt;- e</code></td><td>from now on, <code>x</code> holds the image <code>e</code></td></tr>
+        <tr><td><code>print e</code></td><td>opens a window with the image <code>e</code></td></tr>
+        <tr><td><code>c₁; c₂</code></td><td><code>c₁</code>, then <code>c₂</code></td></tr>
+      </table>
+      <p class="note">Start from your solution, or from <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/imagelang.py"><code>imagelang.py</code></a>. What should <code>circle &lt;- square</code> do?</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · The results</h2>
+  <div class="imgs" style="--h:120px">
+    <figure><img class="alpha" src="../code/images/out/state-1.png" alt="four small red circles in a row"><figcaption>first program</figcaption></figure>
+  </div>
+  <div class="imgs" style="--h:180px; margin-top:12px">
+    <figure><img class="alpha" src="../code/images/out/state-2-1.png" alt="the red circle in the upper left part of a blue sky"><figcaption>second, first print</figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/state-2-2.png" alt="the same picture, mirrored: the circle is in the upper right part"><figcaption>second, second print</figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/state-3.png" alt="the blue square on the left, the red circle on the right"><figcaption>third program</figcaption></figure>
+  </div>
+  <p style="margin-top:18px">What each <code>print</code> shows. A solution is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/imagestate.py"><code>code/images/imagestate.py</code></a>: run it with <code>--show</code> to open the windows.</p>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>
