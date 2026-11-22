@@ -104,12 +104,12 @@ print(a)            # 6
 </section>
 
 <section>
-  <h2>What does <code>true + 1</code> mean?</h2>
-  <p><code>EVal</code> becomes <code>int | bool</code>. The expression <code>true + 1</code> is well formed, and the evaluator of Lecture 6 would compute it: in Python, <code>True + 1</code> is 2.</p>
+  <h2>Booleans are their own values</h2>
+  <p><code>EVal</code> becomes <code>int | bool</code>. Booleans and integers never mix: every operator says which type it takes, and gets nothing else.</p>
   <ul>
-    <li><strong>C:</strong> a boolean is a number, so the result is 2.</li>
-    <li><strong>Typed languages</strong>, such as Java: the program is refused before it runs, by a type checker. We do not have one.</li>
-    <li><strong>Python, and us:</strong> compute the operands, look at what came out, and raise an error if it is not what the operator wants.</li>
+    <li>Arithmetic operators take integers; comparisons such as <code>&lt;</code> and <code>==</code> take integers and give a boolean.</li>
+    <li><code>and</code>, <code>or</code>, <code>not</code> take booleans.</li>
+    <li><code>true + 1</code> is an error.</li>
   </ul>
 </section>
 
@@ -489,7 +489,7 @@ RecursionError: maximum recursion depth exceeded
   <h2>The decisions of today</h2>
   <table style="font-size:.66em">
     <tr><th>decision</th><th>alternative</th><th>why</th></tr>
-    <tr><td><code>true + 1</code> is an error, checked when it runs</td><td>2, as in C; a type checker before running</td><td>no surprises, and no checker to write</td></tr>
+    <tr><td>booleans and integers never mix: <code>true + 1</code> is an error</td><td>a boolean is a number, as in C</td><td>pure booleans</td></tr>
     <tr><td>one <code>Apply</code> node, operators with a type</td><td>two nodes</td><td>one check, written once</td></tr>
     <tr><td><code>==</code> on integers only</td><td>on two values of the same type</td><td>exercise 3</td></tr>
     <tr><td><code>and</code>, <code>or</code> are operators: both sides computed</td><td>stop early: their own nodes</td><td>exercise 2</td></tr>
