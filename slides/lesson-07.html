@@ -383,9 +383,8 @@ if true then var y = 1; x &lt;- x + y else print 0 endif
   <ul>
     <li>Entering a block, the declarations take the locations above <code>next_loc</code>: <strong>push</strong>.</li>
     <li>Leaving it, <code>next_loc</code> goes back to where it was: <strong>pop</strong>. Blocks inside blocks pile up and come off in reverse order.</li>
-    <li>It works because a name of the block is never used after the block ends: the same reason as static scoping.</li>
+    <li>It works because no name of a block outlives it, and no value carries a location. Next lecture, closures will make us check this again.</li>
   </ul>
-  <p class="note">Our language has no pointers, so no value can carry a location out of its block. Next lecture adds the first value that carries an environment with it, and this has to be checked again.</p>
 </section>
 
 <section class="part">
