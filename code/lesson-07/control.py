@@ -1,9 +1,17 @@
 """Lecture 7: control flow.
 
-The language of Lecture 6, with booleans and comparisons, and three new
-commands: if-then-else, while, and a block of commands in braces. There is an
-if-then-else for expressions too. Run with `python3 control.py`. The fragments
-shown in the slides are taken from this file, in the order they appear here.
+The language of Lecture 6 (state.py), with three changes:
+
+1. Booleans are values: EVal = int | bool.
+2. Every operator is an Operator(type, fn) bound in the environment, and the
+   evaluator checks the number and the types of the arguments before applying
+   it. One AST node, Apply, for every operator application, binary or unary.
+3. Two new commands, if-then-else-endif and while-do-done. Their branches and
+   body are blocks: what is declared inside is not visible after, and its
+   locations are reused.
+
+Run with `python3 control.py`. The fragments shown in the slides are taken
+from this file, in the order they appear here.
 """
 
 from __future__ import annotations
@@ -14,37 +22,33 @@ from dataclasses import dataclass
 from lark import Lark, Token, Tree
 from lark.exceptions import LarkError
 
-# --- Syntax: Lecture 6, with conditions, if, while and blocks ----------------
+# --- Syntax: the language of Lecture 6, with booleans, if and while ------------
 
 grammar = r"""
     sequence: command | command ";" sequence
 
-    ?command: vardecl | assign | print | if | while | block
+    ?command: vardecl | assign | print | ifelse | while
     vardecl: "var" IDENTIFIER "=" expr
     assign: IDENTIFIER "<-" expr
     print: "print" expr
-    if: "if" expr "then" command "else" command
-    while: "while" expr "do" command
-    block: "{" sequence "}"
+    ifelse: "if" expr "then" sequence "else" sequence "endif"
+    while: "while" expr "do" sequence "done"
 
-    ?expr: let | ifexpr | test
+    ?expr: let | arith
     let: "let" IDENTIFIER "=" expr "in" expr
-    ifexpr: "if" expr "then" expr "else" expr
-    ?test: arith | compare
-    compare: arith CMP arith
     ?arith: bin | mono
     bin: arith OP mono
-    mono: ground | boolean | var | paren
+    mono: ground | var | paren | unary
+    unary: UNOP mono
     paren: "(" expr ")"
-    ground: NUMBER
-    boolean: BOOLEAN
+    ground: NUMBER | BOOL
     var: IDENTIFIER
 
     NUMBER: /[0-9]+/
-    BOOLEAN: "true" | "false"
-    OP: "+" | "-" | "*" | "/" | "%"
-    CMP: "==" | "!=" | "<=" | ">=" | "<" | ">"
-    IDENTIFIER: /(?!(let|in|var|print|if|then|else|while|do|true|false)\b)[a-zA-Z_][a-zA-Z0-9_]*/
+    BOOL: "true" | "false"
+    OP: "+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<=" | ">=" | "<" | ">" | "and" | "or"
+    UNOP: "not"
+    IDENTIFIER: /(?!(let|in|var|print|if|then|else|endif|while|do|done|true|false|and|or|not)\b)[a-zA-Z_][a-zA-Z0-9_]*/
 
     %import common.WS
     %ignore WS
@@ -59,7 +63,7 @@ class Number:
 
 
 @dataclass(frozen=True)
-class Boolean:
+class Bool:
     value: bool
 
 
@@ -69,10 +73,9 @@ class Var:
 
 
 @dataclass(frozen=True)
-class BinaryExpression:
+class Apply:
     op: str
-    left: Expression
-    right: Expression
+    args: list[Expression]
 
 
 @dataclass(frozen=True)
@@ -82,14 +85,7 @@ class Let:
     body: Expression
 
 
-@dataclass(frozen=True)
-class IfExpr:
-    test: Expression
-    then_branch: Expression
-    else_branch: Expression
-
-
-type Expression = Number | Boolean | Var | BinaryExpression | Let | IfExpr
+type Expression = Number | Bool | Var | Apply | Let
 
 
 @dataclass(frozen=True)
@@ -110,24 +106,19 @@ class Print:
 
 
 @dataclass(frozen=True)
-class If:
-    test: Expression
-    then_branch: Command
-    else_branch: Command
+class IfElse:
+    cond: Expression
+    then_branch: Sequence
+    else_branch: Sequence
 
 
 @dataclass(frozen=True)
 class While:
-    test: Expression
-    body: Command
-
-
-@dataclass(frozen=True)
-class Block:
+    cond: Expression
     body: Sequence
 
 
-type Command = VarDecl | Assign | Print | If | While | Block
+type Command = VarDecl | Assign | Print | IfElse | While
 
 
 @dataclass(frozen=True)
@@ -144,16 +135,14 @@ def transform_expression(tree: Tree | str) -> Expression:
             return transform_expression(subtree)
         case Tree(data="ground", children=[Token(type="NUMBER", value=digits)]):
             return Number(value=int(digits))
-        case Tree(data="boolean", children=[Token(type="BOOLEAN", value=word)]):
-            return Boolean(value=(word == "true"))
+        case Tree(data="ground", children=[Token(type="BOOL", value=word)]):
+            return Bool(value=(word == "true"))
         case Tree(data="var", children=[Token(type="IDENTIFIER", value=name)]):
             return Var(name=name)
-        case Tree(data="bin" | "compare", children=[left, Token(value=op), right]):
-            return BinaryExpression(
-                op=op,
-                left=transform_expression(left),
-                right=transform_expression(right),
-            )
+        case Tree(data="bin", children=[left, Token(type="OP", value=op), right]):
+            return Apply(op=op, args=[transform_expression(left), transform_expression(right)])
+        case Tree(data="unary", children=[Token(type="UNOP", value=op), operand]):
+            return Apply(op=op, args=[transform_expression(operand)])
         case Tree(
             data="let",
             children=[Token(type="IDENTIFIER", value=name), definition, body],
@@ -162,12 +151,6 @@ def transform_expression(tree: Tree | str) -> Expression:
                 name=name,
                 definition=transform_expression(definition),
                 body=transform_expression(body),
-            )
-        case Tree(data="ifexpr", children=[test, then_branch, else_branch]):
-            return IfExpr(
-                test=transform_expression(test),
-                then_branch=transform_expression(then_branch),
-                else_branch=transform_expression(else_branch),
             )
         case _:
             raise ValueError(f"Unexpected parse tree: {tree}")
@@ -181,16 +164,14 @@ def transform_command(tree: Tree) -> Command:
             return Assign(name=name, expr=transform_expression(expr))
         case Tree(data="print", children=[expr]):
             return Print(expr=transform_expression(expr))
-        case Tree(data="if", children=[test, then_branch, else_branch]):
-            return If(
-                test=transform_expression(test),
-                then_branch=transform_command(then_branch),
-                else_branch=transform_command(else_branch),
+        case Tree(data="ifelse", children=[cond, then_branch, else_branch]):
+            return IfElse(
+                cond=transform_expression(cond),
+                then_branch=transform_sequence(then_branch),
+                else_branch=transform_sequence(else_branch),
             )
-        case Tree(data="while", children=[test, body]):
-            return While(test=transform_expression(test), body=transform_command(body))
-        case Tree(data="block", children=[sequence]):
-            return Block(body=transform_sequence(sequence))
+        case Tree(data="while", children=[cond, body]):
+            return While(cond=transform_expression(cond), body=transform_sequence(body))
         case _:
             raise ValueError(f"Unexpected parse tree: {tree}")
 
@@ -216,7 +197,7 @@ def parse_program(text: str) -> Sequence:
     return transform_sequence(tree)
 
 
-# --- Semantic domains: integers and booleans --------------------------------------
+# --- Semantic domains: as in Lecture 6, and EVal gains bool ------------------------
 
 
 @dataclass(frozen=True)
@@ -226,7 +207,14 @@ class Loc:
 
 type EVal = int | bool  # what an expression can produce
 type MVal = EVal  # what a location can hold
-type Operator = Callable[[EVal, EVal], EVal]
+
+
+@dataclass(frozen=True)
+class Operator:
+    type: tuple[list[type], type]  # (argument types, result type)
+    fn: Callable[[list[EVal]], EVal]
+
+
 type DVal = EVal | Operator | Loc  # what a name can stand for
 
 type Environment = Callable[[str], DVal]
@@ -273,23 +261,6 @@ def access(state: State, loc: Loc) -> MVal:
 
 
 def update(state: State, loc: Loc, value: MVal) -> State:
-    """As in Lecture 6, but the new store does not ask the old one: it copies
-    what the old one holds. A loop makes thousands of updates, and a chain of
-    thousands of stores breaks Python's limit on nested calls."""
-    cells = {address: state.store(address) for address in range(state.next_loc)}
-    cells[loc.address] = value
-
-    def new_store(address: int) -> MVal:
-        if address in cells:
-            return cells[address]
-        raise ValueError(f"Location {address} is not allocated")
-
-    return State(store=new_store, next_loc=state.next_loc)
-
-
-def update_chained(state: State, loc: Loc, value: MVal) -> State:
-    """The update of Lecture 6, kept to show what goes wrong with loops."""
-
     def new_store(address: int) -> MVal:
         if address == loc.address:
             return value
@@ -304,86 +275,110 @@ def allocate(state: State, value: MVal) -> tuple[Loc, State]:
     return loc, State(store=state.store, next_loc=loc.address + 1)
 
 
-def show(value: EVal) -> str:
-    """Booleans are printed the way the language writes them."""
-    if value is True:
-        return "true"
-    if value is False:
-        return "false"
-    return str(value)
+# --- Operators: a function and its type --------------------------------------------
 
 
-def integer(value: EVal) -> int:
-    # bool is a subclass of int in Python: without this check, true + 1 is 2
-    if type(value) is not int:
-        raise ValueError(f"{show(value)} is not a number")
-    return value
+def add(args: list[EVal]) -> EVal:
+    return args[0] + args[1]
 
 
-def add(x: EVal, y: EVal) -> EVal:
-    return integer(x) + integer(y)
+def subtract(args: list[EVal]) -> EVal:
+    return args[0] - args[1]
 
 
-def subtract(x: EVal, y: EVal) -> EVal:
-    return integer(x) - integer(y)
+def multiply(args: list[EVal]) -> EVal:
+    return args[0] * args[1]
 
 
-def multiply(x: EVal, y: EVal) -> EVal:
-    return integer(x) * integer(y)
-
-
-def divide(x: EVal, y: EVal) -> EVal:
-    if integer(y) == 0:
+def divide(args: list[EVal]) -> EVal:
+    if args[1] == 0:
         raise ValueError("Division by zero")
-    return integer(x) // integer(y)
+    return args[0] // args[1]
 
 
-def modulo(x: EVal, y: EVal) -> EVal:
-    if integer(y) == 0:
+def modulo(args: list[EVal]) -> EVal:
+    if args[1] == 0:
         raise ValueError("Division by zero")
-    return integer(x) % integer(y)
+    return args[0] % args[1]
 
 
-def less(x: EVal, y: EVal) -> EVal:
-    return integer(x) < integer(y)
+def equal(args: list[EVal]) -> EVal:
+    return args[0] == args[1]
 
 
-def less_equal(x: EVal, y: EVal) -> EVal:
-    return integer(x) <= integer(y)
+def not_equal(args: list[EVal]) -> EVal:
+    return args[0] != args[1]
 
 
-def greater(x: EVal, y: EVal) -> EVal:
-    return integer(x) > integer(y)
+def less(args: list[EVal]) -> EVal:
+    return args[0] < args[1]
 
 
-def greater_equal(x: EVal, y: EVal) -> EVal:
-    return integer(x) >= integer(y)
+def greater(args: list[EVal]) -> EVal:
+    return args[0] > args[1]
 
 
-def equal(x: EVal, y: EVal) -> EVal:
-    if type(x) is not type(y):
-        raise ValueError(f"Cannot compare {show(x)} and {show(y)}")
-    return x == y
+def less_equal(args: list[EVal]) -> EVal:
+    return args[0] <= args[1]
 
 
-def not_equal(x: EVal, y: EVal) -> EVal:
-    return not equal(x, y)
+def greater_equal(args: list[EVal]) -> EVal:
+    return args[0] >= args[1]
+
+
+def logical_and(args: list[EVal]) -> EVal:
+    return args[0] and args[1]
+
+
+def logical_or(args: list[EVal]) -> EVal:
+    return args[0] or args[1]
+
+
+def logical_not(args: list[EVal]) -> EVal:
+    return not args[0]
 
 
 def create_initial_env() -> Environment:
     env = empty_environment()
-    env = bind(env, "+", add)
-    env = bind(env, "-", subtract)
-    env = bind(env, "*", multiply)
-    env = bind(env, "/", divide)
-    env = bind(env, "%", modulo)
-    env = bind(env, "<", less)
-    env = bind(env, "<=", less_equal)
-    env = bind(env, ">", greater)
-    env = bind(env, ">=", greater_equal)
-    env = bind(env, "==", equal)
-    env = bind(env, "!=", not_equal)
+    # arithmetic: int × int → int
+    env = bind(env, "+", Operator(([int, int], int), add))
+    env = bind(env, "-", Operator(([int, int], int), subtract))
+    env = bind(env, "*", Operator(([int, int], int), multiply))
+    env = bind(env, "/", Operator(([int, int], int), divide))
+    env = bind(env, "%", Operator(([int, int], int), modulo))
+    # comparisons: int × int → bool
+    env = bind(env, "==", Operator(([int, int], bool), equal))
+    env = bind(env, "!=", Operator(([int, int], bool), not_equal))
+    env = bind(env, "<", Operator(([int, int], bool), less))
+    env = bind(env, ">", Operator(([int, int], bool), greater))
+    env = bind(env, "<=", Operator(([int, int], bool), less_equal))
+    env = bind(env, ">=", Operator(([int, int], bool), greater_equal))
+    # connectives: bool × bool → bool, and bool → bool
+    env = bind(env, "and", Operator(([bool, bool], bool), logical_and))
+    env = bind(env, "or", Operator(([bool, bool], bool), logical_or))
+    env = bind(env, "not", Operator(([bool], bool), logical_not))
     return env
+
+
+def check_arguments(op: str, expected_types: list[type], values: list[EVal]) -> None:
+    if len(expected_types) != len(values):
+        raise ValueError(
+            f"Operator '{op}' expects {len(expected_types)} arguments, got {len(values)}"
+        )
+    for i, (expected, actual) in enumerate(zip(expected_types, values)):
+        # not isinstance: in Python, bool is a subclass of int, and we do not want true + 1
+        if type(actual) is not expected:
+            raise ValueError(
+                f"Operator '{op}': argument {i + 1} must be {expected.__name__}, "
+                f"got {type(actual).__name__}"
+            )
+
+
+def show(value: EVal) -> str:
+    """Print booleans the way the language writes them."""
+    if type(value) is bool:
+        return "true" if value else "false"
+    return str(value)
 
 
 # --- Expressions read the state ------------------------------------------------
@@ -393,38 +388,52 @@ def evaluate(ast: Expression, env: Environment, state: State) -> EVal:
     match ast:
         case Number(value):
             return value
-        case Boolean(value):
+        case Bool(value):
             return value
         case Var(name):
             match lookup(env, name):
                 case Loc() as loc:
                     return access(state, loc)
-                case bool() | int() as value:
+                case int() | bool() as value:
                     return value
                 case _:
                     raise ValueError(f"{name} is an operator, not a value")
-        case BinaryExpression(op, left, right):
-            operator = lookup(env, op)
-            if not callable(operator):
-                raise ValueError(f"{op} is not an operator")
-            return operator(evaluate(left, env, state), evaluate(right, env, state))
+        case Apply(op, args):
+            values = [evaluate(arg, env, state) for arg in args]
+            match lookup(env, op):
+                case Operator(type=(expected_types, _), fn=fn):
+                    check_arguments(op, expected_types, values)
+                    return fn(values)
+                case _:
+                    raise ValueError(f"{op} is not an operator")
         case Let(name, definition, body):
             value = evaluate(definition, env, state)
             return evaluate(body, bind(env, name, value), state)
-        case IfExpr(test, then_branch, else_branch):
-            if condition(test, env, state):
-                return evaluate(then_branch, env, state)
-            return evaluate(else_branch, env, state)
 
 
-def condition(test: Expression, env: Environment, state: State) -> bool:
-    value = evaluate(test, env, state)
+def evaluate_condition(cond: Expression, env: Environment, state: State) -> bool:
+    value = evaluate(cond, env, state)
     if type(value) is not bool:
-        raise ValueError(f"The condition is {show(value)}, not true or false")
+        raise ValueError(f"Condition must be a boolean, got {show(value)}")
     return value
 
 
 # --- Commands change the state ---------------------------------------------------
+
+
+def execute_block(block: Sequence, env: Environment, state: State) -> State:
+    """Run a block: its declarations do not survive it, and its locations are reused."""
+    _, new_state = execute_sequence(block, env, state)
+    return State(store=new_state.store, next_loc=state.next_loc)
+
+
+def execute_while_by_recursion(
+    cond: Expression, body: Sequence, env: Environment, state: State
+) -> State:
+    """The equation of while, transcribed literally. execute does not use it."""
+    if evaluate_condition(cond, env, state):
+        return execute_while_by_recursion(cond, body, env, execute_block(body, env, state))
+    return state
 
 
 def execute(command: Command, env: Environment, state: State) -> tuple[Environment, State]:
@@ -442,27 +451,14 @@ def execute(command: Command, env: Environment, state: State) -> tuple[Environme
         case Print(expr):
             print(show(evaluate(expr, env, state)))
             return env, state
-        case If(test, then_branch, else_branch):
-            if condition(test, env, state):
-                _, state = execute(then_branch, env, state)
-            else:
-                _, state = execute(else_branch, env, state)
+        case IfElse(cond, then_branch, else_branch):
+            if evaluate_condition(cond, env, state):
+                return env, execute_block(then_branch, env, state)
+            return env, execute_block(else_branch, env, state)
+        case While(cond, body):
+            while evaluate_condition(cond, env, state):
+                state = execute_block(body, env, state)
             return env, state
-        case While(test, body):
-            while condition(test, env, state):
-                _, state = execute(body, env, state)
-            return env, state
-        case Block(body):
-            _, state = execute_sequence(body, env, state)
-            return env, state
-
-
-def execute_while(test: Expression, body: Command, env: Environment, state: State) -> State:
-    """The equation of while, word for word. execute does not use it."""
-    if not condition(test, env, state):
-        return state
-    _, state = execute(body, env, state)
-    return execute_while(test, body, env, state)
 
 
 def execute_sequence(
@@ -478,25 +474,42 @@ def run(text: str) -> None:
     execute_sequence(parse_program(text), create_initial_env(), empty_state())
 
 
+def REPL() -> None:
+    env, state = create_initial_env(), empty_state()
+    while True:
+        line = input("> ")
+        if line == "exit":
+            break
+        try:
+            env, state = execute_sequence(parse_program(line), env, state)
+        except ValueError as e:
+            print(e)
+
+
 if __name__ == "__main__":
-    print(parse_program("while n > 0 do n <- n - 1"))
+    print(parse_program("while n > 0 do n <- n - 1 done"))
 
     for src in [
-        "var x = 7; if x % 2 == 0 then print 0 else print 1",
-        "var n = 5; var f = 1; while n > 1 do { f <- f * n; n <- n - 1 }; print f",
-        "var i = 0; while i < 3 do i <- i + 1; print i",
-        "var x = 1; { var x = 2; print x }; print x",
-        "var x = 0; print if x != 0 then 10 / x else 0",
-        "print 3 < 4; print 2 + 2 == 5; print true == false",
-        "var a = 12; var b = 18; while b != 0 do { var t = b; b <- a % b; a <- t }; print a",
-        "var i = 0; var limit = 3000; while i < limit do i <- i + 1; print i",
-        # errors, on purpose
-        "if 1 then print 1 else print 2",
+        # booleans, and what the typed operators refuse
+        "print 3 < 4",
+        "var b = true; print b; b <- 3 == 4; print b",
         "print true + 1",
-        "print 1 == true",
-        "print 1 < 2 < 3",
-        "if true then var y = 1 else var y = 2; print y",
-        "var x = 0; print 10 / x",
+        "print 1 < 2 and 2 < 3",
+        "print (1 < 2) and (2 < 3)",
+        "print true == false",
+        "print false and (1 / 0 == 0)",
+        # if
+        "var x = 1; if x == 1 then print 42 else print 0 endif",
+        "if 1 then print 1 else print 0 endif",
+        # while
+        "var n = 3; while n > 0 do print n; n <- n - 1 done",
+        "var a = 48; var b = 18; "
+        "while b != 0 do if a > b then a <- a - b else b <- b - a endif done; print a",
+        "while false do print 1 done; print 0",
+        "var n = 5000; while n > 0 do n <- n - 1 done; print n",
+        # blocks
+        "var x = 0; if true then var y = 1; x <- x + y else print 0 endif; print x; print y",
+        "var i = 0; while i < 3 do var sq = i * i; print sq; i <- i + 1 done",
     ]:
         print(f"\n{src}")
         try:
@@ -504,19 +517,23 @@ if __name__ == "__main__":
         except ValueError as e:
             print(e)
 
-    # The equation of while, transcribed, and the store of Lecture 6: both fail
-    # on a long loop, because each step is one more nested Python call.
-    program = parse_program("var i = 0; while i < 3000 do i <- i + 1")
-    env, state = execute(program.first, create_initial_env(), empty_state())
-    loop = program.rest.first  # type: ignore[union-attr]
+    # The equation of while, transcribed literally: one Python call per iteration
+    print("\nwhile by recursion, 5000 iterations")
+    env, state = execute(VarDecl("n", Number(5000)), create_initial_env(), empty_state())
+    loop = parse_program("while n > 0 do n <- n - 1 done").first
     assert isinstance(loop, While)
     try:
-        execute_while(loop.test, loop.body, env, state)
+        execute_while_by_recursion(loop.cond, loop.body, env, state)
     except RecursionError as e:
-        print(f"\nexecute_while: RecursionError: {e}")
+        print(f"RecursionError: {e}")
 
-    update = update_chained  # back to the store of Lecture 6, for the next run
+    # The store as a chain of functions: a limit inherited from Lecture 6
+    src = "var a = 0; var n = 3000; while n > 0 do n <- n - 1 done; print a"
+    print(f"\n{src}")
     try:
-        run("var i = 0; var limit = 3000; while i < limit do i <- i + 1; print i")
+        run(src)
     except RecursionError as e:
-        print(f"update_chained: RecursionError: {e}")
+        print(f"RecursionError: {e}")
+
+    # Uncomment to try it interactively.
+    # REPL()
