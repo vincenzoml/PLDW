@@ -385,6 +385,7 @@ if true then var y = 1; x &lt;- x + y else print 0 endif
     <li>Leaving it, <code>next_loc</code> goes back to where it was: <strong>pop</strong>. Blocks inside blocks pile up and come off in reverse order.</li>
     <li>It works because a name of the block is never used after the block ends: the same reason as static scoping.</li>
   </ul>
+  <p class="note">Our language has no pointers, so no value can carry a location out of its block. Next lecture adds the first value that carries an environment with it, and this has to be checked again.</p>
 </section>
 
 <section class="part">
@@ -481,44 +482,6 @@ def execute_while_by_loop(cond, body, env, state) -&gt; State:
 </section>
 
 <!-- ================================================================ blocks -->
-
-<section class="part">
-  <p class="kicker">Blocks, again</p>
-  <h2>Where the locations of a block go</h2>
-</section>
-
-<section>
-  <h2>Locations behave like a stack</h2>
-  <div class="split flip">
-    <div>
-      <pre><code class="language-text" data-trim>
-var i = 0;
-while i &lt; 3 do
-  var sq = i * i;
-  print sq;
-  i &lt;- i + 1
-done
-      </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
-0
-1
-4
-      </code></pre>
-    </div>
-    <div>
-      <p class="lead">The second line of <code>execute_block</code> puts <code>next_loc</code> back. After the block, no name refers to the location of <code>sq</code>: nobody can read or write it again.</p>
-      <p>Without this, a loop that runs a million times allocates a million locations, for a program that needs one. With it, entering a block pushes, leaving it pops.</p>
-      <p class="note">This is how real machines allocate local variables, and for the same reason: nothing that refers to the locations of a block outlives the block.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>What the restore does not do</h2>
-  <p>The old value is still in the store: <code>update</code> and <code>allocate</code> never remove anything. The location keeps its content until the next <code>var</code> writes over it.</p>
-  <p>We cannot see this: the only way to reach a location is through a name, and the name is gone.</p>
-  <p class="note">Our language has no pointers, so no value can carry a location out of its block. Next lecture adds the first value that carries an environment with it, and this has to be checked again.</p>
-</section>
 
 <!-- ================================================================ wrap-up -->
 
