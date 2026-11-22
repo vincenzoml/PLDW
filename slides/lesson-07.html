@@ -32,36 +32,8 @@
 <!-- ================================================================ exercises of lecture 6 -->
 
 <section class="part">
-  <p class="kicker">Lecture 6, exercises 2 and 3</p>
-  <h2>A variable without a value, and aliases</h2>
-</section>
-
-<section>
-  <h2>Exercise 2 · A variable without a value</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
-declare: "var" IDENTIFIER
-
-@dataclass(frozen=True)
-class Unset:
-    """What a variable declared without a value holds."""
-
-UNSET = Unset()
-
-case Var(name):
-    match lookup(env, name):
-        case Loc() as loc:
-            value = access(state, loc)
-            if value is UNSET:
-                raise ValueError(f"{name} has no value yet")
-            return value
-    </code></pre>
-    <div>
-      <p class="lead"><code>var x</code> allocates a location that holds <code>UNSET</code>, a value no expression can produce.</p>
-      <p>Reading it before the first assignment is an error: <code>var x; print x + 1</code> gives <code>x has no value yet</code>.</p>
-      <p>Declaring a name that is already a variable is an error. So is <code>var x = 1; print let x = 5 in x; var x = 2</code>: when the last command runs, the <code>let</code> is over and <code>x</code> is the variable again.</p>
-    </div>
-  </div>
+  <p class="kicker">Lecture 6, exercise 3</p>
+  <h2>Aliases</h2>
 </section>
 
 <section>
