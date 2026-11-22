@@ -240,7 +240,7 @@ f is not a value
 
 <section>
   <h2>Declaring runs nothing</h2>
-  <div class="split flip">
+  <div class="stack">
     <pre><code class="language-python" data-trim>
 case FunctionDecl(name):
     return bind(env, name, Closure(command, env)), state
@@ -343,14 +343,16 @@ case FunctionApp(name, args):
 
 <section>
   <h2>The equation</h2>
-  <p class="formula">\( ⟦f(e_1, \dots, e_n)⟧(\rho, \sigma) = ⟦e⟧\big(\rho_f[f \mapsto \rho(f)][x_i \mapsto ⟦e_i⟧(\rho, \sigma)],\ \sigma\big) \quad \text{where } \rho(f) = \langle f, \bar{x}, e, \rho_f\rangle \)</p>
+  <p class="formula">\( ⟦f(e_1, \dots, e_n)⟧(\rho, \sigma) = ⟦e⟧\big(\rho_f[f \mapsto \rho(f)][x_i \mapsto ⟦e_i⟧(\rho, \sigma)],\ \sigma\big) \)</p>
+  <p class="formula">\( \text{where } \rho(f) = \langle f, \bar{x}, e, \rho_f\rangle \)</p>
   <ul>
     <li>Parameters are bound to values, as with <code>let</code>, not to locations, as with <code>var</code>.</li>
     <li>A call is a <code>let</code> for each parameter, whose body was written somewhere else.</li>
     <li>A location for each parameter would buy nothing: the body cannot assign.</li>
   </ul>
   <pre class="out"><code class="language-text" data-trim>
-function f(x, y) = x + y; print f(1)       Function f expects 2 arguments, got 1
+function f(x, y) = x + y; print f(1)
+Function f expects 2 arguments, got 1
   </code></pre>
 </section>
 
