@@ -16,11 +16,16 @@ from this file, in the order they appear here.
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 
 from lark import Lark, Token, Tree
 from lark.exceptions import LarkError
+
+# while is run by recursion, one Python call per iteration: Python's default limit
+# of about 1000 open calls is far too low for loops, so we raise it.
+sys.setrecursionlimit(1_000_000)
 
 # --- Syntax: the language of Lecture 6, with booleans, if and while ------------
 
@@ -430,7 +435,7 @@ def execute_block(block: Sequence, env: Environment, state: State) -> State:
 def execute_while_by_recursion(
     cond: Expression, body: Sequence, env: Environment, state: State
 ) -> State:
-    """The equation of while, transcribed literally. execute does not use it."""
+    """The equation of while, transcribed literally: this is how execute runs while."""
     if evaluate_condition(cond, env, state):
         return execute_while_by_recursion(cond, body, env, execute_block(body, env, state))
     return state
@@ -456,9 +461,7 @@ def execute(command: Command, env: Environment, state: State) -> tuple[Environme
                 return env, execute_block(then_branch, env, state)
             return env, execute_block(else_branch, env, state)
         case While(cond, body):
-            while evaluate_condition(cond, env, state):
-                state = execute_block(body, env, state)
-            return env, state
+            return env, execute_while_by_recursion(cond, body, env, state)
 
 
 def execute_sequence(
@@ -522,10 +525,8 @@ if __name__ == "__main__":
     env, state = execute(VarDecl("n", Number(5000)), create_initial_env(), empty_state())
     loop = parse_program("while n > 0 do n <- n - 1 done").first
     assert isinstance(loop, While)
-    try:
-        execute_while_by_recursion(loop.cond, loop.body, env, state)
-    except RecursionError as e:
-        print(f"RecursionError: {e}")
+    after = execute_while_by_recursion(loop.cond, loop.body, env, state)
+    print("done")
 
     # The store as a chain of functions: a limit inherited from Lecture 6
     src = "var a = 0; var n = 3000; while n > 0 do n <- n - 1 done; print a"
@@ -537,3 +538,12 @@ if __name__ == "__main__":
 
     # Uncomment to try it interactively.
     # REPL()
+
+
+def execute_while_by_loop(
+    cond: Expression, body: Sequence, env: Environment, state: State
+) -> State:
+    """The same meaning with Python's own while: no recursion, no limit to raise."""
+    while evaluate_condition(cond, env, state):
+        state = execute_block(body, env, state)
+    return state

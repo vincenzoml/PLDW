@@ -433,29 +433,24 @@ while: "while" expr "do" sequence "done"
 </section>
 
 <section>
-  <h2>The equation, word for word</h2>
-  <div class="stack">
-    <pre><code class="language-python" data-trim>
+  <h2><code>while</code>: the implementation</h2>
+  <pre><code class="language-python" data-trim>
+sys.setrecursionlimit(1_000_000)
+
 def execute_while_by_recursion(cond, body, env, state) -&gt; State:
     if evaluate_condition(cond, env, state):
         return execute_while_by_recursion(
             cond, body, env, execute_block(body, env, state))
     return state
-    </code></pre>
-    <div>
-      <p class="lead">The equation, transcribed: test, run the body once, then the same <code>while</code> again. Next: the same thing written as a loop.</p>
-    </div>
-  </div>
+
+case While(cond, body):
+    return env, execute_while_by_recursion(cond, body, env, state)
+  </code></pre>
+  <p>The equation, line by line: if the condition is true, run the body once, then the same <code>while</code> on the new store; otherwise, the store stays as it is. One Python call per iteration: Python allows about a thousand open calls by default, so the first line raises the limit.</p>
 </section>
 
 <section>
-  <h2><code>while</code>: the implementation</h2>
-  <pre><code class="language-python" data-trim>
-case While(cond, body):
-    while evaluate_condition(cond, env, state):
-        state = execute_block(body, env, state)
-    return env, state
-    </code></pre>
+  <h2><code>while</code> at work</h2>
   <div class="split even">
     <pre><code class="language-text" data-trim>
 var a = 48; var b = 18;
@@ -472,6 +467,17 @@ var n = 5000; while n &gt; 0 do n &lt;- n - 1 done; print n
 0
       </code></pre>
   </div>
+</section>
+
+<section>
+  <h2>The same meaning, as a loop</h2>
+  <pre><code class="language-python" data-trim>
+def execute_while_by_loop(cond, body, env, state) -&gt; State:
+    while evaluate_condition(cond, env, state):
+        state = execute_block(body, env, state)
+    return state
+  </code></pre>
+  <p>Each recursive call only passes the new store to the next one, and nothing is left to do when it returns. So the calls can become iterations of a Python <code>while</code>, which updates <code>state</code> and tests again. Same results, no open calls, no limit to raise: it is how last year's interpreter ran <code>while</code>.</p>
 </section>
 
 <!-- ================================================================ blocks -->
@@ -514,28 +520,6 @@ done
   <p class="note">Our language has no pointers, so no value can carry a location out of its block. Next lecture adds the first value that carries an environment with it, and this has to be checked again.</p>
 </section>
 
-<section>
-  <h2>A limit that comes from the store</h2>
-  <div class="split flip">
-    <div>
-      <pre><code class="language-text" data-trim>
-var a = 0;
-var n = 3000;
-while n &gt; 0 do n &lt;- n - 1 done;
-print a
-      </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
-RecursionError: maximum recursion depth exceeded
-      </code></pre>
-    </div>
-    <div>
-      <p class="lead">Every <code>update</code> wraps the store in one more function, as in Lecture 6.</p>
-      <p>To read <code>a</code> after three thousand updates of <code>n</code>, <code>access</code> goes through three thousand of them, one Python call each.</p>
-      <p class="note">The store as a function was chosen to match the equations, not for speed. A loop is the first thing that shows the price. Replacing it is exercise 5, and nothing else in the interpreter changes.</p>
-    </div>
-  </div>
-</section>
-
 <!-- ================================================================ wrap-up -->
 
 <section class="part">
@@ -552,7 +536,7 @@ RecursionError: maximum recursion depth exceeded
     <tr><td><code>==</code> on integers only</td><td>on two values of the same type</td><td>exercise 3</td></tr>
     <tr><td><code>and</code>, <code>or</code> are operators: both sides computed</td><td>stop early: their own nodes</td><td>exercise 2</td></tr>
     <tr><td><code>endif</code>, <code>done</code></td><td>braces, indentation</td><td>no change to the lexer</td></tr>
-    <tr><td><code>while</code> as a Python loop</td><td>the equation, by recursion</td><td>the recursion stops at about 1000</td></tr>
+    <tr><td><code>while</code> by recursion, as the equation</td><td>a Python loop</td><td>the code is the equation; the limit is raised</td></tr>
     <tr><td>branches and bodies are blocks; <code>next_loc</code> restored</td><td>declarations survive the branch</td><td>names known from the text; a store like a stack</td></tr>
   </table>
 </section>
@@ -580,6 +564,7 @@ evaluate:  Apply, checked
 
 evaluate_condition
 execute_block
+execute_while_by_recursion
 
 execute:   IfElse, While
     </code></pre></div>
@@ -684,7 +669,7 @@ print a                            0
     <div>
       <p class="cite">Level 5 of 5</p>
       <ol>
-        <li>Replace the store with a dictionary, copied by <code>update</code> and <code>allocate</code>. The program on the left must print 0.</li>
+        <li>Replace the store with a dictionary, copied by <code>update</code> and <code>allocate</code>. The program on the left must still print 0.</li>
         <li>Time the two stores on a loop of ten thousand iterations.</li>
       </ol>
       <p class="note">A solution of exercises 1, 2, 3 and 5 is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/solutions.py"><code>code/lesson-07/solutions.py</code></a>.</p>
