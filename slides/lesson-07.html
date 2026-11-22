@@ -96,194 +96,70 @@ print y + z                  5
 </section>
 
 <section>
-  <h2>A factorial</h2>
-  <div class="split">
+  <h2>What we cannot write yet</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+a, b = 48, 18
+while b != 0:
+    if a &gt; b:
+        a = a - b
+    else:
+        b = b - a
+print(a)            # 6
+    </code></pre>
     <div>
-      <p class="cite">Python</p>
-      <pre><code class="language-python" data-trim>
-n = 5
-f = 1
-while n &gt; 1:
-    f = f * n
-    n = n - 1
-print(f)            # 120
-      </code></pre>
-    </div>
-    <div>
-      <p class="cite">Our language, today</p>
-      <pre><code class="language-text" data-trim>
-var n = 5;
-var f = 1;
-while n &gt; 1 do {
-  f &lt;- f * n;
-  n &lt;- n - 1
-};
-print f             # 120
-      </code></pre>
+      <p class="lead">Euclid's algorithm: while <code>b</code> is not zero, subtract the smaller of <code>a</code> and <code>b</code> from the larger.</p>
+      <p>In the language of Lecture 6 every command is executed once, in the order it is written. There is no way to ask a question about the state and act on the answer, and no way to repeat a command a number of times that depends on the data.</p>
     </div>
   </div>
-  <p style="margin-top:22px">In Lecture 6 every command was executed once, in the order it is written. To compute 10! we would have to write the two assignments ten times.</p>
 </section>
 
 <section>
-  <h2>What we need</h2>
-  <div class="cards" style="--n:3">
-    <div class="card"><p class="idx">CONDITIONS</p><p><code>true</code>, <code>false</code>, and comparisons that give one of them: <code>n &gt; 1</code>.</p></div>
-    <div class="card"><p class="idx">CHOICE</p><p><code>if e then c₁ else c₂</code>: execute one command of two.</p></div>
-    <div class="card warm"><p class="idx">REPETITION</p><p><code>while e do c</code>: execute a command as long as a condition holds.</p></div>
-  </div>
-  <p style="margin-top:22px">And one more: <code>{ c₁; c₂ }</code>, a <strong>block</strong>, to put several commands where one is expected.</p>
-  <p class="note">The code of this lecture is in <a href="https://github.com/vincenzoml/PLDW/tree/main/code/lesson-07"><code>code/lesson-07/</code></a>: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/control.py"><code>control.py</code></a>. It starts from <code>state.py</code> of Lecture 6.</p>
+  <h2>Two commands, three changes</h2>
+  <ul>
+    <li><code>if</code> chooses between two sequences of commands; <code>while</code> repeats one.</li>
+    <li>Both test a <strong>condition</strong>, whose value is not a number: the language gets a second kind of value, the booleans. Operators get types.</li>
+    <li>A branch can declare a variable. What happens to it after the branch? The answer makes the store behave like a <strong>stack</strong>.</li>
+  </ul>
+  <p class="note">The code of this lecture is in <a href="https://github.com/vincenzoml/PLDW/tree/main/code/lesson-07"><code>code/lesson-07/</code></a>: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/control.py"><code>control.py</code></a>. It starts from <code>state.py</code> of Lecture 6 and keeps its names.</p>
 </section>
 
-<!-- ================================================================ conditions -->
+<!-- ================================================================ booleans -->
 
 <section class="part">
-  <p class="kicker">Conditions</p>
-  <h2>Booleans and comparisons</h2>
-</section>
-
-<section>
+  <p class="kicker">Booleans</p>
   <h2>A second kind of value</h2>
-  <div class="split flip">
-    <div>
-      <pre><code class="language-text" data-trim>
-print 3 &lt; 4;
-print 2 + 2 == 5;
-print true == false
-      </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
-true
-false
-false
-      </code></pre>
-    </div>
-    <div>
-      <table style="font-size:.72em">
-        <tr><th>syntax</th><th>value</th></tr>
-        <tr><td><code>true</code>, <code>false</code></td><td>the two booleans</td></tr>
-        <tr><td><code>e₁ &lt; e₂</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td><td>compare two integers</td></tr>
-        <tr><td><code>e₁ == e₂</code>, <code>!=</code></td><td>compare two values of the same kind</td></tr>
-      </table>
-      <p style="margin-top:18px">An expression can now give an integer or a boolean. A variable can hold either.</p>
-    </div>
-  </div>
 </section>
 
 <section>
-  <h2>The grammar of conditions</h2>
+  <h2>What does <code>true + 1</code> mean?</h2>
+  <p><code>EVal</code> becomes <code>int | bool</code>. The expression <code>true + 1</code> is well formed, and the evaluator of Lecture 6 would compute it: in Python, <code>True + 1</code> is 2.</p>
+  <ul>
+    <li><strong>C:</strong> a boolean is a number, so the result is 2.</li>
+    <li><strong>Typed languages</strong>, such as Java: the program is refused before it runs, by a type checker. We do not have one.</li>
+    <li><strong>Python, and us:</strong> compute the operands, look at what came out, and raise an error if it is not what the operator wants.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>An operator carries its type</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
-?expr: let | ifexpr | test
-?test: arith | compare
-compare: arith CMP arith
-?arith: bin | mono
-bin: arith OP mono
-mono: ground | boolean | var | paren
-boolean: BOOLEAN
+@dataclass(frozen=True)
+class Operator:
+    type: tuple[list[type], type]  # (argument types, result type)
+    fn: Callable[[list[EVal]], EVal]
 
-BOOLEAN: "true" | "false"
-CMP: "==" | "!=" | "&lt;=" | "&gt;=" | "&lt;" | "&gt;"
+
+env = bind(env, "+", Operator(([int, int], int), add))
+env = bind(env, "&lt;", Operator(([int, int], bool), less))
+env = bind(env, "not", Operator(([bool], bool), logical_not))
     </code></pre>
     <div>
-      <p class="lead">A comparison is a level above arithmetic: in <code>x + 1 &lt; y * 2</code> both sides are computed first.</p>
-      <p>A comparison has two arithmetic sides, so <code>1 &lt; 2 &lt; 3</code> is a syntax error.</p>
-      <p><code>true</code> and <code>false</code> become reserved words, like <code>if</code>, <code>then</code>, <code>else</code>, <code>while</code> and <code>do</code>.</p>
-      <p class="note">Python reads <code>1 &lt; 2 &lt; 3</code> as <code>1 &lt; 2 and 2 &lt; 3</code>. C computes <code>1 &lt; 2</code>, which is 1, then <code>1 &lt; 3</code>.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>Comparisons are operators</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
-def less(x: EVal, y: EVal) -&gt; EVal:
-    return integer(x) &lt; integer(y)
-
-def equal(x: EVal, y: EVal) -&gt; EVal:
-    if type(x) is not type(y):
-        raise ValueError(
-            f"Cannot compare {show(x)} and {show(y)}")
-    return x == y
-
-def create_initial_env() -&gt; Environment:
-    env = empty_environment()
-    env = bind(env, "+", add)
-    ...
-    env = bind(env, "&lt;", less)
-    env = bind(env, "==", equal)
-    ...
-    </code></pre>
-    <div>
-      <p class="lead">A comparison is a <code>BinaryExpression</code>, like <code>x + 1</code>. Its operator is looked up by name in the environment, as in Lecture 4.</p>
-      <p>The case of <code>BinaryExpression</code> in <code>evaluate</code> does not change. Six new names in the initial environment are enough.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>In Python, <code>True</code> is 1</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
-type EVal = int | bool
-
-def integer(value: EVal) -&gt; int:
-    # bool is a subclass of int in Python
-    if type(value) is not int:
-        raise ValueError(
-            f"{show(value)} is not a number")
-    return value
-
-def add(x: EVal, y: EVal) -&gt; EVal:
-    return integer(x) + integer(y)
-    </code></pre>
-    <div>
-      <p class="lead">In Python <code>True + 1</code> is 2, and <code>1 == True</code> is <code>True</code>. We decide that in our language they are errors.</p>
-      <p>So every arithmetic operator checks its operands with <code>integer</code>, which uses <code>type(...) is int</code>: <code>isinstance(True, int)</code> is <code>True</code>.</p>
-      <pre class="out"><code class="language-text" data-trim>
-print true + 1      true is not a number
-print 1 == true     Cannot compare 1 and true
-      </code></pre>
-      <p class="note"><code>show</code> prints the booleans as the language writes them: <code>true</code>, not <code>True</code>.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ================================================================ if -->
-
-<section class="part">
-  <p class="kicker">Choice</p>
-  <h2><code>if</code> and blocks</h2>
-</section>
-
-<section>
-  <h2>The commands</h2>
-  <div class="split flip">
-    <div>
-      <pre><code class="language-text" data-trim>
-var x = 7;
-if x % 2 == 0 then print 0 else print 1;
-if x &gt; 5 then {
-  print x;
-  x &lt;- 5
-} else print 0;
-print x
-      </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
-1
-7
-5
-      </code></pre>
-    </div>
-    <div>
-      <table style="font-size:.7em">
-        <tr><th>command</th><th>meaning</th></tr>
-        <tr><td><code>if e then c₁ else c₂</code></td><td><code>c₁</code> if <code>e</code> is true, <code>c₂</code> if it is false</td></tr>
-        <tr><td><code>while e do c</code></td><td><code>c</code>, again and again, as long as <code>e</code> is true</td></tr>
-        <tr><td><code>{ c₁; c₂; ... }</code></td><td>the commands inside, in order</td></tr>
-      </table>
-      <p class="note" style="margin-top:18px">Each branch, and the body of <code>while</code>, is one command. For more than one, a block.</p>
+      <p class="lead">In Lecture 6 an operator was a Python function bound in the environment. Now it is the function and its type.</p>
+      <p>The arguments come as a list, so the same class works for <code>not</code>, which has one.</p>
+      <p>Fourteen operators: five on integers giving integers, six comparisons giving booleans, and <code>and</code>, <code>or</code>, <code>not</code> on booleans.</p>
+      <p class="note"><code>==</code> is declared on integers only, so <code>true == false</code> is an error. It is a choice: exercise 3 changes it.</p>
     </div>
   </div>
 </section>
@@ -292,352 +168,342 @@ print x
   <h2>The grammar</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
-sequence: command | command ";" sequence
+mono: ground | var | paren | unary
+unary: UNOP mono
+ground: NUMBER | BOOL
 
-?command: vardecl | assign | print
-        | if | while | block
-if: "if" expr "then" command "else" command
-while: "while" expr "do" command
-block: "{" sequence "}"
+BOOL: "true" | "false"
+OP: "+" | "-" | "*" | "/" | "%"
+  | "==" | "!=" | "&lt;=" | "&gt;=" | "&lt;" | "&gt;"
+  | "and" | "or"
+UNOP: "not"
     </code></pre>
     <div>
-      <p class="lead">Three new commands. Inside braces there is a <code>sequence</code>, the same rule as a whole program.</p>
-      <p>A block is a command, so it can be a branch, a body, or another block's command.</p>
-      <p>In <code>while n &gt; 1 do n &lt;- n - 1; print n</code> the body is only the assignment: <code>print n</code> comes after the loop.</p>
-      <p class="note">Every <code>if</code> has an <code>else</code>. Without that rule, <code>if a then if b then c₁ else c₂</code> would have two parse trees: which <code>if</code> does the <code>else</code> belong to?</p>
+      <p class="lead">A new literal, and a new prefix operator. The other operators are added to <code>OP</code>.</p>
+      <p>The rule <code>bin: arith OP mono</code> does not change: all binary operators still have the same precedence, and group from the left.</p>
+      <p class="note">This will matter in a few slides.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>The AST</h2>
+  <h2>One node for every application</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
 @dataclass(frozen=True)
-class If:
-    test: Expression
-    then_branch: Command
-    else_branch: Command
+class Bool:
+    value: bool
 
 @dataclass(frozen=True)
-class While:
-    test: Expression
-    body: Command
-
-@dataclass(frozen=True)
-class Block:
-    body: Sequence
-
-type Command = (VarDecl | Assign | Print
-                | If | While | Block)
+class Apply:
+    op: str
+    args: list[Expression]
     </code></pre>
     <div>
-      <p class="lead">For the first time, a command contains other commands. <code>Command</code> is now a recursive type, like <code>Expression</code>.</p>
-      <p>The transformation of the parse tree calls itself on the branches, as <code>transform_expression</code> does on the operands.</p>
-      <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
-While(test=BinaryExpression(op='&gt;', left=Var(name='n'), right=Number(value=0)),
-      body=Assign(name='n', expr=BinaryExpression(op='-', left=Var(name='n'), right=Number(value=1))))
-      </code></pre>
+      <p class="lead"><code>BinaryExpression</code> of Lecture 6 becomes <code>Apply</code>: one argument for <code>not</code>, two for all the others.</p>
+      <p>With two nodes, the check of the types would be written twice.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>A condition is true or false</h2>
+  <h2>Compute, look up, check, apply</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
-def condition(test: Expression, env: Environment,
-              state: State) -&gt; bool:
-    value = evaluate(test, env, state)
-    if type(value) is not bool:
+case Apply(op, args):
+    values = [evaluate(arg, env, state) for arg in args]
+    match lookup(env, op):
+        case Operator(type=(expected_types, _), fn=fn):
+            check_arguments(op, expected_types, values)
+            return fn(values)
+        case _:
+            raise ValueError(f"{op} is not an operator")
+    </code></pre>
+    <div>
+      <p class="lead">The arguments are computed first. Then the operator is found in the environment, as in Lecture 4.</p>
+      <p><code>check_arguments</code> compares the number and the types of the values with the type of the operator, and only then is the function applied.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The check, and a trap</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+for i, (expected, actual) in enumerate(zip(expected_types, values)):
+    # not isinstance: in Python, bool is a subclass of int
+    if type(actual) is not expected:
         raise ValueError(
-            f"The condition is {show(value)}, "
-            "not true or false")
-    return value
+            f"Operator '{op}': argument {i + 1} must be "
+            f"{expected.__name__}, got {type(actual).__name__}")
     </code></pre>
     <div>
-      <p class="lead">The condition of <code>if</code> and <code>while</code> is an expression. If its value is not a boolean, it is an error.</p>
+      <p class="lead"><code>isinstance(True, int)</code> is <code>True</code> in Python.</p>
+      <p>The exact test <code>type(actual) is expected</code> is what makes <code>true + 1</code> an error and not 2.</p>
       <pre class="out"><code class="language-text" data-trim>
-if 1 then print 1 else print 2
-The condition is 1, not true or false
+print 3 &lt; 4          true
+print true + 1       Operator '+': argument 1 must be int, got bool
+print true == false  Operator '==': argument 1 must be int, got bool
       </code></pre>
-      <p class="note">In Python and C, <code>if 0:</code> and <code>if (0)</code> are allowed: 0, the empty list and <code>None</code> count as false. We keep the two kinds of value apart.</p>
+      <p class="note"><code>show</code> prints the booleans as the language writes them: <code>true</code>, not <code>True</code>.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>Executing <code>if</code></h2>
+  <h2>Consequence 1: one level of precedence</h2>
   <div class="split flip">
-    <pre><code class="language-python" data-trim>
-case If(test, then_branch, else_branch):
-    if condition(test, env, state):
-        _, state = execute(then_branch, env, state)
-    else:
-        _, state = execute(else_branch, env, state)
-    return env, state
+    <pre class="out"><code class="language-text" data-trim>
+print 1 &lt; 2 and 2 &lt; 3
+Operator 'and': argument 2 must be bool, got int
+
+print (1 &lt; 2) and (2 &lt; 3)
+true
     </code></pre>
     <div>
-      <p class="lead">Compute the condition, then execute one branch. The other one is never looked at.</p>
-      <p>The state goes on to the next command: what the branch assigned stays assigned.</p>
-      <p>The environment returned by the branch is thrown away, <code>_</code>. The next command gets the environment the <code>if</code> received.</p>
+      <p class="lead">With all operators at one level, <code>1 &lt; 2 and 2 &lt; 3</code> is read as <code>((1 &lt; 2) and 2) &lt; 3</code>.</p>
+      <p>It did not matter while every operator took and gave integers. Now it does.</p>
+      <p>Parentheses fix it. A grammar with levels is exercise 1.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>Why the environment is thrown away</h2>
+  <h2>Consequence 2: <code>and</code> computes both sides</h2>
   <div class="split flip">
-    <div>
-      <pre><code class="language-text" data-trim>
-var x = 1;
-if x &gt; 0 then var y = 1 else print 0;
-print y
-      </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
-Undefined identifier: y
-      </code></pre>
-    </div>
-    <div>
-      <p class="lead">If the environment of the branch went on, <code>y</code> would exist after the <code>if</code> only when <code>x &gt; 0</code>.</p>
-      <p>Whether <code>print y</code> is correct would depend on the run, not on the text. The scope of a name would no longer be static.</p>
-      <p>So a declaration in a branch is visible only in that branch.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>Executing a block</h2>
-  <div class="split flip">
-    <div>
-      <pre><code class="language-python" data-trim>
-case Block(body):
-    _, state = execute_sequence(body, env, state)
-    return env, state
-      </code></pre>
-      <pre><code class="language-text" data-trim>
-var x = 1;
-{ var x = 2; print x };
-print x
-      </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
-2
-1
-      </code></pre>
-    </div>
-    <div>
-      <p class="lead">The same rule: the commands inside see each other's declarations, and nothing declared inside is seen after the closing brace.</p>
-      <p>The inner <code>x</code> is a new location, \( \ell_1 \). After the block no name reaches it, as with a second <code>var x</code> in Lecture 6.</p>
-      <p class="note">Assignments are not undone: <code>var a = 1; { a &lt;- 2 }; print a</code> prints 2. A block limits names, not changes to the store.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>The equations</h2>
-  <p class="formula" style="font-size:1.08em; line-height:1.8">\( ⟦\mathtt{if}\ e\ \mathtt{then}\ c_1\ \mathtt{else}\ c_2⟧(\rho, \sigma) = \begin{cases} (\rho, \sigma_1) & \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \text{ and } ⟦c_1⟧(\rho, \sigma) = (\rho_1, \sigma_1) \\ (\rho, \sigma_2) & \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \text{ and } ⟦c_2⟧(\rho, \sigma) = (\rho_2, \sigma_2) \end{cases} \)<br>
-  \( ⟦\{\ s\ \}⟧(\rho, \sigma) = (\rho, \sigma') \quad \text{where } ⟦s⟧(\rho, \sigma) = (\rho', \sigma') \)</p>
-  <ul>
-    <li>On the right, the environment is always \( \rho \), the one on the left. Only the store comes out of the branch or of the block.</li>
-    <li>If \( ⟦e⟧(\rho, \sigma) \) is not a boolean, neither case applies: an error.</li>
-  </ul>
-</section>
-
-<!-- ================================================================ if in expressions -->
-
-<section>
-  <h2><code>if</code> in an expression</h2>
-  <div class="split flip">
-    <div>
-      <pre><code class="language-text" data-trim>
-var x = 0;
-print if x != 0 then 10 / x else 0
-      </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
-0
-      </code></pre>
-      <pre><code class="language-python" data-trim>
-ifexpr: "if" expr "then" expr "else" expr
-
-case IfExpr(test, then_branch, else_branch):
-    if condition(test, env, state):
-        return evaluate(then_branch, env, state)
-    return evaluate(else_branch, env, state)
-      </code></pre>
-    </div>
-    <div>
-      <p class="lead">The same choice, between two expressions: its value is the value of one branch.</p>
-      <p>The parser knows which <code>if</code> it is from where it is: after <code>print</code> an expression is expected, at the start of a command a command.</p>
-      <p class="note">Like <code>let</code>, it is at the level of <code>expr</code>: the <code>else</code> branch goes as far as possible. To use it as an operand, parentheses: <code>1 + (if b then 1 else 2)</code>. Python writes it <code>a if b else c</code>, C <code>b ? a : c</code>.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>Why <code>if</code> is not an operator</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
-def choose(test, a, b):
-    return a if test else b
-
-env = bind(env, "if", choose)       # ?
+    <pre class="out"><code class="language-text" data-trim>
+print false and (1 / 0 == 0)
+Division by zero
     </code></pre>
     <div>
-      <p class="lead">An operator receives values: <code>evaluate</code> computes both operands before calling it.</p>
-      <p>With <code>if</code> as an operator, <code>if x != 0 then 10 / x else 0</code> would compute <code>10 / x</code> first, and fail with <code>Division by zero</code> when <code>x</code> is 0.</p>
-      <p>So <code>if</code> needs its own case in <code>evaluate</code>, which computes the condition, and then one branch only.</p>
-      <p class="note">The same holds for <code>and</code> and <code>or</code>: exercise 2.</p>
+      <p class="lead"><code>Apply</code> computes every argument before it looks at the operator.</p>
+      <p>In most languages <code>false and e</code> gives <code>false</code> without computing <code>e</code>. Ours cannot, as long as <code>and</code> is an operator.</p>
+      <p>An <code>and</code> that stops early is not an operator: it is an <code>if</code> in disguise. Exercise 2.</p>
     </div>
   </div>
 </section>
 
-<!-- ================================================================ while -->
+<!-- ================================================================ if and while -->
 
 <section class="part">
-  <p class="kicker">Repetition</p>
-  <h2><code>while</code></h2>
+  <p class="kicker">Choice and repetition</p>
+  <h2><code>if</code> and <code>while</code></h2>
 </section>
 
 <section>
-  <h2>The equation of <code>while</code></h2>
-  <p class="formula" style="font-size:1.08em; line-height:1.8">\( ⟦w⟧(\rho, \sigma) = \begin{cases} ⟦w⟧(\rho, \sigma') & \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \text{ and } ⟦c⟧(\rho, \sigma) = (\rho', \sigma') \\ (\rho, \sigma) & \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \end{cases} \qquad w = \mathtt{while}\ e\ \mathtt{do}\ c \)</p>
-  <ul>
-    <li>If the condition is true: execute the body once, then the whole loop again, from the new store.</li>
-    <li>The meaning of \( w \) is defined using the meaning of \( w \) itself, not of a smaller piece of the program. Every other equation so far went from a program to its parts.</li>
-  </ul>
+  <h2><code>if</code>: the syntax</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+?command: vardecl | assign | print | ifelse | while
+ifelse: "if" expr "then" sequence
+        "else" sequence "endif"
+
+@dataclass(frozen=True)
+class IfElse:
+    cond: Expression
+    then_branch: Sequence
+    else_branch: Sequence
+    </code></pre>
+    <div>
+      <p class="lead">Each branch is a sequence of commands.</p>
+      <p><code>endif</code> is needed: in <code>if c then a else b; d</code>, is <code>d</code> part of the <code>else</code> branch? Something must mark where the branch ends.</p>
+      <p class="note">C uses braces, Python indentation. We use a keyword, which needs no change to the lexer.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>if</code>: the meaning</h2>
+  <p class="formula" style="font-size:1.05em">\( ⟦\mathtt{if}\ e\ \mathtt{then}\ s_1\ \mathtt{else}\ s_2\ \mathtt{endif}⟧(\rho, \sigma) = \begin{cases} ⟦s_1⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \\ ⟦s_2⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \end{cases} \)</p>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def evaluate_condition(cond, env, state) -&gt; bool:
+    value = evaluate(cond, env, state)
+    if type(value) is not bool:
+        raise ValueError(
+            f"Condition must be a boolean, got {show(value)}")
+    return value
+
+case IfElse(cond, then_branch, else_branch):
+    if evaluate_condition(cond, env, state):
+        return env, execute_block(then_branch, env, state)
+    return env, execute_block(else_branch, env, state)
+    </code></pre>
+    <div>
+      <p class="lead">If the condition is neither <code>true</code> nor <code>false</code>, the program is wrong, and we say so.</p>
+      <pre class="out"><code class="language-text" data-trim>
+if 1 then print 1 else print 0 endif
+Condition must be a boolean, got 1
+      </code></pre>
+      <p class="note">The command returns the environment it received, and the branch runs as a <code>execute_block</code>: the third part of the lecture.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><code>while</code>: the equation</h2>
+  <pre><code class="language-python" data-trim>
+while: "while" expr "do" sequence "done"
+  </code></pre>
+  <p class="formula" style="font-size:1.05em">\( ⟦w⟧(\rho, \sigma) = \begin{cases} (\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \\ ⟦w⟧(\rho, \sigma') \text{ where } ⟦s⟧(\rho, \sigma) = (\rho', \sigma') &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \end{cases} \qquad w = \mathtt{while}\ e\ \mathtt{do}\ s\ \mathtt{done} \)</p>
+  <p>If the condition is false, the state does not change. Otherwise, run the body once, then run <em>the same loop</em> from the new store.</p>
+</section>
+
+<section>
+  <h2>A meaning defined in terms of itself</h2>
+  <p>Up to now, the meaning of every construct was built from the meanings of its parts, which are smaller. Such a definition always ends, because the parts run out.</p>
+  <p>The equation of <code>while</code> uses the meaning of the <code>while</code> itself, and nothing gets smaller from one step to the next. For <code>while true do print 1 done</code> the steps never end.</p>
+  <p>This is not a defect. A language in which every program ends cannot run Euclid's algorithm on any input. Whether a program stops is the programmer's problem; an interpreter of a program that does not stop does not stop either.</p>
   <p class="note">In the theory lectures, this is why the meaning of <code>while</code> in IMP is a fixed point.</p>
 </section>
 
 <section>
-  <h2>The equation, in Python</h2>
+  <h2>The equation, word for word</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
-def execute_while(test: Expression, body: Command,
-                  env: Environment, state: State) -&gt; State:
-    if not condition(test, env, state):
-        return state
-    _, state = execute(body, env, state)
-    return execute_while(test, body, env, state)
+def execute_while_by_recursion(cond, body, env, state) -&gt; State:
+    if evaluate_condition(cond, env, state):
+        return execute_while_by_recursion(
+            cond, body, env, execute_block(body, env, state))
+    return state
     </code></pre>
     <div>
-      <p class="lead">Word for word: one Python call per iteration of the loop.</p>
+      <p class="lead">Correct, and it fails at five thousand iterations.</p>
       <pre class="out"><code class="language-text" data-trim>
-var i = 0; while i &lt; 3000 do i &lt;- i + 1
+while by recursion, 5000 iterations
 RecursionError: maximum recursion depth exceeded
       </code></pre>
-      <p>Python stops a program that has more than 1000 calls open at the same time. Our interpreter inherits the limit: a loop of 3000 iterations cannot run.</p>
+      <p>One Python call per iteration, and Python stops at about a thousand calls open at the same time.</p>
+      <p class="note"><code>sys.setrecursionlimit</code> only moves the limit.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>A loop, with a loop</h2>
+  <h2>Written as the loop it is</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
-case While(test, body):
-    while condition(test, env, state):
-        _, state = execute(body, env, state)
+case While(cond, body):
+    while evaluate_condition(cond, env, state):
+        state = execute_block(body, env, state)
     return env, state
     </code></pre>
     <div>
-      <p class="lead">The interpreter executes a <code>while</code> of our language with a <code>while</code> of Python.</p>
-      <p>Each iteration replaces <code>state</code>, and the calls do not pile up. It computes the same thing as the equation.</p>
-      <p>The environment does not change from one iteration to the next: a <code>var</code> in the body is a new location each time, and it is gone at the next test.</p>
+      <pre><code class="language-text" data-trim>
+var a = 48; var b = 18;
+while b != 0 do
+  if a &gt; b then a &lt;- a - b
+  else b &lt;- b - a endif
+done;
+print a
+
+var n = 5000; while n &gt; 0 do n &lt;- n - 1 done; print n
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+6
+0
+      </code></pre>
+      <p class="note">Defining <code>while</code> with Python's <code>while</code> is the same as defining <code>+</code> with Python's <code>+</code>. What the code adds is what exactly is borrowed: the condition computed again in the same environment, in each new state, and the body run as a block.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ blocks -->
+
+<section class="part">
+  <p class="kicker">Blocks</p>
+  <h2>What a branch declares stays in the branch</h2>
+</section>
+
+<section>
+  <h2>Run this in your head</h2>
+  <pre><code class="language-text" data-trim>
+var x = 0;
+if true then var y = 1; x &lt;- x + y else print 0 endif;
+print x;
+print y
+  </code></pre>
+  <p>Should <code>print y</code> work?</p>
+  <p>If declarations survived the branch, <code>y</code> would exist only when the condition was true. To know which names a program can use, we would have to run it.</p>
+  <p>So branches and loop bodies are <strong>blocks</strong>: a name declared in a block is visible until the block ends. It is the rule <code>let</code> already follows.</p>
+</section>
+
+<section>
+  <h2>The code is almost nothing</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def execute_block(block: Sequence, env: Environment,
+                  state: State) -&gt; State:
+    """Run a block: its declarations do not survive it,
+    and its locations are reused."""
+    _, new_state = execute_sequence(block, env, state)
+    return State(store=new_state.store,
+                 next_loc=state.next_loc)
+    </code></pre>
+    <div>
+      <p class="lead">Running the block gives an environment with its declarations. We do not return it.</p>
+      <p>The store is returned: the assignment to <code>x</code> stays.</p>
+      <pre class="out"><code class="language-text" data-trim>
+1
+Undefined identifier: y
+      </code></pre>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>Step by step</h2>
-  <pre><code class="language-text" data-trim>
-var n = 3; var f = 1; while n &gt; 1 do { f &lt;- f * n; n &lt;- n - 1 }; print f
-  </code></pre>
-  <table style="font-size:.76em">
-    <tr><th>test</th><th><code>n &gt; 1</code></th><th>store after the body</th></tr>
-    <tr><td>1</td><td>\( 3 &gt; 1 \): true</td><td>\( \ell_0 \mapsto 2,\ \ell_1 \mapsto 3 \)</td></tr>
-    <tr><td>2</td><td>\( 2 &gt; 1 \): true</td><td>\( \ell_0 \mapsto 1,\ \ell_1 \mapsto 6 \)</td></tr>
-    <tr><td>3</td><td>\( 1 &gt; 1 \): false</td><td>the loop ends; <code>print f</code> shows 6</td></tr>
-  </table>
-  <p style="margin-top:22px"><code>n</code> is at \( \ell_0 \), <code>f</code> at \( \ell_1 \). The environment is the same at every test; only the store changes.</p>
-</section>
-
-<section>
-  <h2>The store of Lecture 6, in a loop</h2>
+  <h2>Locations behave like a stack</h2>
   <div class="split flip">
     <div>
       <pre><code class="language-text" data-trim>
-var i = 0; var limit = 1000;
-while i &lt; limit do i &lt;- i + 1
+var i = 0;
+while i &lt; 3 do
+  var sq = i * i;
+  print sq;
+  i &lt;- i + 1
+done
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+0
+1
+4
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">The second line of <code>execute_block</code> puts <code>next_loc</code> back. After the block, no name refers to the location of <code>sq</code>: nobody can read or write it again.</p>
+      <p>Without this, a loop that runs a million times allocates a million locations, for a program that needs one. With it, entering a block pushes, leaving it pops.</p>
+      <p class="note">This is how real machines allocate local variables, and for the same reason: nothing that refers to the locations of a block outlives the block.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What the restore does not do</h2>
+  <p>The old value is still in the store: <code>update</code> and <code>allocate</code> never remove anything. The location keeps its content until the next <code>var</code> writes over it.</p>
+  <p>We cannot see this: the only way to reach a location is through a name, and the name is gone.</p>
+  <p class="note">Our language has no pointers, so no value can carry a location out of its block. Next lecture adds the first value that carries an environment with it, and this has to be checked again.</p>
+</section>
+
+<section>
+  <h2>A limit that comes from the store</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+var a = 0;
+var n = 3000;
+while n &gt; 0 do n &lt;- n - 1 done;
+print a
       </code></pre>
       <pre class="out"><code class="language-text" data-trim>
 RecursionError: maximum recursion depth exceeded
       </code></pre>
     </div>
     <div>
-      <p class="lead">With the <code>update</code> of Lecture 6, every assignment adds one store to the chain.</p>
-      <p>To read <code>limit</code>, which was never assigned, <code>access</code> asks each store in turn, back to the one made by <code>var limit</code>: 1000 nested calls.</p>
-      <p>Lecture 6 said "for programs of a few hundred commands, it does not matter". A loop makes a few hundred commands out of one.</p>
+      <p class="lead">Every <code>update</code> wraps the store in one more function, as in Lecture 6.</p>
+      <p>To read <code>a</code> after three thousand updates of <code>n</code>, <code>access</code> goes through three thousand of them, one Python call each.</p>
+      <p class="note">The store as a function was chosen to match the equations, not for speed. A loop is the first thing that shows the price. Replacing it is exercise 5, and nothing else in the interpreter changes.</p>
     </div>
   </div>
-</section>
-
-<section>
-  <h2>A store that copies</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
-def update(state: State, loc: Loc, value: MVal) -&gt; State:
-    cells = {address: state.store(address)
-             for address in range(state.next_loc)}
-    cells[loc.address] = value
-
-    def new_store(address: int) -&gt; MVal:
-        if address in cells:
-            return cells[address]
-        raise ValueError(
-            f"Location {address} is not allocated")
-
-    return State(store=new_store, next_loc=state.next_loc)
-    </code></pre>
-    <div>
-      <p class="lead">The new store does not ask the old one: it copies what the old one holds, once, into a dictionary of its own.</p>
-      <p>It is still a function from addresses to values, and the old store is still unchanged. <code>access</code> and <code>allocate</code> stay as they were.</p>
-      <p class="note">The price moves: each update copies all the locations. A program has a few dozen of them, so it is cheap.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>A loop that never ends</h2>
-  <div class="split flip">
-    <pre><code class="language-text" data-trim>
-var k = 1;
-while k &gt; 0 do k &lt;- k + 1
-    </code></pre>
-    <div>
-      <p class="lead">The condition is true at every test. The interpreter runs until it is stopped, with Ctrl-C.</p>
-      <p>No error is raised, and nothing is printed. The equation of <code>while</code> gives no result for this program.</p>
-      <p>With <code>while</code>, a program can run forever. In general no program can tell, by reading another program, whether it will stop: it is the halting problem.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>It runs</h2>
-  <div class="split">
-    <pre><code class="language-text" data-trim>
-var a = 12; var b = 18;
-while b != 0 do {
-  var t = b;
-  b &lt;- a % b;
-  a &lt;- t
-};
-print a
-    </code></pre>
-    <pre class="out"><code class="language-text" data-trim>
-6
-    </code></pre>
-  </div>
-  <p style="margin-top:22px">Euclid's algorithm: the greatest common divisor of 12 and 18. <code>t</code> is declared in the body, so each iteration has its own, and none is visible after the loop.</p>
 </section>
 
 <!-- ================================================================ wrap-up -->
@@ -651,14 +517,13 @@ print a
   <h2>The decisions of today</h2>
   <table style="font-size:.66em">
     <tr><th>decision</th><th>alternative</th><th>why</th></tr>
-    <tr><td>booleans apart from integers</td><td>0 is false, as in C</td><td><code>if 1</code> and <code>true + 1</code> are errors, not surprises</td></tr>
-    <tr><td>comparisons are operators in the environment</td><td>a node per comparison</td><td><code>evaluate</code> does not change</td></tr>
-    <tr><td><code>1 &lt; 2 &lt; 3</code> is a syntax error</td><td>chains, as in Python</td><td>a simpler grammar</td></tr>
-    <tr><td><code>if</code> has its own case</td><td><code>if</code> as an operator</td><td>only one branch is computed</td></tr>
-    <tr><td>a branch is one command; braces for more</td><td>a sequence in every branch</td><td>one rule, <code>block</code>, for all</td></tr>
-    <tr><td>declarations in a branch or block stay there</td><td>they go on after it</td><td>the scope of a name stays static</td></tr>
-    <tr><td><code>while</code> runs as a Python loop</td><td>the equation, by recursion</td><td>no limit on the iterations</td></tr>
-    <tr><td>the store copies on update</td><td>the chain of Lecture 6</td><td>no limit on the assignments</td></tr>
+    <tr><td><code>true + 1</code> is an error, checked when it runs</td><td>2, as in C; a type checker before running</td><td>no surprises, and no checker to write</td></tr>
+    <tr><td>one <code>Apply</code> node, operators with a type</td><td>two nodes</td><td>one check, written once</td></tr>
+    <tr><td><code>==</code> on integers only</td><td>on two values of the same type</td><td>exercise 3</td></tr>
+    <tr><td><code>and</code>, <code>or</code> are operators: both sides computed</td><td>stop early: their own nodes</td><td>exercise 2</td></tr>
+    <tr><td><code>endif</code>, <code>done</code></td><td>braces, indentation</td><td>no change to the lexer</td></tr>
+    <tr><td><code>while</code> as a Python loop</td><td>the equation, by recursion</td><td>the recursion stops at about 1000</td></tr>
+    <tr><td>branches and bodies are blocks; <code>next_loc</code> restored</td><td>declarations survive the branch</td><td>names known from the text; a store like a stack</td></tr>
   </table>
 </section>
 
@@ -666,28 +531,27 @@ print a
   <h2>Control flow: all the changes</h2>
   <div class="cards" style="--n:3; margin-top:14px; font-size:.7em">
     <div class="card"><p class="idx">PARSER</p><pre><code class="language-python" data-trim>
-?command: ... | if | while | block
-if: "if" expr "then" command
-    "else" command
-while: "while" expr "do" command
-block: "{" sequence "}"
-?expr: let | ifexpr | test
-compare: arith CMP arith
+ifelse: "if" expr "then" sequence
+        "else" sequence "endif"
+while: "while" expr "do"
+       sequence "done"
+unary: UNOP mono
+ground: NUMBER | BOOL
     </code></pre></div>
     <div class="card"><p class="idx">DOMAINS</p><pre><code class="language-python" data-trim>
 type EVal = int | bool
 
-less, equal, ...
-  in the initial environment
-
-update copies the store
+class Operator:
+    type: (list[type], type)
+    fn
     </code></pre></div>
     <div class="card warm"><p class="idx">INTERPRETER</p><pre><code class="language-python" data-trim>
-condition(e, env, state)
-  -&gt; bool
+evaluate:  Apply, checked
 
-evaluate:  IfExpr
-execute:   If, While, Block
+evaluate_condition
+execute_block
+
+execute:   IfElse, While
     </code></pre></div>
   </div>
   <p>The full code is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/control.py"><code>code/lesson-07/control.py</code></a>.</p>
@@ -695,9 +559,9 @@ execute:   If, While, Block
 
 <section>
   <h2>Where we are</h2>
-  <p>A program can now choose what to execute and repeat it. With variables, <code>if</code> and <code>while</code>, the language can compute anything a computer can compute.</p>
-  <p>But a computation can be written only once, where it is used. To compute a factorial in three places, the loop is written three times.</p>
-  <p>Next lecture: functions and procedures, to give a computation a name and parameters, and call it.</p>
+  <p>The language can choose and repeat. With a store and a loop it can compute anything that can be computed; the price is that whether a program stops is the programmer's problem.</p>
+  <p>Values are integers and booleans; operators have types, checked when the program runs; blocks give the store the discipline of a stack.</p>
+  <p>What we still cannot do: give a name to a computation and use it twice. Next lecture: functions, and with them the <strong>closure</strong>, a value that carries an environment out of the place where it was made.</p>
 </section>
 
 <!-- ================================================================ exercises -->
@@ -708,124 +572,94 @@ execute:   If, While, Block
 </section>
 
 <section>
-  <h2>Exercise 1 · Predict, then run</h2>
+  <h2>Exercise 1 · Precedence</h2>
   <div class="split flip">
-    <div>
     <pre><code class="language-text" data-trim>
-var s = 0; var k = 4; while k &gt; 0 do { s &lt;- s + k; k &lt;- k - 1 }; print s
-var i = 0; while i &lt; 3 do i &lt;- i + 1; print i
-var y = 1; { var y = 2; y &lt;- y + 1 }; print y
-var a = 10; { a &lt;- a + 1; var a = 0 }; print a
-print if 2 &gt; 1 then 10 else 1 / 0
-var b = 3 &lt; 4; if b then print b else print 0
-var c = 5; while c do c &lt;- c - 1
-print 1 &lt; 2 == true
+print 1 + 2 * 3                 7
+print 1 &lt; 2 and 2 &lt; 3           true
+print not 1 &gt; 2 or false        true
+print 10 - 2 - 3                5
     </code></pre>
-    <p>Today's interpreter: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/control.py"><code>code/lesson-07/control.py</code></a></p>
-    </div>
     <div>
-      <p class="cite">Level 1 of 4</p>
+      <p class="cite">Level 1 of 5</p>
       <ol>
-        <li>For each program, write what it prints, and the error if there is one, before running it.</li>
-        <li>For the first program, write the store after each iteration, as in the table of the slides.</li>
-        <li>In the fourth program, which <code>a</code> does each occurrence refer to?</li>
+        <li>Write a grammar with levels. From the loosest: <code>or</code>, then <code>and</code>, <code>not</code>, the comparisons, <code>+ -</code>, and <code>* / %</code>.</li>
+        <li>The AST does not need to change: every level still builds an <code>Apply</code>.</li>
+      </ol>
+      <p>Today's interpreter: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/control.py"><code>code/lesson-07/control.py</code></a></p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · <code>and</code> and <code>or</code> that stop early</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+print false and (1 / 0 == 0)       false
+print true or (1 / 0 == 0)         true
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 5</p>
+      <ol>
+        <li>Give <code>and</code> and <code>or</code> their own AST nodes, so that the right side is computed only when it is needed.</li>
+        <li>What do they have in common with <code>if</code>?</li>
       </ol>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>Exercise 2 · <code>and</code>, <code>or</code>, <code>not</code></h2>
+  <h2>Exercise 3 · Equality on booleans</h2>
   <div class="split flip">
     <pre><code class="language-text" data-trim>
-var x = 0;
-if x != 0 and 10 / x &gt; 1
-  then print 1 else print 2          2
-
-print not 1 &lt; 2                      false
-print true or false and false        true
-print true and 5                     ?
+print true == false                false
+print 3 != 3                       false
+print true == 1                    an error
     </code></pre>
     <div>
-      <p class="cite">Level 2 of 4</p>
+      <p class="cite">Level 3 of 5</p>
       <ol>
-        <li>Add <code>and</code>, <code>or</code> and <code>not</code> to the grammar. <code>and</code> binds tighter than <code>or</code>, as <code>*</code> does with <code>+</code>.</li>
-        <li>The first program must print 2, without an error. Why can <code>and</code> not be an operator in the environment, like <code>&lt;</code>?</li>
-        <li>Can you implement them without a new AST node, and without changing <code>evaluate</code>?</li>
-        <li>What should the last program give? What does Python give for <code>True and 5</code>?</li>
+        <li>Allow <code>==</code> and <code>!=</code> on two booleans, and keep <code>true == 1</code> an error.</li>
+        <li>The type <code>([int, int], bool)</code> cannot say "two arguments of the same type". Extend <code>Operator</code> or <code>check_arguments</code>.</li>
       </ol>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>Exercise 3 · A <code>for</code> loop</h2>
+  <h2>Exercise 4 · Counting loops</h2>
   <div class="split flip">
     <pre><code class="language-text" data-trim>
-for i = 1 to 5 do print i * i       1 4 9 16 25
-
-var n = 3;
-for i = 1 to n do n &lt;- n + 1;
-print n                              ?
-
-for i = 1 to 2 do print i;
-print i                              ?
+for i = 1 to 3 do print i * i done      1 4 9
     </code></pre>
     <div>
-      <p class="cite">Level 3 of 4</p>
+      <p class="cite">Level 4 of 5</p>
       <ol>
-        <li>Add <code>for i = e₁ to e₂ do c</code>. Implement it by turning it, in the parser, into commands we already have: a block, a declaration, a <code>while</code>.</li>
-        <li>In the second program, is <code>n</code> computed once, before the loop, or at every test? With the second choice, what happens? Choose, and implement your choice.</li>
-        <li>Is <code>i</code> visible after the loop?</li>
+        <li>Add <code>for x = e₁ to e₂ do s done</code>, twice: first with the loop variable bound as in <code>let</code>, then as a variable in the store.</li>
+        <li>Find a program whose output is different in the two versions.</li>
       </ol>
-      <p class="note">Pascal computes the bound once. In C, <code>for (i = 1; i &lt;= n; i++)</code> tests <code>i &lt;= n</code> at every iteration.</p>
     </div>
   </div>
 </section>
 
 <section>
-  <h2>Exercise 4 · Images with loops</h2>
+  <h2>Exercise 5 · A store that does not recurse</h2>
   <div class="split flip">
     <pre><code class="language-text" data-trim>
-var row = scale(circle, 0.25);
-while width(row) &lt; 512 do row &lt;- row | row;
-print row
-
-var step = scale(square, 0.25);
-var stairs = step;
-while height(stairs) &lt; 512 do {
-  step &lt;- step | scale(square, 0.25);
-  stairs &lt;- stairs / step
-};
-print stairs
-
-var p = circle &amp; load("sky.png");
-if width(p) &gt; height(p)
-  then print p / mirror(p)
-  else print p | mirror(p)
+var a = 0;
+var n = 3000;
+while n &gt; 0 do n &lt;- n - 1 done;
+print a                            0
     </code></pre>
     <div>
-      <p class="cite">Level 4 of 4 · a longer one</p>
-      <p class="lead">The language of images of Lecture 6, with today's commands. To have something to test, two new functions.</p>
-      <table style="font-size:.62em">
-        <tr><th>syntax</th><th>meaning</th></tr>
-        <tr><td><code>width(e)</code>, <code>height(e)</code></td><td>the size of the image <code>e</code>, in pixels: a number</td></tr>
-        <tr><td><code>e₁ &lt; e₂</code>, ..., <code>==</code></td><td>compare two numbers: <code>true</code> or <code>false</code></td></tr>
-        <tr><td><code>if</code>, <code>while</code>, <code>{ }</code></td><td>as today</td></tr>
-      </table>
-      <p class="note">A value can now be an image, a number or a boolean. What should <code>circle &lt; square</code> do? And <code>print width(circle)</code>? Start from your solution, or from <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/imagestate.py"><code>imagestate.py</code></a>.</p>
+      <p class="cite">Level 5 of 5</p>
+      <ol>
+        <li>Replace the store with a dictionary, copied by <code>update</code> and <code>allocate</code>. The program on the left must print 0.</li>
+        <li>Time the two stores on a loop of ten thousand iterations.</li>
+      </ol>
+      <p class="note">A solution of exercises 1, 2, 3 and 5 is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/solutions.py"><code>code/lesson-07/solutions.py</code></a>.</p>
     </div>
   </div>
-</section>
-
-<section>
-  <h2>Exercise 4 · The results</h2>
-  <div class="imgs" style="--h:300px">
-    <figure><img class="alpha" src="../code/images/out/control-1.png" alt="four small red circles in a row" style="height:75px"><figcaption>first program</figcaption></figure>
-    <figure><img class="alpha" src="../code/images/out/control-2.png" alt="blue squares in four rows of one, two, three and four: a staircase"><figcaption>second program</figcaption></figure>
-    <figure><img class="alpha" src="../code/images/out/control-3.png" alt="the red circle on the sky, and beside it the same picture mirrored" style="height:150px"><figcaption>third program</figcaption></figure>
-  </div>
-  <p style="margin-top:18px">What each <code>print</code> shows. The sky is 512 × 512, so the third program takes the <code>else</code> branch. A solution is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/imagecontrol.py"><code>code/images/imagecontrol.py</code></a>: run it with <code>--show</code> to open the windows.</p>
 </section>
 
 </div></div>
