@@ -558,7 +558,7 @@ print not 1 &gt; 2 or false        true
 print 10 - 2 - 3                5
     </code></pre>
     <div>
-      <p class="cite">Level 1 of 5</p>
+      <p class="cite">Level 1 of 4</p>
       <ol>
         <li>Write a grammar with levels. From the loosest: <code>or</code>, then <code>and</code>, <code>not</code>, the comparisons, <code>+ -</code>, and <code>* / %</code>.</li>
         <li>The AST does not need to change: every level still builds an <code>Apply</code>.</li>
@@ -576,7 +576,7 @@ print false and (1 / 0 == 0)       false
 print true or (1 / 0 == 0)         true
     </code></pre>
     <div>
-      <p class="cite">Level 2 of 5</p>
+      <p class="cite">Level 2 of 4</p>
       <ol>
         <li>Give <code>and</code> and <code>or</code> their own AST nodes, so that the right side is computed only when it is needed.</li>
         <li>What do they have in common with <code>if</code>?</li>
@@ -594,7 +594,7 @@ print 3 != 3                       false
 print true == 1                    an error
     </code></pre>
     <div>
-      <p class="cite">Level 3 of 5</p>
+      <p class="cite">Level 3 of 4</p>
       <ol>
         <li>Allow <code>==</code> and <code>!=</code> on two booleans, and keep <code>true == 1</code> an error.</li>
         <li>The type <code>([int, int], bool)</code> cannot say "two arguments of the same type". Extend <code>Operator</code> or <code>check_arguments</code>.</li>
@@ -610,7 +610,7 @@ print true == 1                    an error
 for i = 1 to 3 do print i * i done      1 4 9
     </code></pre>
     <div>
-      <p class="cite">Level 4 of 5</p>
+      <p class="cite">Level 4 of 4</p>
       <ol>
         <li>Add <code>for x = e₁ to e₂ do s done</code>, twice: first with the loop variable bound as in <code>let</code>, then as a variable in the store.</li>
         <li>Find a program whose output is different in the two versions.</li>
@@ -620,23 +620,31 @@ for i = 1 to 3 do print i * i done      1 4 9
 </section>
 
 <section>
-  <h2>Exercise 5 · A store that does not recurse</h2>
-  <div class="split flip">
+  <h2>Exercise 4 · A solution</h2>
+  <pre><code class="language-python" data-trim>
+def for_as_let(name, i, end, body, env, state):   # version 1
+    if i &gt; end:
+        return state
+    state = execute_block(body, bind(env, name, i), state)
+    return for_as_let(name, i + 1, end, body, env, state)
+
+def for_as_var(loc, end, body, env, state):        # version 2
+    if access(state, loc) &gt; end:
+        return state
+    state = execute_block(body, env, state)
+    state = update(state, loc, access(state, loc) + 1)
+    return for_as_var(loc, end, body, env, state)
+  </code></pre>
+  <div class="split even">
     <pre><code class="language-text" data-trim>
-var a = 0;
-var n = 3000;
-while n &gt; 0 do n &lt;- n - 1 done;
-print a                            0
+for i = 1 to 5 do print i; i &lt;- i + 1 done
     </code></pre>
-    <div>
-      <p class="cite">Level 5 of 5</p>
-      <ol>
-        <li>Replace the store with a dictionary, copied by <code>update</code> and <code>allocate</code>. The program on the left must still print 0.</li>
-        <li>Time the two stores on a loop of ten thousand iterations.</li>
-      </ol>
-      <p class="note">A solution of exercises 1, 2, 3 and 5 is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/solutions.py"><code>code/lesson-07/solutions.py</code></a>.</p>
-    </div>
+    <pre class="out"><code class="language-text" data-trim>
+let:  1, then "i is not a variable"
+var:  1 3 5
+    </code></pre>
   </div>
+  <p class="note">A solution of exercises 1, 2 and 3 is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/solutions.py"><code>code/lesson-07/solutions.py</code></a>. The <code>for</code> loop is in <code>code/lesson-07/for_loop.py</code>.</p>
 </section>
 
 </div></div>

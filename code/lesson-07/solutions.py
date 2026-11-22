@@ -1,4 +1,4 @@
-"""Lecture 7, exercises 1, 2, 3 and 5. A solution, all in one interpreter.
+"""Lecture 7, exercises 1, 2 and 3. A solution, all in one interpreter.
 
 Exercise 1: a grammar with precedence levels. From the loosest: or, and, not,
 comparisons, + -, * / %. The AST does not change: still Apply.
@@ -9,7 +9,7 @@ which evaluate the right operand only when it is needed, as if does.
 Exercise 3: equality on booleans. == and != accept two arguments of the same
 type; true == 1 is still an error.
 
-Exercise 5: a store that does not recurse. A dictionary, copied by update and
+Also: a store that does not recurse. A dictionary, copied by update and
 allocate, so that old states are never changed.
 
 Everything else is imported from control.py. Run with `python3 solutions.py`.
