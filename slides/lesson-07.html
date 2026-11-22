@@ -368,10 +368,33 @@ Undefined identifier: y
 </section>
 
 <section>
-  <h2><code>if</code>: the meaning</h2>
+  <h2>The store during the block</h2>
+  <pre><code class="language-text" data-trim>
+var x = 0;
+if true then var y = 1; x &lt;- x + y else print 0 endif
+  </code></pre>
+  <figure class="diagram"><svg viewBox="0 0 1060 250" role="img" aria-label="The store before, during and after the block of the if: y gets location 1, and after the block next_loc goes back to 1"><text x="80" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">before the if</text><rect x="30" y="198" width="130" height="40" rx="4" class="d-box"/><text x="18" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="95" y="224" text-anchor="middle" class="d-t-m">x = 0</text><rect x="30" y="152" width="130" height="40" rx="4" class="d-fill-paper"/><text x="18" y="178" text-anchor="end" class="d-t-mono-s">1</text><rect x="30" y="106" width="130" height="40" rx="4" class="d-fill-paper"/><text x="18" y="132" text-anchor="end" class="d-t-mono-s">2</text><rect x="30" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="18" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="20" y1="195" x2="170" y2="195" style="stroke:var(--accent);stroke-width:2.5"/><text x="176" y="200" class="d-t-accent" style="font-size:13px">next_loc</text><text x="340" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">var y = 1</text><rect x="290" y="198" width="130" height="40" rx="4" class="d-box"/><text x="278" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="355" y="224" text-anchor="middle" class="d-t-m">x = 0</text><rect x="290" y="152" width="130" height="40" rx="4" class="d-box"/><text x="278" y="178" text-anchor="end" class="d-t-mono-s">1</text><text x="355" y="178" text-anchor="middle" class="d-t-m">y = 1</text><rect x="290" y="106" width="130" height="40" rx="4" class="d-fill-paper"/><text x="278" y="132" text-anchor="end" class="d-t-mono-s">2</text><rect x="290" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="278" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="280" y1="149" x2="430" y2="149" style="stroke:var(--accent);stroke-width:2.5"/><text x="436" y="154" class="d-t-accent" style="font-size:13px">next_loc</text><text x="600" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">x &lt;- x + y</text><rect x="550" y="198" width="130" height="40" rx="4" class="d-box"/><text x="538" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="615" y="224" text-anchor="middle" class="d-t-m">x = 1</text><rect x="550" y="152" width="130" height="40" rx="4" class="d-box"/><text x="538" y="178" text-anchor="end" class="d-t-mono-s">1</text><text x="615" y="178" text-anchor="middle" class="d-t-m">y = 1</text><rect x="550" y="106" width="130" height="40" rx="4" class="d-fill-paper"/><text x="538" y="132" text-anchor="end" class="d-t-mono-s">2</text><rect x="550" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="538" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="540" y1="149" x2="690" y2="149" style="stroke:var(--accent);stroke-width:2.5"/><text x="696" y="154" class="d-t-accent" style="font-size:13px">next_loc</text><text x="860" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">after the block</text><rect x="810" y="198" width="130" height="40" rx="4" class="d-box"/><text x="798" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="875" y="224" text-anchor="middle" class="d-t-m">x = 1</text><rect x="810" y="152" width="130" height="40" rx="4" class="d-box-soft"/><text x="798" y="178" text-anchor="end" class="d-t-mono-s">1</text><text x="875" y="178" text-anchor="middle" class="d-t-muted">1, nobody reads it</text><rect x="810" y="106" width="130" height="40" rx="4" class="d-fill-paper"/><text x="798" y="132" text-anchor="end" class="d-t-mono-s">2</text><rect x="810" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="798" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="800" y1="195" x2="950" y2="195" style="stroke:var(--accent);stroke-width:2.5"/><text x="956" y="200" class="d-t-accent" style="font-size:13px">next_loc</text></svg></figure>
+  <p>The line is <code>next_loc</code>: the first free location. The block declares <code>y</code> and moves it up; when the block ends, <code>execute_block</code> puts it back. The value <code>1</code> is still in location 1, but no name leads there: the next declaration will reuse it.</p>
+</section>
+
+<section>
+  <h2>Push and pop</h2>
+  <figure class="diagram"><svg viewBox="0 0 1060 250" role="img" aria-label="Nested blocks: each block pushes its locations on top of the others and pops them when it ends"><text x="80" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">outside</text><rect x="30" y="198" width="130" height="40" rx="4" class="d-box"/><text x="18" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="95" y="224" text-anchor="middle" class="d-t-m">a = …</text><rect x="30" y="152" width="130" height="40" rx="4" class="d-fill-paper"/><text x="18" y="178" text-anchor="end" class="d-t-mono-s">1</text><rect x="30" y="106" width="130" height="40" rx="4" class="d-fill-paper"/><text x="18" y="132" text-anchor="end" class="d-t-mono-s">2</text><rect x="30" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="18" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="20" y1="195" x2="170" y2="195" style="stroke:var(--accent);stroke-width:2.5"/><text x="176" y="200" class="d-t-accent" style="font-size:13px">next_loc</text><text x="340" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">enter block 1</text><rect x="290" y="198" width="130" height="40" rx="4" class="d-box"/><text x="278" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="355" y="224" text-anchor="middle" class="d-t-m">a = …</text><rect x="290" y="152" width="130" height="40" rx="4" class="d-box"/><text x="278" y="178" text-anchor="end" class="d-t-mono-s">1</text><text x="355" y="178" text-anchor="middle" class="d-t-m">b = …</text><rect x="290" y="106" width="130" height="40" rx="4" class="d-fill-paper"/><text x="278" y="132" text-anchor="end" class="d-t-mono-s">2</text><rect x="290" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="278" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="280" y1="149" x2="430" y2="149" style="stroke:var(--accent);stroke-width:2.5"/><text x="436" y="154" class="d-t-accent" style="font-size:13px">next_loc</text><text x="600" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">enter block 2</text><rect x="550" y="198" width="130" height="40" rx="4" class="d-box"/><text x="538" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="615" y="224" text-anchor="middle" class="d-t-m">a = …</text><rect x="550" y="152" width="130" height="40" rx="4" class="d-box"/><text x="538" y="178" text-anchor="end" class="d-t-mono-s">1</text><text x="615" y="178" text-anchor="middle" class="d-t-m">b = …</text><rect x="550" y="106" width="130" height="40" rx="4" class="d-box"/><text x="538" y="132" text-anchor="end" class="d-t-mono-s">2</text><text x="615" y="132" text-anchor="middle" class="d-t-m">c = …</text><rect x="550" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="538" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="540" y1="103" x2="690" y2="103" style="stroke:var(--accent);stroke-width:2.5"/><text x="696" y="108" class="d-t-accent" style="font-size:13px">next_loc</text><text x="860" y="22" text-anchor="middle" class="d-t-b" style="font-size:15px">leave block 2</text><rect x="810" y="198" width="130" height="40" rx="4" class="d-box"/><text x="798" y="224" text-anchor="end" class="d-t-mono-s">0</text><text x="875" y="224" text-anchor="middle" class="d-t-m">a = …</text><rect x="810" y="152" width="130" height="40" rx="4" class="d-box"/><text x="798" y="178" text-anchor="end" class="d-t-mono-s">1</text><text x="875" y="178" text-anchor="middle" class="d-t-m">b = …</text><rect x="810" y="106" width="130" height="40" rx="4" class="d-box-soft"/><text x="798" y="132" text-anchor="end" class="d-t-mono-s">2</text><text x="875" y="132" text-anchor="middle" class="d-t-muted">…</text><rect x="810" y="60" width="130" height="40" rx="4" class="d-fill-paper"/><text x="798" y="86" text-anchor="end" class="d-t-mono-s">3</text><line x1="800" y1="149" x2="950" y2="149" style="stroke:var(--accent);stroke-width:2.5"/><text x="956" y="154" class="d-t-accent" style="font-size:13px">next_loc</text></svg></figure>
+  <ul>
+    <li>Entering a block, the declarations take the locations above <code>next_loc</code>: <strong>push</strong>.</li>
+    <li>Leaving it, <code>next_loc</code> goes back to where it was: <strong>pop</strong>. Blocks inside blocks pile up and come off in reverse order.</li>
+    <li>It works because a name of the block is never used after the block ends: the same reason as static scoping.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><code>if</code>: the semantics</h2>
   <p class="formula" style="font-size:1.05em">\( ⟦\mathtt{if}\ e\ \mathtt{then}\ s_1\ \mathtt{else}\ s_2\ \mathtt{endif}⟧(\rho, \sigma) = \begin{cases} ⟦s_1⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \\ ⟦s_2⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \end{cases} \)</p>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
+</section>
+
+<section>
+  <h2><code>if</code>: the implementation</h2>
+  <pre><code class="language-python" data-trim>
 def evaluate_condition(cond, env, state) -&gt; bool:
     value = evaluate(cond, env, state)
     if type(value) is not bool:
@@ -384,19 +407,10 @@ case IfElse(cond, then_branch, else_branch):
         return env, execute_block(then_branch, env, state)
     return env, execute_block(else_branch, env, state)
     </code></pre>
-    <div>
-      <p class="lead">If the condition is neither <code>true</code> nor <code>false</code>, the program is wrong, and we say so.</p>
-      <pre class="out"><code class="language-text" data-trim>
-if 1 then print 1 else print 0 endif
-Condition must be a boolean, got 1
-      </code></pre>
-      <p class="note">The command returns the environment it received; the branch runs with <code>execute_block</code>.</p>
-    </div>
-  </div>
 </section>
 
 <section>
-  <h2><code>while</code>: the equation</h2>
+  <h2><code>while</code>: the semantics</h2>
   <pre><code class="language-python" data-trim>
 while: "while" expr "do" sequence "done"
   </code></pre>
@@ -430,16 +444,15 @@ def execute_while_by_recursion(cond, body, env, state) -&gt; State:
 </section>
 
 <section>
-  <h2>Written as the loop it is</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
+  <h2><code>while</code>: the implementation</h2>
+  <pre><code class="language-python" data-trim>
 case While(cond, body):
     while evaluate_condition(cond, env, state):
         state = execute_block(body, env, state)
     return env, state
     </code></pre>
-    <div>
-      <pre><code class="language-text" data-trim>
+  <div class="split even">
+    <pre><code class="language-text" data-trim>
 var a = 48; var b = 18;
 while b != 0 do
   if a &gt; b then a &lt;- a - b
@@ -449,12 +462,10 @@ print a
 
 var n = 5000; while n &gt; 0 do n &lt;- n - 1 done; print n
       </code></pre>
-      <pre class="out"><code class="language-text" data-trim>
+    <pre class="out"><code class="language-text" data-trim>
 6
 0
       </code></pre>
-      <p class="note">Defining <code>while</code> with Python's <code>while</code> is the same as defining <code>+</code> with Python's <code>+</code>. What the code adds is what exactly is borrowed: the condition computed again in the same environment, in each new state, and the body run as a block.</p>
-    </div>
   </div>
 </section>
 
