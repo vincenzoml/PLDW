@@ -46,6 +46,7 @@ Online at **<https://vincenzoml.github.io/PLDW/>**. They are plain HTML files: a
 - `slides/lesson-04.html` — Lecture 4: semantic domains, the environment as a function, and an evaluator that looks operators up by name (code in `code/lesson-04/`)
 - `slides/lesson-05.html` — Lecture 5: binding and scoping, with `let`, free variables, and static against dynamic scoping (code in `code/lesson-05/`); at the end, an extra exercise on images in Python with Pillow (code and example images in `code/images/`)
 - `slides/lesson-06.html` — Lecture 6: state and commands, with variables whose value changes, the store as a function from locations to values, and the commands `var`, `<-` and `print` (code in `code/lesson-06/`); the language of images with variables is in `code/images/imagestate.py`
+- `slides/lesson-07.html` — Lecture 7: control flow, with booleans and comparisons, `if` as a command and as an expression, `while`, and blocks in braces (code and solutions in `code/lesson-07/`); the language of images with `if` and `while` is in `code/images/imagecontrol.py`
 
 ## Exam
 
