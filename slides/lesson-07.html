@@ -242,7 +242,7 @@ case Apply(op, args):
 
 <section>
   <h2>The check, and a trap</h2>
-  <div class="split flip">
+  <div class="stack">
     <pre><code class="language-python" data-trim>
 for i, (expected, actual) in enumerate(zip(expected_types, values)):
     # not isinstance: in Python, bool is a subclass of int
@@ -373,7 +373,7 @@ while: "while" expr "do" sequence "done"
 
 <section>
   <h2>The equation, word for word</h2>
-  <div class="split flip">
+  <div class="stack">
     <pre><code class="language-python" data-trim>
 def execute_while_by_recursion(cond, body, env, state) -&gt; State:
     if evaluate_condition(cond, env, state):
