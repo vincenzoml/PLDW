@@ -397,13 +397,7 @@ def execute_while_by_recursion(cond, body, env, state) -&gt; State:
     return state
     </code></pre>
     <div>
-      <p class="lead">Correct, and it fails at five thousand iterations.</p>
-      <pre class="out"><code class="language-text" data-trim>
-while by recursion, 5000 iterations
-RecursionError: maximum recursion depth exceeded
-      </code></pre>
-      <p>One Python call per iteration, and Python stops at about a thousand calls open at the same time.</p>
-      <p class="note"><code>sys.setrecursionlimit</code> only moves the limit.</p>
+      <p class="lead">The equation, transcribed: test, run the body once, then the same <code>while</code> again. Next: the same thing written as a loop.</p>
     </div>
   </div>
 </section>
