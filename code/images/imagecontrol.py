@@ -1,7 +1,7 @@
 """Lecture 7, exercise 4: the language of images, with control flow. A solution.
 
-The language of imagestate.py (Lecture 6), with if-then-else, while and blocks
-in braces. A condition needs something to compare: width(e) and height(e) give
+The language of imagestate.py (Lecture 6), with if-then-else (as a command and
+as an expression), while and blocks in braces. A condition needs something to compare: width(e) and height(e) give
 the size of an image in pixels, and the comparisons < <= > >= == != give true
 or false. So a value is now an image, a number or a boolean.
 
@@ -46,8 +46,9 @@ grammar = r"""
     while: "while" expr "do" command
     block: "{" sequence "}"
 
-    ?expr: let | test
+    ?expr: let | ifexpr | test
     let: "let" IDENTIFIER "=" expr "in" expr
+    ifexpr: "if" expr "then" expr "else" expr
     ?test: arith | compare
     compare: arith CMP arith
     ?arith: bin | mono
@@ -79,7 +80,14 @@ class Boolean:
     value: bool
 
 
-type Expression = Number | Text | Boolean | Var | BinaryExpression | Call | Let
+@dataclass(frozen=True)
+class IfExpr:
+    test: Expression
+    then_branch: Expression
+    else_branch: Expression
+
+
+type Expression = Number | Text | Boolean | Var | BinaryExpression | Call | Let | IfExpr
 
 
 @dataclass(frozen=True)
@@ -127,6 +135,12 @@ def transform_expression(tree: Tree | str) -> Expression:
             return Call(name=name, args=tuple(transform_expression(a) for a in args))
         case Tree(data="let", children=[Token(value=name), definition, body]):
             return Let(name, transform_expression(definition), transform_expression(body))
+        case Tree(data="ifexpr", children=[test, then_branch, else_branch]):
+            return IfExpr(
+                transform_expression(test),
+                transform_expression(then_branch),
+                transform_expression(else_branch),
+            )
         case _:
             raise ValueError(f"Unexpected parse tree: {tree}")
 
@@ -257,6 +271,9 @@ def evaluate(ast: Expression, env: Environment, state: State) -> EVal:
         case Let(name, definition, body):
             value = evaluate(definition, env, state)
             return evaluate(body, bind(env, name, value), state)
+        case IfExpr(test, then_branch, else_branch):
+            branch = then_branch if condition(test, env, state) else else_branch
+            return evaluate(branch, env, state)
 
 
 def condition(test: Expression, env: Environment, state: State) -> bool:
