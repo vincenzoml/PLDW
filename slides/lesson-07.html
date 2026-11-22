@@ -326,9 +326,28 @@ class IfElse:
   </div>
 </section>
 
+<section class="part">
+  <p class="kicker">Blocks</p>
+  <h2>What a branch declares stays in the branch</h2>
+</section>
+
 <section>
-  <h2>A branch runs as a block</h2>
-  <pre><code class="language-python" data-trim>
+  <h2>Run this in your head</h2>
+  <pre><code class="language-text" data-trim>
+var x = 0;
+if true then var y = 1; x &lt;- x + y else print 0 endif;
+print x;
+print y
+  </code></pre>
+  <p>Should <code>print y</code> work?</p>
+  <p>If declarations survived the branch, <code>y</code> would exist only when the condition was true. To know which names a program can use, we would have to run it.</p>
+  <p>So branches and loop bodies are <strong>blocks</strong>: a name declared in a block is visible until the block ends. It is the rule <code>let</code> already follows.</p>
+</section>
+
+<section>
+  <h2>The code is almost nothing</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
 def execute_block(block: Sequence, env: Environment,
                   state: State) -&gt; State:
     """Run a block: its declarations do not survive it,
@@ -336,8 +355,16 @@ def execute_block(block: Sequence, env: Environment,
     _, new_state = execute_sequence(block, env, state)
     return State(store=new_state.store,
                  next_loc=state.next_loc)
-  </code></pre>
-  <p>The branches of <code>if</code> and the body of <code>while</code> are run by <code>execute_block</code>: assignments stay, declarations do not. The third part of the lecture says why.</p>
+    </code></pre>
+    <div>
+      <p class="lead">Running the block gives an environment with its declarations. We do not return it.</p>
+      <p>The store is returned: the assignment to <code>x</code> stays.</p>
+      <pre class="out"><code class="language-text" data-trim>
+1
+Undefined identifier: y
+      </code></pre>
+    </div>
+  </div>
 </section>
 
 <section>
@@ -434,44 +461,8 @@ var n = 5000; while n &gt; 0 do n &lt;- n - 1 done; print n
 <!-- ================================================================ blocks -->
 
 <section class="part">
-  <p class="kicker">Blocks</p>
-  <h2>What a branch declares stays in the branch</h2>
-</section>
-
-<section>
-  <h2>Run this in your head</h2>
-  <pre><code class="language-text" data-trim>
-var x = 0;
-if true then var y = 1; x &lt;- x + y else print 0 endif;
-print x;
-print y
-  </code></pre>
-  <p>Should <code>print y</code> work?</p>
-  <p>If declarations survived the branch, <code>y</code> would exist only when the condition was true. To know which names a program can use, we would have to run it.</p>
-  <p>So branches and loop bodies are <strong>blocks</strong>: a name declared in a block is visible until the block ends. It is the rule <code>let</code> already follows.</p>
-</section>
-
-<section>
-  <h2>The code is almost nothing</h2>
-  <div class="split flip">
-    <pre><code class="language-python" data-trim>
-def execute_block(block: Sequence, env: Environment,
-                  state: State) -&gt; State:
-    """Run a block: its declarations do not survive it,
-    and its locations are reused."""
-    _, new_state = execute_sequence(block, env, state)
-    return State(store=new_state.store,
-                 next_loc=state.next_loc)
-    </code></pre>
-    <div>
-      <p class="lead">Running the block gives an environment with its declarations. We do not return it.</p>
-      <p>The store is returned: the assignment to <code>x</code> stays.</p>
-      <pre class="out"><code class="language-text" data-trim>
-1
-Undefined identifier: y
-      </code></pre>
-    </div>
-  </div>
+  <p class="kicker">Blocks, again</p>
+  <h2>Where the locations of a block go</h2>
 </section>
 
 <section>
