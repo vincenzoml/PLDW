@@ -387,6 +387,11 @@ if true then var y = 1; x &lt;- x + y else print 0 endif
   </ul>
 </section>
 
+<section class="part">
+  <p class="kicker">Choice and repetition</p>
+  <h2>What <code>if</code> and <code>while</code> mean</h2>
+</section>
+
 <section>
   <h2><code>if</code>: the semantics</h2>
   <p class="formula" style="font-size:1.05em">\( ⟦\mathtt{if}\ e\ \mathtt{then}\ s_1\ \mathtt{else}\ s_2\ \mathtt{endif}⟧(\rho, \sigma) = \begin{cases} ⟦s_1⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \\ ⟦s_2⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \end{cases} \)</p>
