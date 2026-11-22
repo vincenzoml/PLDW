@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Functions and procedures</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<link rel="stylesheet" href="assets/pldw.css">
+<style>
+  /* program output, set apart from the code that printed it */
+  .reveal pre.out code { background: var(--paper-2); color: var(--ink); border-left: 3px solid var(--warm); }
+  /* images with transparency, on a checkerboard so that alpha is visible */
+  .reveal .imgs { display: flex; gap: 18px; justify-content: center; align-items: flex-end; }
+  .reveal .imgs figure { margin: 0; text-align: center; }
+  .reveal .imgs img { height: var(--h, 200px); width: auto; margin: 0; border-radius: 4px; }
+  .reveal .imgs figcaption { font-family: var(--mono); font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .reveal img.alpha { background: repeating-conic-gradient(#d9d6cd 0 25%, #f7f5ef 0 50%) 0 0 / 24px 24px; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title">
+  <h1>Functions and procedures</h1>
+  <p class="sub">Lecture 8. A name for a computation, and parameters to call it with.</p>
+  <p class="who">Programming Languages Lab · University of Pisa<br>Vincenzo Ciancia, CNR-ISTI<br><a href="mailto:vincenzo.ciancia@isti.cnr.it">vincenzo.ciancia@isti.cnr.it</a> · <a href="https://github.com/vincenzoml/PLDW">github.com/vincenzoml/PLDW</a></p>
+</section>
+
+<!-- ================================================================ exercises of lecture 7 -->
+
+<section class="part">
+  <p class="kicker">Lecture 7, exercises 2 and 3</p>
+  <h2><code>and</code>, <code>or</code>, <code>not</code>, and <code>for</code></h2>
+</section>
+
+<section>
+  <h2>Exercise 2 · <code>and</code>, <code>or</code>, <code>not</code></h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+?expr: let | ifexpr | disj
+?disj: conj | or
+or: disj "or" conj
+?conj: neg | and
+and: conj "and" neg
+?neg: test | not
+not: "not" neg
+
+case Tree(data="and", children=[left, right]):
+    return IfExpr(transform_expression(left),
+                  transform_expression(right), FALSE)
+case Tree(data="or", children=[left, right]):
+    return IfExpr(transform_expression(left),
+                  TRUE, transform_expression(right))
+case Tree(data="not", children=[operand]):
+    return IfExpr(transform_expression(operand),
+                  FALSE, TRUE)
+    </code></pre>
+    <div>
+      <p class="lead"><code>a and b</code> means <code>if a then b else false</code>. If <code>a</code> is false, <code>b</code> is never computed.</p>
+      <p>An operator in the environment would get both values, already computed: <code>x != 0 and 10 / x &gt; 1</code> would divide by zero.</p>
+      <p>The parser builds an <code>IfExpr</code>: no new node, and <code>evaluate</code> is the one of Lecture 7.</p>
+      <p class="note"><code>true and 5</code> gives 5, as <code>True and 5</code> in Python. To make it an error, <code>and</code> needs its own node, which checks <code>b</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · <code>for</code></h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+for i = e₁ to e₂ do c
+
+{
+  var i = e₁;
+  var "for limit" = e₂;
+  while i &lt;= "for limit" do {
+    { c };
+    i &lt;- i + 1
+  }
+}
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">The parser turns a <code>for</code> into a block we could almost have written by hand.</p>
+      <p>The bound is computed once, into a variable whose name has a space: no program can write that name, so none can see it or change it.</p>
+      <pre class="out"><code class="language-text" data-trim>
+var n = 3; for i = 1 to n do n &lt;- n + 1; print n
+6
+for i = 1 to 2 do print i; print i
+1
+2
+Undefined identifier: i
+      </code></pre>
+      <p class="note">If the bound were computed at every test, the first program would never stop. The solution is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-07/solutions.py"><code>code/lesson-07/solutions.py</code></a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ motivation -->
+
+<section class="part">
+  <p class="kicker">Functions</p>
+  <h2>A name for a computation</h2>
+</section>
+
+<section>
+  <h2>The same computation, twice</h2>
+  <div class="split">
+    <div>
+      <p class="cite">Our language, Lecture 7</p>
+      <pre><code class="language-text" data-trim>
+var a = 3; var b = 4;
+var r = 1; var i = a;
+while i &gt; 1 do { r &lt;- r * i; i &lt;- i - 1 };
+print r;
+r &lt;- 1; i &lt;- b;
+while i &gt; 1 do { r &lt;- r * i; i &lt;- i - 1 };
+print r
+      </code></pre>
+    </div>
+    <div>
+      <p class="cite">Our language, today</p>
+      <pre><code class="language-text" data-trim>
+fun fact(n) =
+  if n == 0 then 1 else n * fact(n - 1);
+print fact(3);
+print fact(4)
+      </code></pre>
+    </div>
+  </div>
+  <p style="margin-top:22px">On the left, the loop is written once per number. On the right, the computation has a name, <code>fact</code>, and a parameter, <code>n</code>: it is written once, and used twice.</p>
+  <p class="note">The code of this lecture is in <a href="https://github.com/vincenzoml/PLDW/tree/main/code/lesson-08"><code>code/lesson-08/</code></a>: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-08/functions.py"><code>functions.py</code></a>. It starts from <code>control.py</code> of Lecture 7.</p>
+</section>
+
+<section>
+  <h2>Declaring and calling</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+fun square(x) = x * x;
+print square(3) + square(4);
+
+fun max(a, b) = if a &gt; b then a else b;
+print max(3, 7)
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+25
+7
+      </code></pre>
+    </div>
+    <div>
+      <table style="font-size:.72em">
+        <tr><th>syntax</th><th>meaning</th></tr>
+        <tr><td><code>fun f(x₁, ..., xₙ) = e</code></td><td>a command: <code>f</code> is a function with parameters <code>x₁ ... xₙ</code> and body <code>e</code></td></tr>
+        <tr><td><code>f(e₁, ..., eₙ)</code></td><td>an expression: the value of <code>e</code>, with each <code>xᵢ</code> standing for the value of <code>eᵢ</code></td></tr>
+      </table>
+      <p class="note" style="margin-top:18px">The body of a function is an expression, as the definition of a <code>let</code>. A function with no parameters is written <code>fun three() = 3</code>, and called <code>three()</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The grammar</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+?command: vardecl | assign | print | if | while | block
+        | fundecl | procdecl | callcmd
+fundecl: "fun" IDENTIFIER "(" params ")" "=" expr
+params: (IDENTIFIER ("," IDENTIFIER)*)?
+
+mono: ground | boolean | call | var | paren
+call: IDENTIFIER "(" args ")"
+args: (expr ("," expr)*)?
+    </code></pre>
+    <div>
+      <p class="lead">A declaration is a command, like <code>var</code>. A call is an expression, at the level of a number or a name: it can be an operand.</p>
+      <p><code>( ... )?</code> means "zero or one time": the list of parameters, and of arguments, can be empty.</p>
+      <p class="note"><code>procdecl</code> and <code>callcmd</code> are for procedures, later today. <code>fun</code> and <code>proc</code> become reserved words.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The AST</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class FunDecl:
+    name: str
+    params: tuple[str, ...]
+    body: Expression
+
+@dataclass(frozen=True)
+class Call:
+    name: str
+    args: tuple[Expression, ...]
+    </code></pre>
+    <div>
+      <p class="lead"><code>FunDecl</code> is a command, <code>Call</code> an expression.</p>
+      <p>The parameters are names, strings, as in <code>Let</code>. The arguments are expressions.</p>
+      <pre class="out"><code class="language-text" data-trim style="white-space:pre-wrap">
+FunDecl(name='square', params=('x',),
+        body=BinaryExpression(op='*', left=Var(name='x'), right=Var(name='x')))
+Print(expr=Call(name='square', args=(Number(value=3),)))
+      </code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ closures -->
+
+<section class="part">
+  <p class="kicker">Semantic domains</p>
+  <h2>A function is a closure</h2>
+</section>
+
+<section>
+  <h2>What a function stands for</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+@dataclass(frozen=True)
+class Function:
+    params: tuple[str, ...]
+    body: Expression
+    env: Environment  # of the declaration
+
+
+type EVal = int | bool
+type MVal = EVal
+type DVal = (EVal | Operator | Loc
+             | Function | Procedure)
+    </code></pre>
+    <div>
+      <p class="lead">A declared function is a <strong>closure</strong>: the parameters, the body, and the environment where it was declared.</p>
+      <p>A name can stand for a function: <code>Function</code> is denotable. It is not expressible: no expression gives a function, and no variable holds one.</p>
+      <pre class="out"><code class="language-text" data-trim>
+fun square(x) = x * x; var g = square
+square is not a value
+      </code></pre>
+      <p class="note">Exercise 3 makes functions expressible.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Calling a function</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+case Call(name, args):
+    function = lookup(env, name)
+    if not isinstance(function, Function):
+        raise ValueError(f"{name} is not a function")
+    values = [evaluate(arg, env, state) for arg in args]
+    check_arity(name, function.params, values)
+    call_env = function.env
+    for param, value in zip(function.params, values):
+        call_env = bind(call_env, param, value)
+    return evaluate(function.body, call_env, state)
+    </code></pre>
+    <div>
+      <p class="lead">The arguments are computed in the environment of the call. The body is computed in the environment of the closure, with each parameter bound to its value.</p>
+      <p>A parameter is bound like a name of <code>let</code>: to a value, not to a location. The body cannot assign it.</p>
+      <p class="note"><code>check_arity</code> raises <code>square takes 1 argument(s), not 2</code> when the numbers differ.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The equation</h2>
+  <p class="formula">\( ⟦f(e_1, \dots, e_n)⟧(\rho, \sigma) = ⟦e⟧\big(\rho'[x_1 \mapsto v_1, \dots, x_n \mapsto v_n],\ \sigma\big) \)</p>
+  <ul>
+    <li>where \( \rho(f) = (x_1 \dots x_n,\ e,\ \rho') \): the closure of <code>f</code>.</li>
+    <li>and \( v_i = ⟦e_i⟧(\rho, \sigma) \): the arguments, in the environment of the call.</li>
+    <li>The store is \( \sigma \) in both places: a function reads the store of the moment of the call, and does not change it.</li>
+  </ul>
+  <p class="note">With \( n = 1 \), it is the equation of <code>let</code> of Lecture 5, with the definition computed now and the body written somewhere else.</p>
+</section>
+
+<section>
+  <h2>Which <code>k</code>?</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+var k = 1;
+fun addk(x) = x + k;
+print let k = 100 in addk(1);
+k &lt;- 5;
+print addk(1)
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+2
+6
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">The first call is in the body of <code>let k = 100</code>. The body of <code>addk</code> still sees the variable <code>k</code>: the one visible where <code>addk</code> was declared. This is static scoping, as in Lecture 5.</p>
+      <p>The second call sees 5. The closure keeps the <em>location</em> of <code>k</code>, and the store says what it holds now: the Python example of Lecture 6, "What a closure sees".</p>
+      <p class="note">With <code>call_env = env</code> in place of <code>function.env</code>, the scoping is dynamic: the first call prints 101.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Declared after</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+fun h(x) = x + z;
+var z = 1;
+print h(1)
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+Undefined identifier: z
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">When <code>h</code> is declared, there is no <code>z</code> in the environment. The closure keeps that environment, and <code>var z</code> after it does not change it.</p>
+      <p>A function sees the names declared before it, and nothing else, as every command in a sequence.</p>
+      <p class="note">Python looks the name up when the function is called, in the module: there, the same program prints 2. C refuses it when compiling.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ recursion -->
+
+<section class="part">
+  <p class="kicker">Recursion</p>
+  <h2>A function that calls itself</h2>
+</section>
+
+<section>
+  <h2>Recursion</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+fun fact(n) =
+  if n == 0 then 1 else n * fact(n - 1);
+print fact(10);
+
+fun fib(n) =
+  if n &lt; 2 then n else fib(n - 1) + fib(n - 2);
+print fib(15)
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+3628800
+610
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">The body of <code>fact</code> uses <code>fact</code>. For this, the environment kept by the closure must contain <code>fact</code> itself.</p>
+      <p>The recursion stops because <code>if</code> computes one branch only: Lecture 7. With <code>if</code> as an operator, <code>fact(0)</code> would compute <code>fact(-1)</code>, and so on, forever.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The first attempt</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+case FunDecl(name, params, body):
+    function = Function(params, body, env)
+    return bind(env, name, function), state
+    </code></pre>
+    <div>
+      <p class="lead">The closure keeps <code>env</code>, the environment before the declaration. The name <code>fact</code> is added after, in a new environment the closure never sees.</p>
+      <pre class="out"><code class="language-text" data-trim>
+print fact(3)
+Undefined identifier: fact
+      </code></pre>
+      <p>The closure needs the environment that <code>bind</code> returns, and <code>bind</code> needs the closure: each one must exist before the other.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>An environment that contains its closure</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+case FunDecl(name, params, body):
+
+    def env_with_function(n: str) -&gt; DVal:
+        if n == name:
+            return function
+        return env(n)
+
+    function = Function(params, body, env_with_function)
+    return env_with_function, state
+    </code></pre>
+    <div>
+      <p class="lead"><code>env_with_function</code> is <code>bind(env, name, function)</code>, written out by hand.</p>
+      <p>When it is defined, <code>function</code> does not exist yet. It is looked up only when the environment is asked for <code>name</code>, at the first call: by then it exists.</p>
+      <p>So the closure contains an environment that contains the closure: a cycle, made with a function, as every environment since Lecture 4.</p>
+      <p class="note">OCaml asks for <code>let rec</code> to allow this. Python, like our language, allows it always.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>How deep</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+print fact(300)
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+3060575122164406360...
+      </code></pre>
+      <pre><code class="language-text" data-trim>
+print fact(400)
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+RecursionError: maximum recursion depth exceeded
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">Each call of our language is a few nested calls of <code>evaluate</code>: the call, the <code>if</code>, the multiplication. Python's limit of about 1000 open calls becomes a limit of about 300 calls of <code>fact</code>.</p>
+      <p>In Lecture 7 the same limit came up with <code>while</code>, and a loop in Python removed it. Here the recursion is in the program being run: the interpreter has to follow it.</p>
+      <p class="note"><code>sys.setrecursionlimit</code> raises the limit. Real interpreters keep their own stack of calls, as data, instead of using Python's.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ procedures -->
+
+<section class="part">
+  <p class="kicker">Procedures</p>
+  <h2>Calls that change the state</h2>
+</section>
+
+<section>
+  <h2>A function cannot change the store</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+var total = 0;
+proc add(x) total &lt;- total + x;
+add(3);
+add(4);
+print total
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+7
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead">The body of a function is an expression, and in Lecture 6 we decided that an expression never changes the state.</p>
+      <p>A <strong>procedure</strong> is the same thing for commands: its body is a command, and a call is a command. It gives no value: it changes the store.</p>
+      <table style="font-size:.66em">
+        <tr><th>syntax</th><th>meaning</th></tr>
+        <tr><td><code>proc p(x₁, ..., xₙ) c</code></td><td>a command: <code>p</code> is a procedure with body <code>c</code></td></tr>
+        <tr><td><code>p(e₁, ..., eₙ)</code></td><td>a command: execute <code>c</code>, with the arguments</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Grammar, AST, closure</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+procdecl: "proc" IDENTIFIER "(" params ")" command
+callcmd: IDENTIFIER "(" args ")"
+
+@dataclass(frozen=True)
+class ProcDecl:
+    name: str
+    params: tuple[str, ...]
+    body: Command
+
+@dataclass(frozen=True)
+class CallCommand:
+    name: str
+    args: tuple[Expression, ...]
+
+@dataclass(frozen=True)
+class Procedure:
+    params: tuple[str, ...]
+    body: Command
+    env: Environment  # of the declaration
+    </code></pre>
+    <div>
+      <p class="lead">The same shape as for functions, one level up: a <code>Command</code> where a function has an <code>Expression</code>.</p>
+      <p>The declaration builds the closure with the same cycle, so a procedure can call itself.</p>
+      <p>A call to a function at the start of a command, <code>square(3)</code>, is a <code>CallCommand</code>, and fails: <code>square is not a procedure</code>. And <code>print add(1)</code> fails: <code>add is not a function</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Calling a procedure</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+case CallCommand(name, args):
+    callee = lookup(env, name)
+    if not isinstance(callee, Procedure):
+        raise ValueError(f"{name} is not a procedure")
+    values = [evaluate(arg, env, state) for arg in args]
+    check_arity(name, callee.params, values)
+    call_env = callee.env
+    for param, value in zip(callee.params, values):
+        loc, state = allocate(state, value)
+        call_env = bind(call_env, param, loc)
+    _, state = execute(callee.body, call_env, state)
+    return env, state
+    </code></pre>
+    <div>
+      <p class="lead">Each parameter is a new variable: a new location, holding the value of the argument. Inside the body it can be assigned.</p>
+      <p>The body is executed in the environment of the closure. Its state goes on; its environment is thrown away, as for a block.</p>
+      <p class="note">The equation: \( ⟦p(e_1, \dots, e_n)⟧(\rho, \sigma) = (\rho, \sigma') \), where \( \rho(p) = (x_1 \dots x_n,\ c,\ \rho') \) and \( ⟦c⟧(\rho'[x_i \mapsto \ell_i],\ \sigma[\ell_i \mapsto v_i]) = (\rho'', \sigma') \), with \( \ell_i \) new locations.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Parameters are copies</h2>
+  <div class="split flip">
+    <div>
+      <pre><code class="language-text" data-trim>
+proc countdown(n)
+  while n &gt; 0 do { print n; n &lt;- n - 1 };
+var a = 3;
+countdown(a);
+print a
+      </code></pre>
+      <pre class="out"><code class="language-text" data-trim>
+3
+2
+1
+3
+      </code></pre>
+    </div>
+    <div>
+      <p class="lead"><code>countdown</code> changes <code>n</code> down to 0, and <code>a</code> is still 3.</p>
+      <p><code>n</code> is a new location that received a copy of the value of <code>a</code>. This is <strong>call by value</strong>.</p>
+      <p>A procedure changes a variable of the caller only if it sees it in its own closure, as <code>add</code> sees <code>total</code>.</p>
+      <p class="note">Exercise 2: call by reference, where the parameter is the location of the argument.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Functions and procedures</h2>
+  <table style="font-size:.74em">
+    <tr><th></th><th>function</th><th>procedure</th></tr>
+    <tr><td>declared with</td><td><code>fun f(x) = e</code></td><td><code>proc p(x) c</code></td></tr>
+    <tr><td>body</td><td>an expression</td><td>a command</td></tr>
+    <tr><td>a call is</td><td>an expression</td><td>a command</td></tr>
+    <tr><td>a call gives</td><td>a value</td><td>a new store</td></tr>
+    <tr><td>a parameter is</td><td>a name for a value, as in <code>let</code></td><td>a new variable, as in <code>var</code></td></tr>
+    <tr><td>changes the store</td><td>never</td><td>through the variables it sees</td></tr>
+  </table>
+  <p style="margin-top:22px">Pascal and Ada have both, as we do. In C and Python there is only one kind, which can do both: compute a value and change the state.</p>
+</section>
+
+<!-- ================================================================ wrap-up -->
+
+<section class="part">
+  <p class="kicker">Summary</p>
+  <h2>Functions in your language</h2>
+</section>
+
+<section>
+  <h2>The decisions of today</h2>
+  <table style="font-size:.66em">
+    <tr><th>decision</th><th>alternative</th><th>why</th></tr>
+    <tr><td>a function is a closure</td><td>the body alone</td><td>static scoping</td></tr>
+    <tr><td>the closure contains itself</td><td><code>let rec</code>, as in OCaml</td><td>recursion without a new keyword</td></tr>
+    <tr><td>a function's body is an expression</td><td>commands and <code>return</code></td><td>a function never changes the state</td></tr>
+    <tr><td>procedures apart from functions</td><td>one kind, as in Python</td><td>the same line as Lecture 6, between expressions and commands</td></tr>
+    <tr><td>parameters by value</td><td>by reference</td><td>a call cannot change the caller's variables</td></tr>
+    <tr><td>functions denotable, not expressible</td><td>functions as values</td><td>a smaller language; exercise 3</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Functions: all the changes</h2>
+  <div class="cards" style="--n:3; margin-top:14px; font-size:.7em">
+    <div class="card"><p class="idx">PARSER</p><pre><code class="language-python" data-trim>
+fundecl: "fun" IDENTIFIER
+  "(" params ")" "=" expr
+procdecl: "proc" IDENTIFIER
+  "(" params ")" command
+callcmd: IDENTIFIER "(" args ")"
+call: IDENTIFIER "(" args ")"
+    </code></pre></div>
+    <div class="card"><p class="idx">DOMAINS</p><pre><code class="language-python" data-trim>
+class Function:
+    params, body, env
+
+class Procedure:
+    params, body, env
+
+DVal = ... | Function | Procedure
+    </code></pre></div>
+    <div class="card warm"><p class="idx">INTERPRETER</p><pre><code class="language-python" data-trim>
+evaluate:  Call
+
+execute:   FunDecl, ProcDecl,
+           CallCommand
+    </code></pre></div>
+  </div>
+  <p>The full code is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-08/functions.py"><code>code/lesson-08/functions.py</code></a>.</p>
+</section>
+
+<section>
+  <h2>Where we are</h2>
+  <p>The language has expressions, <code>let</code>, variables, <code>if</code>, <code>while</code>, functions and procedures. The project asks for exactly these, in a language for a domain of your choice.</p>
+  <p>Each of them came with a decision, and with an equation that says what it means. The interpreter is the equations, written in Python.</p>
+  <p>The images language of the exercises has all of them too: it can be the starting point of a project.</p>
+</section>
+
+<!-- ================================================================ exercises -->
+
+<section class="part">
+  <p class="kicker">Exercises</p>
+  <h2>Your turn</h2>
+</section>
+
+<section>
+  <h2>Exercise 1 · Predict, then run</h2>
+  <div class="split flip">
+    <div>
+    <pre><code class="language-text" data-trim>
+fun double(x) = x + x; print double(double(3))
+var n = 2; fun times(x) = x * n; n &lt;- 10; print times(3)
+fun f(x) = x + 1; print let f = 5 in f
+fun g(x) = if x &gt; 0 then g(x - 1) + 2 else 0; print g(4)
+var c = 0; proc tick() c &lt;- c + 1; tick(); tick(); print c
+proc p(x) { x &lt;- x * 2; print x }; var y = 4; p(y); print y
+fun h(x) = x + z; var z = 1; print h(1)
+fun sq(x) = x * x; sq(2)
+    </code></pre>
+    <p>Today's interpreter: <a href="https://github.com/vincenzoml/PLDW/blob/main/code/lesson-08/functions.py"><code>code/lesson-08/functions.py</code></a></p>
+    </div>
+    <div>
+      <p class="cite">Level 1 of 4</p>
+      <ol>
+        <li>For each program, write what it prints, and the error if there is one, before running it.</li>
+        <li>In the second program, which store does <code>times</code> read: the one of the declaration, or of the call?</li>
+        <li>In the third, is <code>f</code> a function or a number in the body of the <code>let</code>?</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 2 · Parameters by reference</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+proc swap(ref a, ref b) {
+  var t = a; a &lt;- b; b &lt;- t
+};
+var x = 1; var y = 2;
+swap(x, y); print x; print y        2 1
+
+swap(x, 3)                          ?
+
+proc both(ref a, ref b) {
+  a &lt;- a + 1; b &lt;- b + 1
+};
+var z = 0; both(z, z); print z      ?
+    </code></pre>
+    <div>
+      <p class="cite">Level 2 of 4</p>
+      <ol>
+        <li>Allow <code>ref</code> before a parameter of a procedure. Such a parameter is not a new variable: it is bound to the location of the argument, which must be a variable.</li>
+        <li>What should <code>swap(x, 3)</code> do?</li>
+        <li>Predict what the last program prints, then run it.</li>
+      </ol>
+      <p class="note">The same idea as <code>alias</code>, exercise 3 of Lecture 6: two names, one location. C++ writes <code>int&amp; a</code>, Pascal <code>var a</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 3 · Functions as values</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+fun twice(f, x) = f(f(x));
+fun inc(x) = x + 1;
+print twice(inc, 5)                  7
+
+fun dec(x) = x - 1;
+fun pick(b) = if b then inc else dec;
+var g = pick(false);
+print g(5)                           ?
+
+var k = 10;
+fun addk(x) = x + k;
+fun apply(f, k) = f(1);
+print apply(addk, 100)               ?
+    </code></pre>
+    <div>
+      <p class="cite">Level 3 of 4</p>
+      <ol>
+        <li>Make functions expressible: a name bound to a function can be an argument, the value of a variable, the result of a function.</li>
+        <li>Which of the three sets, <code>EVal</code>, <code>MVal</code>, <code>DVal</code>, change?</li>
+        <li>Predict the last program. Which <code>k</code> does <code>addk</code> see?</li>
+      </ol>
+      <p class="note">A function that takes or returns a function is a <strong>higher-order</strong> function, as <code>map</code> and <code>sorted(..., key=...)</code> in Python.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · Images with functions</h2>
+  <div class="split flip">
+    <pre><code class="language-text" data-trim>
+fun pair(p) = p | mirror(p);
+print pair(circle) / pair(square)
+
+fun sierpinski(p, size) =
+  if width(p) &gt;= size then p
+  else sierpinski(p / (p | p), size);
+print sierpinski(scale(circle, 0.0625), 512)
+
+var gallery = scale(circle, 0.25);
+proc add(p)
+  gallery &lt;- gallery | scale(p, 0.25);
+add(square); add(mirror(circle)); add(square);
+print gallery
+    </code></pre>
+    <div>
+      <p class="cite">Level 4 of 4 · a longer one</p>
+      <p class="lead">The language of images of Lecture 7, with today's <code>fun</code> and <code>proc</code>.</p>
+      <p>A call of a declared function looks like a call of a primitive, <code>mirror(p)</code> or <code>scale(p, 0.5)</code>. The evaluator tells them apart by what the name stands for.</p>
+      <p class="note">A parameter can stand for an image or a number. Can it stand for a file name, <code>"sky.png"</code>? Start from your solution, or from <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/imagecontrol.py"><code>imagecontrol.py</code></a>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Exercise 4 · The results</h2>
+  <div class="imgs" style="--h:260px">
+    <figure><img class="alpha" src="../code/images/out/functions-1.png" alt="a circle and its mirror image, above a square and its mirror image"><figcaption>first program</figcaption></figure>
+    <figure><img class="alpha" src="../code/images/out/functions-2.png" alt="small red circles arranged in a Sierpinski triangle"><figcaption>second program</figcaption></figure>
+  </div>
+  <div class="imgs" style="--h:90px; margin-top:12px">
+    <figure><img class="alpha" src="../code/images/out/functions-3.png" alt="a row of four small images: circle, square, mirrored circle, square"><figcaption>third program</figcaption></figure>
+  </div>
+  <p style="margin-top:18px">What each <code>print</code> shows. The second program calls <code>sierpinski</code> five times. A solution is in <a href="https://github.com/vincenzoml/PLDW/blob/main/code/images/imagefun.py"><code>code/images/imagefun.py</code></a>: run it with <code>--show</code> to open the windows.</p>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/math/math.min.js"></script>
+<script src="assets/pldw.js"></script>
+</body>
+</html>
