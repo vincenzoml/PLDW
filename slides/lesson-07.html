@@ -104,11 +104,8 @@ print(a)            # 6
 </section>
 
 <section>
-  <h2>The semantic domains</h2>
-  <div class="split">
-    <div>
-      <p class="note">Lecture 6</p>
-      <pre><code class="language-python" data-trim>
+  <h2>The semantic domains of Lecture 6</h2>
+  <pre><code class="language-python" data-trim>
 type EVal = int  # what an expression can produce
 type MVal = EVal  # what a location can hold
 type Operator = Callable[[EVal, EVal], EVal]
@@ -116,10 +113,11 @@ type DVal = EVal | Operator | Loc  # what a name can stand for
 type Environment = Callable[[str], DVal]
 type Store = Callable[[int], MVal]
       </code></pre>
-    </div>
-    <div>
-      <p class="note">Today</p>
-      <pre><code class="language-python" data-trim>
+</section>
+
+<section>
+  <h2>The semantic domains, today</h2>
+  <pre><code class="language-python" data-trim>
 type EVal = int | bool  # what an expression can produce
 type MVal = EVal  # what a location can hold
 
@@ -132,8 +130,6 @@ type DVal = EVal | Operator | Loc  # what a name can stand for
 type Environment = Callable[[str], DVal]
 type Store = Callable[[int], MVal]
       </code></pre>
-    </div>
-  </div>
   <p>Two lines change: <code>EVal</code> and <code>Operator</code>. Everything else stays.</p>
 </section>
 
