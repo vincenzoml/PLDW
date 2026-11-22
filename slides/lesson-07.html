@@ -114,6 +114,18 @@ print(a)            # 6
 </section>
 
 <section>
+  <h2><code>true + 1</code> in other languages</h2>
+  <table style="font-size:.75em">
+    <tr><th>language</th><th><code>true + 1</code></th><th>why</th></tr>
+    <tr><td>C</td><td><code>2</code></td><td>a boolean is a number</td></tr>
+    <tr><td>Python</td><td><code>2</code></td><td><code>bool</code> is a subclass of <code>int</code></td></tr>
+    <tr><td>Java</td><td>refused before it runs</td><td>a type checker reads the program first</td></tr>
+    <tr><td><strong>ours</strong></td><td><strong>an error, when it runs</strong></td><td><strong>each operator checks the type of its arguments</strong></td></tr>
+  </table>
+  <p class="note">Our interpreter is written in Python, so it must not inherit Python's answer: next slide.</p>
+</section>
+
+<section>
   <h2>An operator carries its type</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
