@@ -359,7 +359,8 @@ Condition must be a boolean, got 1
   <pre><code class="language-python" data-trim>
 while: "while" expr "do" sequence "done"
   </code></pre>
-  <p class="formula" style="font-size:1.05em">\( ⟦w⟧(\rho, \sigma) = \begin{cases} (\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \\ ⟦w⟧(\rho, \sigma') \text{ where } ⟦s⟧(\rho, \sigma) = (\rho', \sigma') &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \end{cases} \qquad w = \mathtt{while}\ e\ \mathtt{do}\ s\ \mathtt{done} \)</p>
+  <p class="formula">\( w = \mathtt{while}\ e\ \mathtt{do}\ s\ \mathtt{done} \)</p>
+  <p class="formula" style="font-size:1.05em">\( ⟦w⟧(\rho, \sigma) = \begin{cases} (\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \\ ⟦w⟧(\rho, \sigma') \text{ where } ⟦s⟧(\rho, \sigma) = (\rho', \sigma') &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \end{cases} \)</p>
   <p>If the condition is false, the state does not change. Otherwise, run the body once, then run <em>the same loop</em> from the new store.</p>
 </section>
 
