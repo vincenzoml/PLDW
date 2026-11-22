@@ -327,6 +327,20 @@ class IfElse:
 </section>
 
 <section>
+  <h2>A branch runs as a block</h2>
+  <pre><code class="language-python" data-trim>
+def execute_block(block: Sequence, env: Environment,
+                  state: State) -&gt; State:
+    """Run a block: its declarations do not survive it,
+    and its locations are reused."""
+    _, new_state = execute_sequence(block, env, state)
+    return State(store=new_state.store,
+                 next_loc=state.next_loc)
+  </code></pre>
+  <p>The branches of <code>if</code> and the body of <code>while</code> are run by <code>execute_block</code>: assignments stay, declarations do not. The third part of the lecture says why.</p>
+</section>
+
+<section>
   <h2><code>if</code>: the meaning</h2>
   <p class="formula" style="font-size:1.05em">\( ⟦\mathtt{if}\ e\ \mathtt{then}\ s_1\ \mathtt{else}\ s_2\ \mathtt{endif}⟧(\rho, \sigma) = \begin{cases} ⟦s_1⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{true} \\ ⟦s_2⟧(\rho, \sigma) &amp; \text{if } ⟦e⟧(\rho, \sigma) = \mathit{false} \end{cases} \)</p>
   <div class="split flip">
@@ -349,7 +363,7 @@ case IfElse(cond, then_branch, else_branch):
 if 1 then print 1 else print 0 endif
 Condition must be a boolean, got 1
       </code></pre>
-      <p class="note">The command returns the environment it received, and the branch runs as a <code>execute_block</code>: the third part of the lecture.</p>
+      <p class="note">The command returns the environment it received; the branch runs with <code>execute_block</code>.</p>
     </div>
   </div>
 </section>
