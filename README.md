@@ -48,6 +48,7 @@ Online at **<https://vincenzoml.github.io/PLDW/>**. They are plain HTML files: a
 - `slides/lesson-06.html` — Lecture 6: state and commands, with variables whose value changes, the store as a function from locations to values, and the commands `var`, `<-` and `print` (code in `code/lesson-06/`); the language of images with variables is in `code/images/imagestate.py`
 - `slides/lesson-07.html` — Lecture 7: control flow, with booleans and operators that carry their type, `if` and `while`, and blocks whose declarations stay inside (code and solutions in `code/lesson-07/`)
 - `slides/lesson-08.html` — Lecture 8: functions and closures, with static scoping, call by value, the conditional expression and recursion (code and solutions in `code/lesson-08/`)
+- `slides/lesson-11.html` — Lecture 11: spatial model checking, from the logic SLCS to VoxLogicA 2.1 (code in `code/lesson-11/`: a model checker for SLCS in Python, and programs for VoxLogicA 1 and 2.1)
 
 ## Exam
 
