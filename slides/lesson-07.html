@@ -211,6 +211,28 @@ def create_initial_env() -&gt; Environment:
 </section>
 
 <section>
+  <h2>The connectives</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def logical_and(args: list[EVal]) -&gt; EVal:
+    return args[0] and args[1]
+
+
+def logical_or(args: list[EVal]) -&gt; EVal:
+    return args[0] or args[1]
+
+
+def logical_not(args: list[EVal]) -&gt; EVal:
+    return not args[0]
+    </code></pre>
+    <div>
+      <p class="lead">Python's <code>and</code>, <code>or</code>, <code>not</code>, applied to values already computed.</p>
+      <p>Both arguments are in the list before the function runs: see "Consequence 2".</p>
+    </div>
+  </div>
+</section>
+
+<section>
   <h2>The grammar</h2>
   <div class="split flip">
     <pre><code class="language-python" data-trim>
