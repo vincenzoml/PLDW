@@ -152,7 +152,7 @@ type Store = Callable[[int], MVal]
     <tr><td>Java</td><td>refused before it runs</td><td>a type checker reads the program first</td></tr>
     <tr><td><strong>ours</strong></td><td><strong>an error, when it runs</strong></td><td><strong>each operator checks the type of its arguments</strong></td></tr>
   </table>
-  <p class="note">Our interpreter is written in Python, so it must not inherit Python's answer: see "The check, and a trap".</p>
+  <p class="note">Our interpreter is written in Python, so it must not inherit Python's answer: see "The trap".</p>
 </section>
 
 <section>
@@ -174,6 +174,38 @@ env = bind(env, "not", Operator(([bool], bool), logical_not))
       <p>The arguments come as a list, so the same class works for <code>not</code>, which has one.</p>
       <p>Fourteen operators: five on integers giving integers, six comparisons giving booleans, and <code>and</code>, <code>or</code>, <code>not</code> on booleans.</p>
       <p class="note"><code>==</code> is declared on integers only, so <code>true == false</code> is an error. It is a choice: exercise 3 changes it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The initial environment</h2>
+  <div class="split flip">
+    <pre><code class="language-python" data-trim>
+def create_initial_env() -&gt; Environment:
+    env = empty_environment()
+    # arithmetic: int × int → int
+    env = bind(env, "+", Operator(([int, int], int), add))
+    env = bind(env, "-", Operator(([int, int], int), subtract))
+    env = bind(env, "*", Operator(([int, int], int), multiply))
+    env = bind(env, "/", Operator(([int, int], int), divide))
+    env = bind(env, "%", Operator(([int, int], int), modulo))
+    # comparisons: int × int → bool
+    env = bind(env, "==", Operator(([int, int], bool), equal))
+    env = bind(env, "!=", Operator(([int, int], bool), not_equal))
+    env = bind(env, "&lt;", Operator(([int, int], bool), less))
+    env = bind(env, "&gt;", Operator(([int, int], bool), greater))
+    env = bind(env, "&lt;=", Operator(([int, int], bool), less_equal))
+    env = bind(env, "&gt;=", Operator(([int, int], bool), greater_equal))
+    # connectives: bool × bool → bool, and bool → bool
+    env = bind(env, "and", Operator(([bool, bool], bool), logical_and))
+    env = bind(env, "or", Operator(([bool, bool], bool), logical_or))
+    env = bind(env, "not", Operator(([bool], bool), logical_not))
+    return env
+    </code></pre>
+    <div>
+      <p class="lead">Every program starts in this environment: the fourteen operators, each with its type.</p>
+      <p>Each function is one line, for example <code>add</code> returns <code>args[0] + args[1]</code>.</p>
     </div>
   </div>
 </section>
@@ -241,16 +273,32 @@ case Apply(op, args):
 </section>
 
 <section>
-  <h2>The check, and a trap</h2>
-  <div class="stack">
+  <h2><code>check_arguments</code></h2>
+  <div class="split flip">
     <pre><code class="language-python" data-trim>
-for i, (expected, actual) in enumerate(zip(expected_types, values)):
-    # not isinstance: in Python, bool is a subclass of int
-    if type(actual) is not expected:
+def check_arguments(op: str, expected_types: list[type],
+                    values: list[EVal]) -&gt; None:
+    if len(expected_types) != len(values):
         raise ValueError(
-            f"Operator '{op}': argument {i + 1} must be "
-            f"{expected.__name__}, got {type(actual).__name__}")
+            f"Operator '{op}' expects {len(expected_types)} "
+            f"arguments, got {len(values)}")
+    for i, (expected, actual) in enumerate(zip(expected_types, values)):
+        # not isinstance: in Python, bool is a subclass of int
+        if type(actual) is not expected:
+            raise ValueError(
+                f"Operator '{op}': argument {i + 1} must be "
+                f"{expected.__name__}, got {type(actual).__name__}")
     </code></pre>
+    <div>
+      <p class="lead">First the number of arguments, then the type of each one.</p>
+      <p>It returns nothing: either the arguments fit the operator, or an error stops the program.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The trap</h2>
+  <div class="stack">
     <div>
       <p class="lead"><code>isinstance(True, int)</code> is <code>True</code> in Python.</p>
       <p>The exact test <code>type(actual) is expected</code> is what makes <code>true + 1</code> an error and not 2.</p>
