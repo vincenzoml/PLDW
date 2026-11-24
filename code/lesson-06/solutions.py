@@ -122,15 +122,13 @@ def parse_program(text: str) -> Sequence:
     return transform_sequence(tree)
 
 
-# --- Exercise 2: a location can hold "no value yet" ----------------------------
+# --- Exercise 2: a location that has not been written yet -----------------------
 
 
-@dataclass(frozen=True)
-class Unset:
-    """What a variable declared without a value holds."""
-
-
-UNSET = Unset()
+def reserve(state: State) -> tuple[Loc, State]:
+    """A fresh location, with nothing written in it: reading it is an error."""
+    loc = Loc(state.next_loc)
+    return loc, State(store=state.store, next_loc=loc.address + 1)
 
 
 def is_variable(env: Environment, name: str) -> bool:
@@ -147,10 +145,10 @@ def evaluate(ast: Expression, env: Environment, state: State) -> EVal:
         case Var(name):
             match lookup(env, name):
                 case Loc() as loc:
-                    value = access(state, loc)
-                    if value is UNSET:
-                        raise ValueError(f"{name} has no value yet")
-                    return value
+                    try:
+                        return access(state, loc)
+                    except ValueError:
+                        raise ValueError(f"{name} has no value yet") from None
                 case int() as value:
                     return value
                 case _:
@@ -176,7 +174,7 @@ def execute(command: Command, env: Environment, state: State) -> tuple[Environme
         case Declare(name):
             if is_variable(env, name):
                 raise ValueError(f"{name} is already declared")
-            loc, state = allocate(state, UNSET)  # type: ignore[arg-type]
+            loc, state = reserve(state)
             return bind(env, name, loc), state
         case Alias(name, target):  # exercise 3
             if is_variable(env, name):
